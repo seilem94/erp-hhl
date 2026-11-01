@@ -1,0 +1,87 @@
+"""Domain-level exceptions.
+
+All exceptions are pure Python — zero framework dependencies.
+The infrastructure layer (FastAPI, etc.) is responsible for catching
+these and mapping them to the appropriate HTTP status codes.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from uuid import UUID
+
+from src.domain.enums import ProjectStatus
+
+
+class DomainException(Exception):
+    """Base class for all domain exceptions.
+
+    Catching this class covers every domain-level error; prefer the
+    concrete subclasses when you need to react to a specific condition.
+    """
+
+
+class EntityNotFoundError(DomainException):
+    """Base class for 'resource does not exist' errors (→ HTTP 404)."""
+
+
+class ProjectNotFoundError(EntityNotFoundError):
+    """Raised when a project_id is provided but no matching project exists.
+
+    Args:
+        project_id: The UUID that was looked up and not found.
+    """
+
+    def __init__(self, project_id: UUID) -> None:
+        self.project_id = project_id
+        super().__init__(f"Project '{project_id}' not found.")
+
+
+class BusinessRuleViolationError(DomainException):
+    """Base class for business-rule violations (→ HTTP 422)."""
+
+
+class ProjectCancelledError(BusinessRuleViolationError):
+    """Raised when an expense targets a project in CANCELLED status.
+
+    Args:
+        project_id: UUID of the cancelled project.
+        current_status: The status that was found (always CANCELLED).
+    """
+
+    def __init__(self, project_id: UUID, current_status: ProjectStatus) -> None:
+        self.project_id = project_id
+        self.current_status = current_status
+        super().__init__(
+            f"Project '{project_id}' is in '{current_status}' status "
+            "and cannot accept new expenses."
+        )
+
+
+class InvalidExpenseDateError(BusinessRuleViolationError):
+    """Raised when the expense date is strictly in the future.
+
+    Args:
+        expense_date: The date supplied by the caller.
+        today: The reference date used for validation.
+    """
+
+    def __init__(self, expense_date: date, today: date) -> None:
+        self.expense_date = expense_date
+        self.today = today
+        super().__init__(
+            f"Expense date '{expense_date}' is in the future (today is '{today}')."
+        )
+
+
+class InvalidExpenseAmountError(BusinessRuleViolationError):
+    """Raised when the expense amount is zero or negative.
+
+    Args:
+        amount: The invalid amount that was supplied.
+    """
+
+    def __init__(self, amount: Decimal) -> None:
+        self.amount = amount
+        super().__init__(f"Expense amount must be greater than zero, got '{amount}'.")
