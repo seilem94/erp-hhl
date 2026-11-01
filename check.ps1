@@ -3,6 +3,7 @@ Set-Location backend
 .\venv\Scripts\ruff check .
 .\venv\Scripts\ruff format --check .
 .\venv\Scripts\mypy src/
+.\venv\Scripts\python -m pytest tests/
 Set-Location ..
 
 Write-Host "`n--- 2. Validando Frontend ---" -ForegroundColor Cyan
@@ -11,4 +12,4 @@ npm run lint
 npm run type-check
 Set-Location ..
 
-Write-Host "`n✓ Todo validado con éxito." -ForegroundColor Green
+Write-Host "`n[OK] Todo validado con exito." -ForegroundColor Green
