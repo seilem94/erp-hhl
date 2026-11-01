@@ -17,6 +17,7 @@ from uuid import UUID
 
 from src.domain.entities.expense import Expense
 from src.domain.entities.project import Project
+from src.domain.enums import ProjectStatus
 from src.domain.repositories.expense_repository import ExpenseRepository
 from src.domain.repositories.project_repository import ProjectRepository
 
@@ -102,3 +103,6 @@ class InMemoryProjectRepository(ProjectRepository):
 
     def list_all(self) -> list[Project]:
         return list(self._store.values())
+
+    def list_by_status(self, status: ProjectStatus) -> list[Project]:
+        return [p for p in self._store.values() if p.status == status]
