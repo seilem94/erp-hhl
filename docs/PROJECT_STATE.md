@@ -29,7 +29,7 @@
 - [x] Crear excepciones de dominio (`DomainException` y subtipos).
 - [x] Implementar el caso de uso `RegisterDailyExpenseUseCase` y su DTO.
 - [x] Implementar repositorios en memoria (`tests/fakes.py`) y suite de tests con `pytest`.
-- [ ] Definir casos de uso de consulta (ej. listar gastos por proyecto y OPEX).
+- [x] Definir casos de uso de consulta (ej. listar gastos por proyecto y OPEX).
 
 ## 🛑 Bloqueos o Pendientes Inmediatos
 - **Resuelto:** Decisión sobre comprobantes (normalización automática si hay URL).
