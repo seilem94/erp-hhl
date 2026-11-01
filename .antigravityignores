@@ -11,4 +11,4 @@ backend/.ruff_cache/
 
 # git y docs no prioritarios
 .git/
-docs/adr/
+#docs/adr/

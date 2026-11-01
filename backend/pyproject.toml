@@ -3,6 +3,13 @@ name = "erp-backend"
 version = "0.1.0"
 requires-python = ">=3.11"
 
+[project.optional-dependencies]
+dev = ["pytest>=9.2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
 [tool.ruff]
 line-length = 88
 target-version = "py311"
