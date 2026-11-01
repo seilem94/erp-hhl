@@ -35,5 +35,11 @@ Una tarea o sub-fase solo se considera completada cuando cumple TODOS los siguie
 
 ## 6. Control de Versiones y Commits
 - Trabaja exclusivamente en la rama asignada en el prompt (nunca directo sobre `main`).
-- Cada vez que completes una tarea atómica y pase las validaciones, sugiere el comando `git commit` exacto con formato semántico (`feat(...)`, `fix(...)`, etc.).
-- Prohibido hacer commits masivos que mezclen backend y frontend en un solo cambio.
+- **Idioma obligatorio:** Todos los mensajes de commit y sus descripciones DEBEN redactarse en **español**.
+- **Formato semántico:** Utiliza Conventional Commits manteniendo el prefijo en minúsculas en inglés (`feat`, `fix`, `chore`, `docs`, `refactor`, `test`), seguido del contexto y una descripción imperativa en español.
+  - Ejemplos válidos:
+    * `feat(domain): agregar entidad Expense y repositorio abstracto`
+    * `fix(use-cases): corregir validacion de fecha futura en gastos`
+    * `chore(config): actualizar reglas de ruff en pyproject.toml`
+    * `docs(readme): agregar instrucciones de ejecucion local`
+- Prohibido generar sugerencias de commits redactadas en inglés.
