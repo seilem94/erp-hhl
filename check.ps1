@@ -11,4 +11,4 @@ npm run lint
 npm run type-check
 Set-Location ..
 
-Write-Host "`n✓ Todo validado con éxito." -ForegroundColor Green
+Write-Host "`n[OK] Todo validado con exito." -ForegroundColor Green
