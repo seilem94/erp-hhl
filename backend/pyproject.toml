@@ -3,6 +3,13 @@ name = "erp-backend"
 version = "0.1.0"
 requires-python = ">=3.11"
 
+dependencies = [
+    "sqlalchemy>=2.0.0",
+    "psycopg[binary]>=3.1.0",
+    "alembic>=1.13.0",
+    "pydantic-settings>=2.0.0",
+]
+
 [project.optional-dependencies]
 dev = ["pytest>=9.2"]
 
@@ -24,3 +31,4 @@ strict = true
 ignore_missing_imports = true
 disallow_untyped_defs = true
 check_untyped_defs = true
+plugins = ["pydantic.mypy"]
