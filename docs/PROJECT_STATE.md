@@ -18,8 +18,12 @@
       - `routers/expenses.py`: `POST /api/v1/expenses` (201), `GET /api/v1/expenses/project/{project_id}` y `GET /api/v1/expenses/operational`.
       - Desacoplamiento total: los routers ejecutan exclusivamente casos de uso sin tocar base de datos ni ORM directamente.
     - Aplicación FastAPI principal en `src/main.py`: middleware CORS permisivo para desarrollo local, registro de manejador de excepciones de dominio, montaje de routers y endpoint `GET /health`.
+    - Documentación OpenAPI/Swagger/ReDoc 100% en español:
+      - Esquema `ErrorResponse` en `schemas/error.py` para tipar respuestas de error (`{"detail": "..."}`).
+      - Declaración explícita de códigos de respuesta HTTP en cada endpoint (`200`, `201`, `400`, `404`, `422`).
+      - Descripciones, resúmenes, parámetros y ejemplos de campos en español para facilitar pruebas e integración con frontend.
     - Suite de pruebas de integración HTTP en `tests/infrastructure/test_http_api.py` (10 tests con `TestClient` sobre fakes en memoria).
-  - Validación completa con `check.ps1`: Ruff check/format limpio (47 archivos), Mypy estricto sin errores (36 archivos) y 75 tests de Pytest pasando al 100%.
+  - Validación completa con `check.ps1`: Ruff check/format limpio (48 archivos), Mypy estricto sin errores (37 archivos) y 75 tests de Pytest pasando al 100%.
 - **En progreso:** Hito 5 - Entorno Docker Local y Datos Semilla (`docker-compose.yml`, `backend/scripts/seed.py`).
 
 ## 🧱 Decisiones Técnicas Tomadas (Inmutables)
