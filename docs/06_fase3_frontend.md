@@ -1,5 +1,7 @@
 # Roadmap: Fase 3 — Frontend SPA / PWA (React 19 + Vite)
 
+**Estado al 2026-11-03:** Base Vite y panel visual implementados. Las rutas de módulos existen como vistas en preparación; integración HTTP, formularios, autenticación y PWA siguen pendientes. Ver [PROJECT_STATE.md](PROJECT_STATE.md).
+
 Esta fase comprende el diseño y construcción de la interfaz de usuario para el ERP Eléctrico, implementada como una Single Page Application (SPA) con capacidades PWA, optimizada para captura de gastos en terreno desde dispositivos móviles y administración operativa de obras desde escritorio.
 
 ---
@@ -11,7 +13,7 @@ Esta fase comprende el diseño y construcción de la interfaz de usuario para el
 3. **Gestión de Estado Asíncrono y API:** Uso de **TanStack Query** para la orquestación de llamadas a la API REST de FastAPI (`/api/v1/projects`, `/api/v1/expenses`), manejo de caché reactiva, revalidaciones automáticas y mutaciones con optimistic updates.
 4. **Estrategia de Fuentes (Offline-First):**
    - Las tipografías del sistema (ej. `@fontsource/inter`) deben instalarse exclusivamente como dependencias npm y auto-alojarse dentro del bundle generado por Vite.
-   - **Prohibición estricta:** Queda prohibido el uso de enlaces externos a Google Fonts (`fonts.googleapis.com` o `fonts.gstatic.com`) o CDNs de fuentes en línea, garantizando operatividad total sin conexión a internet en zonas rurales/obras y evitando bloqueos de red en pipelines de CI/CD.
+   - **Prohibición estricta:** Queda prohibido el uso de enlaces externos a Google Fonts (`fonts.googleapis.com` o `fonts.gstatic.com`) o CDNs de fuentes en línea. Esto permite compilar sin descargas externas tras instalar dependencias; la operativa offline completa requiere service worker, caché y sincronización de datos.
 5. **Comandos de Validación y Compilación:**
    - Análisis estático / Linter: `eslint .`
    - Chequeo de tipos y empaquetado para producción: `tsc -b && vite build`
@@ -22,20 +24,29 @@ Esta fase comprende el diseño y construcción de la interfaz de usuario para el
 ## 📋 Hitos y Tareas Secuenciales
 
 ### 🔹 Hito 1: Configuración Base del Entorno y Dependencias (Vite + TanStack)
-- [ ] Inicialización / reconfiguración del proyecto frontend con `vite` y React 19 en TypeScript estricto.
-- [ ] Instalación de dependencias núcleo:
-  - `react@19`, `react-dom@19`
-  - `@tanstack/react-router`, `@tanstack/react-query`
-  - `@fontsource/inter` (auto-alojada en bundle local)
-  - `tailwindcss`, `lucide-react`, `clsx`, `tailwind-merge`
-- [ ] Configuración de `vite.config.ts` y alias de paths (`@/...`).
-- [ ] Configuración de ESLint (`eslint .`) y script de compilación (`tsc -b && vite build`).
+- [x] Inicialización del proyecto con Vite y React 19 en TypeScript estricto.
+- [x] Dependencias instaladas: `react`, `react-dom`, `@tanstack/react-router`, `@tanstack/react-query` y `@fontsource/inter`.
+- [x] Tailwind CSS 4, `@tailwindcss/postcss`, PostCSS y Autoprefixer configurados.
+- [x] Configuración de `vite.config.ts` y alias `@/` en Vite y TypeScript.
+- [x] ESLint 10 (`eslint .`) y script de compilación (`tsc -b && vite build`).
+- [x] Corrección de GHSA-g3hv-75wg-m249 mediante override limitado de minimatch; lockfile actualizado.
+
+Los iconos actuales son SVG locales tipados. `lucide-react`, `clsx` y `tailwind-merge` no están instalados; evaluar su necesidad antes de añadir dependencias.
 
 ### 🔹 Hito 2: Enrutamiento y Capa de Consumo API (FastAPI Client)
-- [ ] Definición del árbol de rutas con TanStack Router (rutas de autenticación, dashboard, obras, gastos).
-- [ ] Configuración del `QueryClient` de TanStack Query y proveedor global.
+- [x] Árbol de rutas tipadas con Inicio, Proyectos, Gastos, Configuración y página no encontrada.
+- [ ] Reemplazar las vistas de preparación por pantallas funcionales y definir el flujo de autenticación.
+- [x] Configuración del `QueryClient` de TanStack Query y proveedor global.
 - [ ] Capa de servicios HTTP / funciones de fetch hacia la API FastAPI (`/api/v1/projects`, `/api/v1/expenses`) con tipado estricto alineado a los esquemas Pydantic v2 del backend.
 - [ ] Manejo estandarizado de errores HTTP (400, 404, 422) y estados de carga (`isPending`, `isError`).
+
+### 🔹 Diseño Visual del Panel (Completado)
+- [x] Navbar con logo local, enlaces activos, menú móvil y menú de usuario con cierre por Escape.
+- [x] Hero con título original, texto descriptivo, degradado sutil e ilustración local.
+- [x] Tarjetas de Proyectos y Obras, Registro de Gastos y Finanzas Rápidas; tres columnas en escritorio y una en móvil.
+- [x] Paleta de marca, Inter local, favicon y barras de distribución financiera accesibles.
+- [x] Datos de ejemplo identificados; navegación a vistas de módulo en preparación sin simular persistencia.
+- [x] Revisión visual y de interacción en Chromium de 320 a 1440 px.
 
 ### 🔹 Hito 3: Interfaz Móvil de Terreno (Registro Rápido de Gastos)
 - [ ] Formulario móvil optimizado para terreno: captura en 20 segundos de compras con validación de montos positivos y fechas.
@@ -53,4 +64,5 @@ Esta fase comprende el diseño y construcción de la interfaz de usuario para el
 - [ ] Configuración de manifiesto de aplicación web (`manifest.json` o plugin `vite-plugin-pwa`).
 - [ ] Service Worker para caching de assets estáticos y tipografías locales `@fontsource/inter`.
 - [ ] Soporte para instalación directa en pantalla de inicio en Android e iOS sin pasar por tiendas de aplicaciones.
-- [ ] Validación completa con `eslint .` y `tsc -b && vite build` asegurando exit code 0.
+- [x] Validación de la base y el diseño actual con `eslint .` y `tsc -b && vite build` (exit code 0).
+- [ ] Validación específica de instalación PWA, caché y sincronización offline cuando se implementen.

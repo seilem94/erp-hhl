@@ -8,12 +8,16 @@ Este documento resume la estrategia arquitectónica, decisiones tecnológicas y 
 
 *   **Backend:** FastAPI (Python) + Pydantic v2
 *   **Base de Datos:** PostgreSQL
-*   **Frontend / UI:** React 19 + Vite (SPA) (Configurado como PWA - Progressive Web App)
+*   **Frontend / UI:** React 19 + Vite (SPA) (SPA implementada; capacidades PWA pendientes)
     *   **Enrutamiento y Estado:** TanStack Router para navegación SPA tipada y TanStack Query para gestión de estado asíncrono y peticiones a FastAPI.
-    *   **Estrategia de Fuentes:** Tipografías auto-alojadas (ej. `@fontsource/inter`) instaladas como dependencias npm y empaquetadas en el bundle de Vite. Prohibido el uso de Google Fonts externos (`fonts.googleapis.com`) para garantizar funcionamiento offline y evitar bloqueos en CI/CD.
+    *   **Estrategia de Fuentes:** Tipografías auto-alojadas (ej. `@fontsource/inter`) instaladas como dependencias npm y empaquetadas en el bundle de Vite. Prohibido el uso de Google Fonts externos (`fonts.googleapis.com`) para compilar sin descargas externas tras instalar dependencias y evitar bloqueos en CI/CD. La operativa offline completa sigue pendiente.
     *   **Validación y Compilación:** Estándares de Vite (`eslint .` para linter y `tsc -b && vite build` para tipos y empaquetado).
 *   **Infraestructura:** Docker & Docker Compose
 *   **Red / Seguridad:** Cloudflare Tunnels o Tailscale (Exposición segura sin apertura de puertos en router)
+
+### Estado de Implementación al 2026-11-03
+
+El panel visual de inicio está implementado con recursos locales y métricas de ejemplo. Las rutas de Proyectos, Gastos y Configuración presentan vistas en preparación. Los proveedores TanStack están instalados; el cliente HTTP y las pantallas funcionales siguen pendientes, igual que autenticación, service worker e instalación PWA. Ver [roadmap de frontend](06_fase3_frontend.md).
 
 ---
 
@@ -37,9 +41,9 @@ El sistema separa estrictamente las reglas de negocio de los detalles de infraes
 
 ---
 
-## 🤖 Prompt de Continuación para Modelos de IA (Gemini Pro/Flash)
+## 🤖 Prompt Inicial de Planificación (Referencia Histórica)
 
-Copia el siguiente prompt en tu chat de IA para iniciar el proceso de desarrollo guiado:
+Este prompt se conserva como referencia del diseño inicial. Para continuar el desarrollo actual, usar [LLM_CONTEXT.md](LLM_CONTEXT.md) y [PROJECT_STATE.md](PROJECT_STATE.md); no reinicializar el proyecto ni asumir que los objetivos de esta sección ya están implementados.
 
 ```text
 Actúa como un Arquitecto de Software Senior, CTO y Especialista en DevOps con amplia experiencia en Python (FastAPI), React 19 + Vite (SPA), PostgreSQL y Self-Hosting. 

@@ -45,3 +45,12 @@ Una tarea o sub-fase solo se considera completada cuando cumple TODOS los siguie
     * `chore(config): actualizar reglas de ruff en pyproject.toml`
     * `docs(readme): agregar instrucciones de ejecucion local`
 - Prohibido generar sugerencias de commits redactadas en inglés.
+
+## 7. Contexto de Continuación y Frontend Actual
+- Antes de implementar, lee [LLM_CONTEXT.md](LLM_CONTEXT.md), [PROJECT_STATE.md](PROJECT_STATE.md) y el roadmap de la fase activa. Distingue decisiones, objetivos y funcionalidades realmente entregadas.
+- Conserva el branding, la separación de componentes y los proveedores existentes de TanStack Query y Router. Colores en `frontend/src/index.css`; recursos en `frontend/public/`; Inter importada en `frontend/src/main.tsx`.
+- Las cifras del inicio son datos de ejemplo. Proyectos, Gastos y Configuración son vistas en preparación; no existe todavía registro de gastos ni consultas HTTP desde la SPA. No presentar navegación como una operación persistida ni el menú de usuario como autenticación.
+- Las fuentes locales permiten builds sin red externa tras instalar dependencias; no equivalen a soporte offline completo ni a una PWA instalable.
+- Node admitido: `^20.19.0 || ^22.13.0 || >=24`. Usar `npm ci` con el lockfile y conservar el override de seguridad de minimatch hasta revisar una actualización compatible de sus consumidores.
+- Para documentación exclusivamente, comprobar coherencia, enlaces locales y `git diff --check`; no afirmar nuevas ejecuciones de suites históricas. Para cambios de código, siguen vigentes las validaciones de las secciones anteriores.
+- `check.ps1` ejecuta backend, tests y frontend. Si el usuario limita el alcance al frontend, validar solo esa sección o `make check-frontend`, e informar expresamente que no se ejecutó el script completo.

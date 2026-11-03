@@ -3,6 +3,7 @@
 ## 📌 Estado Actual
 - **Fase Activa:** Fase 3 - Frontend SPA / PWA (React 19 + Vite).
 - **Rama:** `refactor/frontend-vite`
+- **Entrega Frontend actual:** Panel visual y branding publicados en `312284e`, con recursos gráficos y Navbar actualizados en `6ae6c07` y `85ae4aa`; métricas de ejemplo, sin integración HTTP ni operaciones persistidas desde la SPA.
 - **Últimos hitos completados:**
   - **Hito 1 (Modelado y Repositorios):** Modelos ORM (`ProjectORM`, `ExpenseORM`), mappers bidireccionales puros (`mappers.py`) y repositorios concretos (`SQLAlchemyProjectRepository`, `SQLAlchemyExpenseRepository`).
   - **Hito 2 (Configuración y Dependencias):** Declaración e instalación de dependencias en `pyproject.toml` (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`), configuración centralizada con `pydantic-settings` (`src/core/config.py`) y sesión de base de datos con factoría y dependencia generadora `get_db` (`src/infrastructure/database/session.py`) con commit automático al finalizar peticiones exitosas y rollback ante excepciones.
@@ -30,8 +31,15 @@
     - Validación `make check-frontend` aprobada (`npm run lint` y `npm run build`: `tsc -b && vite build`), con compilación de producción ejecutada sin acceso de red externa. `Makefile` y `check.ps1` actualizados al flujo de Vite.
     - Comprobación de la compilación en Chromium: vista móvil y escritorio, estilos Tailwind, carga de Inter local y navegación SPA correctos, sin peticiones externas ni errores de JavaScript.
     - Archivos de `backend/` conservados sin modificaciones.
-  - **Seguridad de dependencias Frontend:** Actualización a ESLint 10 y override de `minimatch@>=10 <11` a `^11.0.1` para corregir GHSA-g3hv-75wg-m249; el lockfile resuelve `minimatch@11.0.4`. `npm audit` informa cero vulnerabilidades y `make check-frontend` pasa sin errores. Requisitos de Node actualizados a las versiones admitidas por ESLint 10.
-- **Estado Hito 5:** En pausa temporal por decisión técnica del usuario (el entorno de desarrollo opera con PostgreSQL nativo local; se retomará para el despliegue final en Debian).
+  - **Seguridad de dependencias Frontend (validación del commit `b483990`):** Actualización a ESLint 10 y override de `minimatch@>=10 <11` a `^11.0.1` para corregir GHSA-g3hv-75wg-m249; el lockfile resuelve `minimatch@11.0.4`. `npm audit` informó cero vulnerabilidades en esa revisión y `make check-frontend` pasa sin errores. Requisitos de Node actualizados a las versiones admitidas por ESLint 10.
+  - **Branding y Panel Principal (Frontend):** Implementación modular de Navbar, Hero y tarjetas de Proyectos y Obras, Registro de Gastos y Finanzas Rápidas. Navegación móvil, menú de usuario y accesos rápidos operativos.
+    - Identidad visual: marino `#0F172A`, azul eléctrico `#2563EB`, azul profundo `#1E40AF` y fondo `#F8FAFC`, definidos en `frontend/src/index.css`; Inter local (400, 500 y 600).
+    - Recursos locales iniciales: `logo.svg`, `favicon.svg` y `hero-blueprint.svg`. Los commits posteriores `6ae6c07` y `85ae4aa` incorporan `logo.png`, `logo-white.png` y `favicon.ico`, y cambian la Navbar para usar el logo de la empresa (`/logo.png`). `index.html` continúa apuntando a `/favicon.svg`; el ICO está disponible, sin activar.
+    - Rutas tipadas `/`, `/proyectos`, `/gastos` y `/configuracion`, además de página no encontrada. Solo Inicio presenta el panel; los otros módulos muestran avisos de preparación. El avatar es un icono con menú, no una sesión autenticada.
+    - Métricas marcadas como datos de ejemplo: 1 / 70 obras, gastos operativos de $84.000, obras de $161.800 y total de $245.800 CLP. Los botones navegan; no registran gastos ni consultan datos reales.
+    - Validaciones de la entrega `312284e`: lint y build aprobados. Se ejecutó el bloque frontend original de `check.ps1` con PowerShell temporal; el script completo y los tests/backend se excluyeron del alcance de esa entrega. Revisión en Chromium de 320 a 1440 px, sin desbordes, errores de JavaScript ni peticiones externas.
+    - Cambio limitado a `frontend/`, sin modificar dependencias ni backend. Los ajustes remotos posteriores de logo/Navbar se conservaron al actualizar esta documentación; no se repitieron sus validaciones de código en esta tarea documental.
+- **Estado Hito 5 de la Fase 2:** En pausa temporal por decisión técnica del usuario (el entorno de desarrollo opera con PostgreSQL nativo local; se retomará para el despliegue final en Debian).
 
 ## 🧱 Decisiones Técnicas Tomadas (Inmutables)
 - Clean Architecture pragmática sin sobreingeniería (entidades puras sin decorators de ORM).
@@ -77,7 +85,7 @@
 ## 🛑 Bloqueos o Pendientes Inmediatos
 - Ninguno en código de backend. Hitos 1 al 4 de la Fase 2 completados, probados e integrados con base de datos real.
 - **Hito 5 en pausa temporal:** Se desarrollará al preparar el despliegue al servidor de producción con Debian.
-- **Frontend:** Pendientes las rutas funcionales, el cliente HTTP y las consultas/mutaciones a FastAPI, los formularios de obras y gastos, y las capacidades PWA (service worker, instalación y operaciones offline). La migración base no implementa todavía estas funcionalidades.
+- **Frontend:** El árbol de navegación y las vistas de módulo ya existen. Pendientes las pantallas funcionales, autenticación, el cliente HTTP y las consultas/mutaciones a FastAPI, los formularios de obras y gastos, y las capacidades PWA (service worker, instalación y operaciones offline). La migración base no implementa todavía estas funcionalidades.
 
 ## 📋 Próximo Paso para el Agente
-- Continuar la Fase 3 sobre la base React 19 + Vite: integrar los endpoints de FastAPI mediante TanStack Query, ampliar las rutas tipadas de TanStack Router y construir las vistas de obras y gastos según `06_fase3_frontend.md`.
+- Leer [LLM_CONTEXT.md](LLM_CONTEXT.md) y continuar con el cliente HTTP tipado y las consultas/mutaciones de TanStack Query; sustituir las vistas de preparación por listados y formularios reales, conservando el branding y la modularidad. Seguir [06_fase3_frontend.md](06_fase3_frontend.md) y mantener visibles los datos de ejemplo hasta reemplazarlos por respuestas de FastAPI.
