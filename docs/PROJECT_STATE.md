@@ -1,8 +1,8 @@
 # PROJECT_STATE.md (Última actualización: 2026-11-03)
 
 ## 📌 Estado Actual
-- **Fase Activa:** Fase 2 - Infraestructura y Persistencia (Backend).
-- **Rama:** `feat/backend-projects-domain`
+- **Fase Activa:** Fase 3 - Frontend SPA / PWA (React 19 + Vite).
+- **Rama:** `refactor/frontend-vite`
 - **Últimos hitos completados:**
   - **Hito 1 (Modelado y Repositorios):** Modelos ORM (`ProjectORM`, `ExpenseORM`), mappers bidireccionales puros (`mappers.py`) y repositorios concretos (`SQLAlchemyProjectRepository`, `SQLAlchemyExpenseRepository`).
   - **Hito 2 (Configuración y Dependencias):** Declaración e instalación de dependencias en `pyproject.toml` (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`), configuración centralizada con `pydantic-settings` (`src/core/config.py`) y sesión de base de datos con factoría y dependencia generadora `get_db` (`src/infrastructure/database/session.py`) con commit automático al finalizar peticiones exitosas y rollback ante excepciones.
@@ -24,6 +24,12 @@
       - Descripciones, resúmenes, parámetros y ejemplos de campos en español para facilitar pruebas e integración con frontend.
     - Suite de pruebas completa: 80 tests en Pytest pasando al 100% (incluye tests unitarios de `UpdateProjectUseCase` y pruebas de integración HTTP de `PATCH`).
   - Validación completa con `check.ps1`: Ruff check/format limpio (50 archivos), Mypy estricto sin errores (38 archivos) y 80 tests de Pytest pasando al 100%.
+  - **Migración Frontend a React 19 + Vite (SPA):** Finalizada con éxito. Reemplazo completo del frontend anterior por la plantilla oficial `react-ts` de Vite, sin dependencias ni configuraciones de Next.js.
+    - TypeScript estricto, alias `@/`, Tailwind CSS 4 con PostCSS y Autoprefixer, y fuentes Inter auto-alojadas mediante `@fontsource/inter` (pesos 400, 500 y 600), sin peticiones a Google Fonts ni CDNs.
+    - Base de TanStack Router con ruta de inicio y página no encontrada; `QueryClient` y proveedor global de TanStack Query preparados para integrar FastAPI.
+    - Validación `make check-frontend` aprobada (`npm run lint` y `npm run build`: `tsc -b && vite build`), con compilación de producción ejecutada sin acceso de red externa. `Makefile` y `check.ps1` actualizados al flujo de Vite.
+    - Comprobación de la compilación en Chromium: vista móvil y escritorio, estilos Tailwind, carga de Inter local y navegación SPA correctos, sin peticiones externas ni errores de JavaScript.
+    - Archivos de `backend/` conservados sin modificaciones.
 - **Estado Hito 5:** En pausa temporal por decisión técnica del usuario (el entorno de desarrollo opera con PostgreSQL nativo local; se retomará para el despliegue final en Debian).
 
 ## 🧱 Decisiones Técnicas Tomadas (Inmutables)
@@ -70,6 +76,7 @@
 ## 🛑 Bloqueos o Pendientes Inmediatos
 - Ninguno en código de backend. Hitos 1 al 4 de la Fase 2 completados, probados e integrados con base de datos real.
 - **Hito 5 en pausa temporal:** Se desarrollará al preparar el despliegue al servidor de producción con Debian.
+- **Frontend:** Pendientes las rutas funcionales, el cliente HTTP y las consultas/mutaciones a FastAPI, los formularios de obras y gastos, y las capacidades PWA (service worker, instalación y operaciones offline). La migración base no implementa todavía estas funcionalidades.
 
 ## 📋 Próximo Paso para el Agente
-- Iniciar la Fase 3 (Frontend SPA / PWA con React 19 + Vite (SPA), TanStack Router y TanStack Query) o incorporar nuevas funcionalidades/consultas que el usuario solicite para el backend.
+- Continuar la Fase 3 sobre la base React 19 + Vite: integrar los endpoints de FastAPI mediante TanStack Query, ampliar las rutas tipadas de TanStack Router y construir las vistas de obras y gastos según `06_fase3_frontend.md`.

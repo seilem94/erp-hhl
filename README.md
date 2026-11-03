@@ -60,7 +60,7 @@ backend/
 ### Requisitos Previos
 * Python 3.11+
 * PostgreSQL local (instalado como servicio) o en la nube (Supabase, Neon, etc.)
-* Node.js 20+ y npm (para el frontend)
+* Node.js 20.19+ o 22.12+ y npm (para el frontend)
 * Docker y Docker Compose *(opcional, reservado para despliegue final en producción / servidor Debian)*
 
 ---
@@ -114,7 +114,7 @@ backend/
 #### 2. Frontend (React 19 + Vite (SPA))
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 Disponible en el servidor de desarrollo Vite: [http://localhost:5173](http://localhost:5173)
@@ -122,10 +122,10 @@ Disponible en el servidor de desarrollo Vite: [http://localhost:5173](http://loc
 ##### Comandos de Validación y Compilación (Frontend):
 ```bash
 # Linter estándar de Vite:
-eslint .
+npm run lint
 
 # Verificación de tipos TypeScript y empaquetado de producción:
-tsc -b && vite build
+npm run build
 ```
 
 ##### Arquitectura y Estrategia Frontend:

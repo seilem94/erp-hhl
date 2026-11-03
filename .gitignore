@@ -37,10 +37,6 @@ htmlcov/
 # --- Node & Frontend ---
 frontend/node_modules/
 node_modules/
-frontend/.next/
-.next/
-frontend/out/
-out/
 build/
 dist/
 
@@ -50,10 +46,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-# Next.js Build & Telemetry
-.next/types/
-next-env.d.ts.bak
 
 # --- Variables de Entorno y Secretos ---
 .env

@@ -9,7 +9,9 @@ Set-Location ..
 Write-Host "`n--- 2. Validando Frontend ---" -ForegroundColor Cyan
 Set-Location frontend
 npm run lint
-npm run type-check
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+npm run build
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Set-Location ..
 
 Write-Host "`n[OK] Todo validado con exito." -ForegroundColor Green
