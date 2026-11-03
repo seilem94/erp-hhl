@@ -1,9 +1,17 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Protocolo del Frontend — React 19 + Vite (SPA)
 
-## This is NOT the Next.js you know
+## 1. Stack Tecnológico
+- **Base:** React 19 + Vite con TypeScript en modo estricto.
+- **Enrutamiento:** TanStack Router (enrutamiento de cliente 100% tipado en React 19 + Vite (SPA)).
+- **Estado Asíncrono / API:** TanStack Query para peticiones a la API de FastAPI.
+- **Estilos:** Tailwind CSS y Lucide Icons.
+- **Fuentes:** Tipografías auto-alojadas con dependencias npm (ej. `@fontsource/inter`).
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+## 2. Reglas Estrictas
+- **Prohibición de Google Fonts externos:** Prohibido importar o enlazar a `fonts.googleapis.com` o CDNs externos. Todas las tipografías deben auto-alojarse en el bundle local para funcionamiento offline y pipelines CI/CD sin red.
+- **Arquitectura SPA de cliente:** No utilizar componentes de servidor o dependencias acopladas a servidor; la aplicación es puramente React 19 + Vite (SPA).
+- **Tipado estricto:** Prohibido el uso de `any`.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+## 3. Comandos de Validación
+- Linter: `eslint .`
+- Tipos y Build: `tsc -b && vite build`

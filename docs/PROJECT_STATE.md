@@ -42,6 +42,11 @@
 - Prohibición de filtrado de modelos ORM: todo dato saliente de los repositorios de infraestructura pasa obligatoriamente por `mappers.py` retornando `@dataclass` puro del dominio.
 - Los routers HTTP ejecutan exclusivamente casos de uso mediante inyección de dependencias `Depends()` y no acceden directamente a la base de datos ni a los repositorios.
 - La dependencia generadora `get_db` gestiona el ciclo transaccional: ejecuta `commit()` si la petición termina con éxito y `rollback()` ante excepciones no controladas.
+- Migración Frontend a React 19 + Vite (SPA): Arquitectura Single Page Application ligera y optimizada para PWA en terreno.
+- Enrutamiento Frontend: Uso exclusivo de TanStack Router para manejo de rutas seguras y tipadas en la SPA.
+- Gestión de Estado y API: Uso de TanStack Query para control de estado asíncrono, caché y consumo de endpoints de FastAPI.
+- Estrategia de Fuentes (Offline-First): Tipografías auto-alojadas (ej. `@fontsource/inter`) instaladas como dependencias npm e integradas al bundle de Vite. Prohibición estricta de Google Fonts externos (`fonts.googleapis.com`) para evitar bloqueos de red en CI/CD y asegurar soporte offline en obra.
+- Estándares de Validación Frontend: `eslint .` para análisis estático y `tsc -b && vite build` para chequeo de tipos y compilación de producción.
 
 ## 📋 Tareas de la Fase 1 y Fase 2
 - [x] Crear entidades de dominio (`Expense`, `Project`) y enums.
@@ -67,4 +72,4 @@
 - **Hito 5 en pausa temporal:** Se desarrollará al preparar el despliegue al servidor de producción con Debian.
 
 ## 📋 Próximo Paso para el Agente
-- Iniciar la Fase 3 (Frontend PWA con Next.js) o incorporar nuevas funcionalidades/consultas que el usuario solicite para el backend.
+- Iniciar la Fase 3 (Frontend SPA / PWA con React 19 + Vite (SPA), TanStack Router y TanStack Query) o incorporar nuevas funcionalidades/consultas que el usuario solicite para el backend.

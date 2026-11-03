@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚡ Frontend — HHL ERP (React 19 + Vite SPA)
 
-## Getting Started
+Interfaz de usuario para el ERP Eléctrico HHL, desarrollada como una Single Page Application (SPA) ligera con capacidades PWA, optimizada para la captura rápida de gastos en terreno desde dispositivos móviles y la administración de proyectos eléctricos desde escritorio.
 
-First, run the development server:
+---
 
+## 🛠️ Stack Tecnológico
+
+| Herramienta | Propósito |
+| :--- | :--- |
+| **React 19** | Biblioteca declarativa de interfaces de usuario |
+| **Vite** | Bundler ultrarrápido y servidor de desarrollo HMR |
+| **TypeScript** | Tipado estático estricto (cero `any`) |
+| **TanStack Router** | Enrutamiento SPA fuertemente tipado con gestión de parámetros |
+| **TanStack Query** | Manejo de estado del servidor, caché reactiva y peticiones a FastAPI |
+| **Tailwind CSS** | Sistema de diseño de utilidades adaptado a dispositivos móviles |
+| **@fontsource/inter** | Tipografía auto-alojada localmente en el bundle |
+
+---
+
+## 🚀 Puesta en Marcha
+
+### Instalación de dependencias
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Servidor de desarrollo
+```bash
+npm run dev
+```
+Disponible por defecto en: [http://localhost:5173](http://localhost:5173)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔍 Comandos de Validación y Compilación
 
-## Learn More
+Para cumplir con los estándares de calidad del proyecto, utiliza los comandos de Vite y TypeScript:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Análisis estático y linter:
+eslint .
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Comprobación de tipos y empaquetado para producción:
+tsc -b && vite build
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+*(Nota: Comandos estándar requeridos para validación en desarrollo y pipelines CI/CD).*
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🔤 Estrategia de Fuentes (Offline-First)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* **Auto-alojamiento local:** Las fuentes tipográficas (ej. `@fontsource/inter`) deben ser instaladas exclusivamente como paquetes npm y empaquetadas dentro del bundle estático generado por Vite.
+* **Prohibición de Google Fonts externos:** Queda prohibido el enlace o consumo de fuentes externas provenientes de `fonts.googleapis.com` o `fonts.gstatic.com`. Esta regla asegura:
+  1. Operativa 100% offline para el técnico en terreno en zonas con señal inestable o nula.
+  2. Builds deterministas y sin bloqueos de red en pipelines de CI/CD.
+
+---
+
+## 🌐 Enrutamiento y Estado de Servidor
+
+* **TanStack Router:** Proporciona enrutamiento seguro de tipos en tiempo de compilación para la navegación entre el dashboard, obras y formularios de rendición.
+* **TanStack Query:** Gestiona la comunicación con los endpoints REST del backend FastAPI (`/api/v1/projects`, `/api/v1/expenses`), ofreciendo revalidación automática, caché en memoria y optimizaciones de red.

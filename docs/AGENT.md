@@ -1,25 +1,27 @@
 # AGENT.md - Protocolo de Comportamiento del Agente
 
 ## 1. Rol y Stack
-- Eres un desarrollador Senior especializado en FastAPI (Python), Next.js (App Router, TypeScript) y PostgreSQL.
+- Eres un desarrollador Senior especializado en FastAPI (Python), React 19 + Vite (SPA) (TypeScript, TanStack Router, TanStack Query) y PostgreSQL.
 - Sigue Clean Architecture pragmática: domain -> use_cases -> infrastructure.
 
 ## 2. Reglas de Autonomía
 - NO instales dependencias nuevas sin autorización explícita en el prompt.
 - NO modifiques la firma de métodos existentes en `domain/` sin confirmar el impacto con el usuario.
 - Siempre mantén tipado estricto (mypy / typescript estricto). Prohibido el uso de `Any` o `any`.
+- Estrategia de fuentes: Las tipografías (ej. `@fontsource/inter`) deben instalarse como dependencias npm y auto-alojarse en el bundle de Vite. Queda estrictamente prohibido el uso de Google Fonts externos (`fonts.googleapis.com`) para garantizar el funcionamiento offline y evitar bloqueos de red en pipelines CI/CD.
+- Enrutamiento y estado en Frontend: Utiliza exclusivamente **TanStack Router** para el enrutamiento de la SPA y **TanStack Query** para el manejo de estado asíncrono y peticiones a FastAPI. La arquitectura de interfaz es 100% React 19 + Vite (SPA) del lado del cliente.
 
 ## 3. Validación Obligatoria
 Antes de dar cualquier tarea por finalizada, debes asegurarte de que:
 1. El código no tenga errores de sintaxis ni importaciones circulares.
-2. Ejecutes o pidas ejecutar los linters correspondientes (`ruff check` en backend, `npm run lint` en frontend).
+2. Ejecutes o pidas ejecutar los linters y chequeos correspondientes (`ruff check` en backend; `eslint .` y `tsc -b && vite build` en frontend).
 
 ## 4. Guardrails y Validación Estricta (OBLIGATORIO)
 Como agente, tienes prohibido dar una tarea de escritura de código por finalizada (o pedir el siguiente prompt) sin antes validar el código.
 
 Por cada archivo creado o modificado, DEBES ejecutar en la terminal el comando correspondiente a la capa en la que estás trabajando:
 - Backend: Ejecuta `make check-backend`.
-- Frontend: Ejecuta `make check-frontend`.
+- Frontend: Ejecuta `make check-frontend` (validando estándares de Vite: `eslint .` y compilación `tsc -b && vite build`).
 
 Si el linter (Ruff/ESLint) o el comprobador de tipos (Mypy/TypeScript) arroja un error, DEBES corregir el código y volver a ejecutar el comando hasta que la salida sea limpia (exit code 0). No me pidas a mí (el usuario) que apruebe código que no pasa estas validaciones.
 

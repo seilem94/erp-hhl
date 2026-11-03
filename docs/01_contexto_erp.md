@@ -9,5 +9,5 @@ Desarrollar un ERP modular self-hosted para un emprendimiento eléctrico. El sis
 
 ## Stack
 - Backend: FastAPI, Pydantic v2, PostgreSQL, SQLAlchemy/SQLModel.
-- Frontend: Next.js (App Router), React 19, TypeScript, Tailwind CSS.
+- Frontend: React 19 + Vite (SPA), TypeScript, Tailwind CSS, TanStack Router (enrutamiento tipado) y TanStack Query (estado asíncrono y FastAPI). Fuentes auto-alojadas con @fontsource/inter en bundle de Vite, sin Google Fonts externos (fonts.googleapis.com).
 - Infraestructura: Docker, Docker Compose.

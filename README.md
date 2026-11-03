@@ -18,7 +18,7 @@ VoltaicERP nace de la necesidad real de resolver dos puntos críticos en operaci
 | :--- | :--- | :--- |
 | **Backend** | Python + FastAPI + Pydantic v2 | API REST asíncrona, validación estricta y bajo consumo de recursos |
 | **Persistencia** | PostgreSQL + SQLAlchemy / SQLModel | Almacenamiento relacional robusto con transaccionalidad ACID |
-| **Frontend** | Next.js (App Router, React 19, TypeScript) | Interfaz web responsiva configurada como PWA para terreno |
+| **Frontend** | React 19 + Vite (SPA) (TypeScript, TanStack Router, TanStack Query) | Interfaz web responsiva configurada como PWA para terreno con enrutamiento y estado tipado |
 | **Estilos** | Tailwind CSS + Lucide Icons | UI funcional, accesible y adaptada a dispositivos móviles |
 | **Contenedores** | Docker + Docker Compose | Entorno reproducible y despliegue unificado |
 | **Red y Acceso** | Cloudflare Tunnels / Tailscale | Exposición remota segura sin apertura de puertos en router ($0 costo) |
@@ -50,7 +50,7 @@ backend/
 
 - [x] **Fase 1: Núcleo y Dominio (MVP)** — Entidades de dominio, contratos de repositorios y casos de uso de proyectos y gastos diarios.
 - [ ] **Fase 2: API e Infraestructura (En progreso)** — Modelos SQLAlchemy 2.0, mappers, repositorios PostgreSQL, migraciones con Alembic, esquemas Pydantic v2 DTO, manejadores de errores y routers FastAPI completados (incluyendo actualización parcial PATCH de obras); pendiente entorno Docker Compose y seed scripts (Hito 5).
-- [ ] **Fase 3: Frontend PWA** — UI móvil para registro rápido en terreno y panel de administración en escritorio.
+- [ ] **Fase 3: Frontend SPA / PWA (React 19 + Vite)** — UI móvil para registro rápido en terreno y panel de administración en escritorio (TanStack Router & TanStack Query).
 - [ ] **Fase 4: Despliegue y DevOps** — Orquestación completa con Docker Compose y túnel seguro en servidor local.
 
 ---
@@ -111,13 +111,26 @@ backend/
    .\check.ps1
    ```
 
-#### 2. Frontend (Next.js PWA)
+#### 2. Frontend (React 19 + Vite (SPA))
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Disponible en: [http://localhost:3000](http://localhost:3000)
+Disponible en el servidor de desarrollo Vite: [http://localhost:5173](http://localhost:5173)
+
+##### Comandos de Validación y Compilación (Frontend):
+```bash
+# Linter estándar de Vite:
+eslint .
+
+# Verificación de tipos TypeScript y empaquetado de producción:
+tsc -b && vite build
+```
+
+##### Arquitectura y Estrategia Frontend:
+* **Enrutamiento y Estado:** Enrutamiento del cliente con **TanStack Router** (rutas tipadas) y manejo de estado asíncrono/servidor con **TanStack Query** (peticiones a la API de FastAPI).
+* **Estrategia de Fuentes (Offline-First):** Las tipografías (ej. `@fontsource/inter`) deben instalarse exclusivamente como dependencias npm y auto-alojarse dentro del bundle generado por Vite. Está estrictamente prohibido el uso de Google Fonts externos (`fonts.googleapis.com`) para garantizar la operativa offline en obra y prevenir bloqueos de red en pipelines CI/CD.
 
 ---
 
