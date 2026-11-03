@@ -8,4 +8,6 @@ No implementar controladores HTTP ni base de datos real hasta que el dominio est
 2. [x] Crear las interfaces abstractas `domain/repositories/expense_repository.py` y `project_repository.py`.
 3. [x] Implementar la lógica de negocio en `use_cases/register_daily_expense.py` (debe validar que el proyecto exista y registrar el gasto).
 4. [x] Implementar un repositorio en memoria (`tests/fakes.py`) para probar los casos de uso sin PostgreSQL.
-5. [ ] Implementar casos de uso de consulta (gastos por proyecto y gastos operacionales) antes de infraestructura.
+5. [x] Implementar casos de uso de consulta (gastos por proyecto y gastos operacionales) antes de infraestructura.
+6. [x] Implementar casos de uso de proyectos (`create_project.py` y `list_projects.py` con filtro de estado) y sus tests unitarios.
+7. [x] Implementar caso de uso de actualización parcial de proyectos (`update_project.py`) y sus tests unitarios.

@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from uuid import UUID
 
 from src.domain.entities.project import Project
+from src.domain.enums import ProjectStatus
 
 
 class ProjectRepository(ABC):
@@ -44,6 +45,17 @@ class ProjectRepository(ABC):
 
         Returns:
             List of Project entities (may be empty).
+        """
+
+    @abstractmethod
+    def list_by_status(self, status: ProjectStatus) -> list[Project]:
+        """Return all projects that match the given status.
+
+        Args:
+            status: The lifecycle state to filter by.
+
+        Returns:
+            List of Project entities with the requested status (may be empty).
         """
 
     @abstractmethod
