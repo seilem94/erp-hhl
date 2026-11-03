@@ -1,68 +1,176 @@
-# ⚡ Frontend — HHL ERP (React 19 + Vite SPA)
+# HHL ERP — Frontend
 
-Base de la interfaz de HHL ERP, generada con la plantilla oficial `react-ts` de Vite. Aplicación de cliente con TypeScript estricto, TanStack Router y TanStack Query.
+Interfaz de cliente construida con **React 19, Vite y TypeScript estricto**. Incluye el diseño del panel principal, navegación adaptable y recursos gráficos y tipografías auto-alojados.
 
----
+## Estado actual
 
-## 🛠️ Stack Tecnológico
+- Panel de inicio con Hero y tarjetas de Proyectos y Obras, Registro de Gastos y Finanzas Rápidas.
+- Navbar con logo de la empresa, enlaces activos, menú móvil y menú de usuario.
+- Accesos rápidos y navegación mediante TanStack Router.
+- Métricas identificadas como **datos de ejemplo**, con importes formateados en pesos chilenos.
+- Las vistas de Proyectos, Gastos y Configuración están en preparación: los enlaces navegan, pero todavía no registran ni modifican información.
+- El menú de usuario es visual; no representa una sesión autenticada.
 
-| Herramienta | Propósito |
+## Tecnologías
+
+| Herramienta | Uso |
 | :--- | :--- |
-| **React 19 + Vite** | SPA con desarrollo HMR y compilación estática |
-| **TypeScript** | Tipado estricto, sin `any` |
-| **TanStack Router** | Inicio, vistas de módulos en preparación y página no encontrada con navegación tipada |
-| **TanStack Query** | `QueryClient` y proveedor global para la futura integración con FastAPI |
-| **Tailwind CSS 4** | Utilidades CSS procesadas con `@tailwindcss/postcss` y Autoprefixer |
-| **@fontsource/inter** | Inter auto-alojada, con pesos 400, 500 y 600 del subconjunto latino |
+| React 19 | Componentes de interfaz y estado local |
+| Vite 8 | Desarrollo con HMR y empaquetado estático |
+| TypeScript | Tipado estricto y alias de importación |
+| TanStack Router | Rutas de cliente tipadas y restauración del scroll |
+| TanStack Query | QueryClient y proveedor global preparados para futuras consultas remotas |
+| Tailwind CSS 4 | Utilidades, tokens de marca y estilos compartidos |
+| PostCSS y Autoprefixer | Procesamiento del CSS junto con `@tailwindcss/postcss` |
+| @fontsource/inter | Tipografía local, sin dependencias de fuentes externas |
+| ESLint 10 | Análisis estático de JavaScript, TypeScript y componentes React |
 
----
+Los iconos se implementan como SVG locales tipados en `src/components/ui/icon.tsx`. No se requiere una biblioteca adicional de iconos para la interfaz actual.
 
-## 🚀 Puesta en Marcha
+## Requisitos
 
-Requiere Node.js 20.19+, 22.13+ o 24+ y npm. Ejecutar desde `frontend/`:
+- npm.
+- Una versión de Node.js compatible con `package.json`: **`^20.19.0 || ^22.13.0 || >=24`**.
+
+Comprobar las versiones instaladas:
+
+```bash
+node --version
+npm --version
+```
+
+## Instalación y desarrollo
+
+Ejecutar los comandos desde esta carpeta, `frontend/`:
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Vite utiliza el puerto `5173` por defecto. El alias `@/` apunta a `src/` tanto en Vite como en TypeScript.
+`npm ci` utiliza `package-lock.json` para instalar las versiones fijadas. La instalación inicial requiere acceso al registro npm.
 
----
-
-## 🔍 Comandos de Validación y Compilación
+Vite utiliza el puerto **5173** por defecto; si está ocupado puede seleccionar otro, indicado en la terminal. Para fijar el puerto y detectar conflictos:
 
 ```bash
-# ESLint:
+npm run dev -- --port 5173 --strictPort
+```
+
+El script `dev` debe ejecutar `vite`. Si muestra otro framework, comprobar la rama y la versión local de `package.json`.
+
+## Scripts disponibles
+
+| Comando | Acción |
+| :--- | :--- |
+| `npm run dev` | Inicia Vite con recarga de módulos |
+| `npm run lint` | Ejecuta `eslint .` |
+| `npm run build` | Ejecuta `tsc -b && vite build` |
+| `npm run preview` | Sirve localmente la compilación de `dist/` |
+
+Validar cambios de interfaz con:
+
+```bash
 npm run lint
-
-# TypeScript y compilación de producción (tsc -b && vite build):
 npm run build
+```
 
-# Servir localmente el resultado de dist/:
+El build comprueba los proyectos TypeScript y genera HTML, JavaScript, CSS y fuentes en `dist/`. Una vez instaladas las dependencias, no necesita descargar recursos externos.
+
+## Estructura
+
+```text
+frontend/
+├── public/                         # Imágenes, favicon e ilustraciones locales
+├── src/
+│   ├── components/
+│   │   ├── dashboard/
+│   │   │   ├── hero.tsx             # Introducción del panel
+│   │   │   └── feature-cards.tsx    # Tarjetas y métricas de ejemplo
+│   │   ├── ui/icon.tsx              # Iconos SVG tipados
+│   │   ├── navbar.tsx               # Navegación y menús
+│   │   └── root-layout.tsx          # Cabecera, contenido y pie de página
+│   ├── pages/                      # Inicio, módulos en preparación y página no encontrada
+│   ├── App.tsx                     # Proveedores de Query y Router
+│   ├── index.css                   # Tailwind, colores y estilos compartidos
+│   ├── main.tsx                    # Entrada React e importación de Inter
+│   ├── query-client.ts             # Instancia global de QueryClient
+│   └── router.ts                   # Árbol de rutas tipadas
+├── index.html                      # Metadatos, idioma y favicon activo
+├── eslint.config.js
+├── postcss.config.js
+├── tsconfig.json                   # Referencias a las configuraciones de aplicación y herramientas
+├── vite.config.ts
+├── package.json
+└── package-lock.json
+```
+
+El alias `@/` apunta a `src/` y está configurado tanto en Vite como en TypeScript. Conservar los proveedores globales al incorporar nuevas páginas.
+
+## Rutas
+
+| Ruta | Vista |
+| :--- | :--- |
+| `/` | Panel principal con cifras de ejemplo |
+| `/proyectos` | Proyectos y Obras, en preparación |
+| `/gastos` | Registro de Gastos, en preparación |
+| `/configuracion` | Configuración, en preparación |
+| Cualquier otra ruta | Página no encontrada con enlace de regreso al inicio |
+
+## Identidad visual y recursos locales
+
+Los tokens se definen en el bloque `@theme` de `src/index.css`:
+
+| Token | Color | Aplicación |
+| :--- | :--- | :--- |
+| `brand-navy` | `#0F172A` | Textos oscuros y tarjeta de proyectos |
+| `brand-blue` | `#2563EB` | Acentos, enlaces activos y acciones |
+| `brand-deep-blue` | `#1E40AF` | Degradados y contraste del azul |
+| `brand-canvas` | `#F8FAFC` | Fondo general |
+| `brand-tint` | `#EFF6FF` | Fondos suaves y estados activos |
+| `brand-border` | `#E2E8F0` | Bordes y separadores |
+
+Recursos de `public/`:
+
+- **`logo.png`**: logo de empresa utilizado por la Navbar.
+- **`logo-white.png`**: variante blanca disponible para fondos oscuros.
+- **`favicon.svg`**: favicon activo, referenciado desde `index.html`.
+- **`favicon.ico`**: alternativa disponible; todavía no está referenciada en `index.html`.
+- **`hero-blueprint.svg`**: ilustración decorativa del Hero.
+- **`logo.svg`**: emblema provisional anterior, conservado como recurso; no sustituye al logo de empresa actual.
+
+Los archivos de `public/` se referencian desde la raíz pública, por ejemplo `/logo.png`, sin incluir `public/` en la URL.
+
+Inter es la fuente predeterminada de todo el sitio. Se importa desde `@fontsource/inter` en `src/main.tsx`, con pesos **400, 500 y 600** del subconjunto latino. Vite incorpora sus archivos `.woff` y `.woff2` en `dist/assets/`. No añadir enlaces a Google Fonts ni a CDNs de tipografías, estilos o scripts.
+
+El diseño utiliza tres columnas de tarjetas desde el breakpoint `lg` y una columna en pantallas menores. Mantener los nombres accesibles, los estados de foco, la navegación por teclado y el cierre de menús mediante Escape.
+
+## Compilación y publicación estática
+
+```bash
+npm run build
 npm run preview
 ```
 
-Desde la raíz del repositorio, `make check-frontend` ejecuta lint y build. `check.ps1` utiliza las mismas validaciones de frontend y propaga sus errores.
+`preview` utiliza el puerto **4173** por defecto y permite comprobar el resultado localmente. No es un servidor de producción.
 
-La instalación inicial necesita acceso al registro npm. Una vez instaladas las dependencias, la compilación funciona sin acceso a red externa y genera HTML, JavaScript, CSS y fuentes locales en `dist/`.
+Para publicar la interfaz, servir el contenido de `dist/` con un alojamiento estático que redirija las rutas de la SPA a `index.html`. Esto permite abrir o recargar directamente rutas como `/proyectos`.
 
-Para desplegar, servir `dist/` con un servidor estático que redirija las rutas de la SPA a `index.html`. `vite preview` sirve para comprobar la compilación localmente, no como servidor de producción.
+## Dependencias de desarrollo
 
----
+Para consultar avisos de seguridad:
 
-## 🔤 Estrategia de Fuentes (Offline-First)
+```bash
+npm audit
+```
 
-Inter se importa desde `@fontsource/inter` en `src/main.tsx`. Vite copia los archivos `.woff` y `.woff2` a `dist/assets/`; el navegador los obtiene del mismo servidor que la aplicación. No se utilizan hojas de estilo, fuentes ni scripts desde CDNs externos.
+El override `minimatch@>=10 <11` selecciona `^11.0.1` para los consumidores modernos de esa dependencia y mitiga GHSA-g3hv-75wg-m249. Revisarlo cuando las herramientas consumidoras declaren versiones corregidas compatibles; conservar el lockfile y validar lint/build después de actualizar dependencias.
 
-Esta base no incluye todavía un service worker ni una cola de operaciones offline. Las capacidades PWA completas y la integración funcional con FastAPI siguen pendientes según `docs/06_fase3_frontend.md`.
+## Funcionalidades pendientes
 
-## 🎨 Identidad Visual y Panel de Inicio
+- Consultas remotas y sustitución de las métricas de ejemplo por información real.
+- Listados, filtros, formularios y estados de carga, error y vacío.
+- Autenticación y preferencias persistentes de usuario.
+- Captura y carga de comprobantes desde la interfaz.
+- Manifiesto PWA, service worker, instalación y sincronización offline.
 
-La interfaz utiliza los colores de marca declarados en `src/index.css`: marino `#0F172A`, azul eléctrico `#2563EB`, azul profundo `#1E40AF` y fondo `#F8FAFC`. Los recursos `public/logo.svg`, `public/favicon.svg` y `public/hero-blueprint.svg` se sirven localmente.
-
-El panel reúne tarjetas de proyectos, gastos y distribución financiera. Sus cifras se identifican como **datos de ejemplo**; no representan consultas al backend. Los enlaces a Proyectos, Gastos y Configuración muestran vistas de módulo en preparación, sin simular operaciones persistidas. La navegación móvil, el menú de usuario y los accesos rápidos funcionan sin dependencias adicionales.
-
-## 🔒 Dependencias de desarrollo
-
-ESLint 10 elimina los consumidores antiguos de `minimatch`. El override `minimatch@>=10 <11` selecciona la API moderna corregida (`^11.0.1`) para ESLint y TypeScript ESLint, mitigando GHSA-g3hv-75wg-m249. Revisar este override cuando ambas herramientas dependan directamente de una versión corregida. El cambio está validado con `npm audit`, lint y build; no se utiliza `npm audit fix --force`.
+Los recursos auto-alojados permiten compilar sin descargas externas tras instalar dependencias. No implican por sí solos que la aplicación pueda instalarse o funcionar completamente sin conexión.
