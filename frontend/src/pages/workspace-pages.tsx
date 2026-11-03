@@ -23,14 +23,6 @@ function ModulePage({ title, description, icon }: ModulePageProps) {
   )
 }
 
-export function ProjectsPage() {
-  return <ModulePage title="Proyectos y Obras" description="El seguimiento de tus obras, sus avances y sus presupuestos, en un solo lugar." icon="blueprint" />
-}
-
-export function ExpensesPage() {
-  return <ModulePage title="Registro de Gastos" description="Un espacio para registrar las compras en terreno y consultar los gastos de tu equipo." icon="receipt" />
-}
-
 export function SettingsPage() {
   return <ModulePage title="Configuración" description="Las preferencias de tu equipo y tu espacio de trabajo." icon="settings" />
 }

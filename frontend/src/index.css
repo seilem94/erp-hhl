@@ -72,6 +72,18 @@
     border: 1px solid var(--color-brand-deep-blue);
   }
 
+  .form-panel {
+    @apply rounded-2xl border border-brand-border bg-white p-5 shadow-sm shadow-brand-navy/3 sm:p-7;
+  }
+
+  .form-input {
+    @apply min-h-12 w-full min-w-0 rounded-xl border border-brand-border bg-white px-3.5 py-3 text-sm text-brand-navy outline-none transition-shadow placeholder:text-slate-400 focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/10 disabled:bg-brand-canvas disabled:text-slate-500 aria-invalid:border-red-500 aria-invalid:focus:ring-red-500/10;
+  }
+
+  .button-primary {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-deep-blue disabled:cursor-wait disabled:opacity-60;
+  }
+
   .project-progress {
     appearance: none;
     border: none;
