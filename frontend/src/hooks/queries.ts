@@ -15,6 +15,7 @@ export function useProjects() {
     queryKey: queryKeys.projects,
     queryFn: ({ signal }) => getProjects(signal),
     staleTime: 30000,
+    networkMode: 'always',
     retry: false,
   })
 }
@@ -23,6 +24,8 @@ export function useCreateProject() {
   const client = useQueryClient()
   return useMutation<ProjectResponse, ApiError, CreateProjectRequest>({
     mutationFn: createProject,
+    // Fail offline instead of queuing a write to resume without user confirmation.
+    networkMode: 'always',
     retry: false,
     onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.projects }),
   })
@@ -33,6 +36,7 @@ export function useExpenses(projectId: string | null = null) {
     queryKey: queryKeys.expenseList(projectId),
     queryFn: ({ signal }) => getExpenses(projectId, signal),
     staleTime: 30000,
+    networkMode: 'always',
     retry: false,
   })
 }
@@ -41,6 +45,7 @@ export function useRegisterExpense() {
   const client = useQueryClient()
   return useMutation<ExpenseResponse, ApiError, RegisterExpenseRequest>({
     mutationFn: registerExpense,
+    networkMode: 'always',
     retry: false,
     onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.expenses }),
   })

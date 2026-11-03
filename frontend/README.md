@@ -25,7 +25,7 @@ El cliente usa `VITE_API_BASE_URL` como origen de la API, sin añadir `/api/v1` 
 
 La variable se incorpora al build: definirla antes de compilar para publicar en otro entorno. Las variables `VITE_*` son públicas y no deben contener credenciales. El servicio debe permitir mediante CORS el origen desde el que se sirve la interfaz.
 
-Los DTO se mantienen en `src/api/types.ts` y se contrastan con `/openapi.json` del servicio. El cliente usa `fetch`, comprueba las respuestas y normaliza errores HTTP, validaciones y fallos de conexión. No reintenta automáticamente las altas: si no puede confirmar un envío, revisar el listado antes de repetirlo.
+Los DTO se mantienen en `src/api/types.ts` y se contrastan con `/openapi.json` del servicio. El cliente usa `fetch`, comprueba las respuestas y normaliza errores HTTP, validaciones y fallos de conexión. No reintenta automáticamente las altas ni las deja en cola al detectar desconexión: si no puede confirmar un envío, conserva los datos del formulario y se debe revisar el listado antes de repetirlo.
 
 ## Scripts disponibles
 
