@@ -31,6 +31,11 @@ class CreateProjectRequest(BaseModel):
         ),
         examples=[Decimal("5000000.00")],
     )
+    description: str | None = Field(
+        default=None,
+        description="Alcance técnico o descripción detallada de la obra (opcional).",
+        examples=["Instalación de tableros TDA y cableado subterráneo."],
+    )
 
 
 class ProjectResponse(BaseModel):

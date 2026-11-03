@@ -51,6 +51,7 @@ def test_create_project_success(client: TestClient) -> None:
         "name": "Instalación Tablero Central",
         "client": "Constructora Alerce",
         "estimated_budget": "5000000.00",
+        "description": "Montaje de tableros TDA",
     }
     response = client.post("/api/v1/projects", json=payload)
     assert response.status_code == 201
@@ -59,6 +60,7 @@ def test_create_project_success(client: TestClient) -> None:
     assert data["client"] == payload["client"]
     assert data["status"] == ProjectStatus.PLANNING.value
     assert data["budget"] == payload["estimated_budget"]
+    assert data["description"] == payload["description"]
     assert "id" in data
 
 

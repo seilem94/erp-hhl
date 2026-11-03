@@ -61,6 +61,7 @@ def create_project(
         name=request.name,
         client=request.client,
         estimated_budget=request.estimated_budget,
+        description=request.description,
     )
     project = use_case.execute(dto)
     return ProjectResponse.model_validate(project)

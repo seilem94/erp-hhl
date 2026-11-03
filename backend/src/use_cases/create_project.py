@@ -35,11 +35,13 @@ class CreateProjectDTO:
               (e.g. "Instalación Tablero General Edificio Central").
         client: Name of the contracting client or company.
         estimated_budget: Optional agreed or estimated budget in local currency.
+        description: Optional scope or technical notes for the obra.
     """
 
     name: str
     client: str
     estimated_budget: Decimal | None = None
+    description: str | None = None
 
 
 class CreateProjectUseCase:
@@ -80,6 +82,7 @@ class CreateProjectUseCase:
             created_at=now,
             updated_at=now,
             budget=dto.estimated_budget,
+            description=dto.description,
         )
 
         return self._project_repo.save(project)
