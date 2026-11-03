@@ -1,91 +1,38 @@
-# PROJECT_STATE.md (Última actualización: 2026-11-03)
+# Estado del proyecto
 
-## 📌 Estado Actual
-- **Fase Activa:** Fase 3 - Frontend SPA / PWA (React 19 + Vite).
-- **Rama:** `refactor/frontend-vite`
-- **Entrega Frontend actual:** Panel visual y branding publicados en `312284e`, con recursos gráficos y Navbar actualizados en `6ae6c07` y `85ae4aa`; métricas de ejemplo, sin integración HTTP ni operaciones persistidas desde la SPA.
-- **Últimos hitos completados:**
-  - **Hito 1 (Modelado y Repositorios):** Modelos ORM (`ProjectORM`, `ExpenseORM`), mappers bidireccionales puros (`mappers.py`) y repositorios concretos (`SQLAlchemyProjectRepository`, `SQLAlchemyExpenseRepository`).
-  - **Hito 2 (Configuración y Dependencias):** Declaración e instalación de dependencias en `pyproject.toml` (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`), configuración centralizada con `pydantic-settings` (`src/core/config.py`) y sesión de base de datos con factoría y dependencia generadora `get_db` (`src/infrastructure/database/session.py`) con commit automático al finalizar peticiones exitosas y rollback ante excepciones.
-  - **Hito 3 (Migraciones y Pruebas de Integración):**
-    - Configuración de Alembic y generación de la primera migración de esquema (`0001_create_projects_and_expenses_tables.py`).
-    - Suite completa de pruebas de integración en `tests/infrastructure/test_sqlalchemy_repositories.py` (65 tests pasando).
-  - **Hito 4 (Capa de Presentación HTTP con FastAPI):**
-    - Esquemas Pydantic v2 DTO en `src/infrastructure/http/schemas/`: `CreateProjectRequest` (con soporte para `description`), `UpdateProjectRequest`, `ProjectResponse`, `RegisterExpenseRequest`, `ExpenseResponse` con `model_config = ConfigDict(from_attributes=True)` para serialización directa desde dataclasses de dominio.
-    - Manejador global de excepciones en `src/infrastructure/http/error_handlers.py`: `domain_exception_handler` mapeando `ProjectNotFoundError` a 404, validaciones de negocio (`InvalidExpenseAmountError`, `InvalidExpenseDateError`, `ProjectCancelledError`) a 422 y `DomainException` genéricas a 400.
-    - Inyección de dependencias en `src/infrastructure/http/dependencies.py`: factorías para repositorios (`get_project_repo`, `get_expense_repo`) y casos de uso (`get_create_project_uc`, `get_update_project_uc`, `get_list_projects_uc`, `get_register_expense_uc`, `get_project_expenses_uc`, `get_operational_expenses_uc`) utilizando `typing.Annotated`.
-    - Routers modulares en `src/infrastructure/http/routers/`:
-      - `routers/projects.py`: `POST /api/v1/projects` (201), `GET /api/v1/projects` (filtro por status opcional) y `PATCH /api/v1/projects/{project_id}` (actualización parcial de obras con `UpdateProjectUseCase`).
-      - `routers/expenses.py`: `POST /api/v1/expenses` (201), `GET /api/v1/expenses/project/{project_id}` y `GET /api/v1/expenses/operational`.
-      - Desacoplamiento total: los routers ejecutan exclusivamente casos de uso sin tocar base de datos ni ORM directamente.
-    - Aplicación FastAPI principal en `src/main.py`: middleware CORS permisivo para desarrollo local, registro de manejador de excepciones de dominio, montaje de routers y endpoint `GET /health`.
-    - Documentación OpenAPI/Swagger/ReDoc 100% en español:
-      - Esquema `ErrorResponse` en `schemas/error.py` para tipar respuestas de error (`{"detail": "..."}`).
-      - Declaración explícita de códigos de respuesta HTTP en cada endpoint (`200`, `201`, `400`, `404`, `422`).
-      - Descripciones, resúmenes, parámetros y ejemplos de campos en español para facilitar pruebas e integración con frontend.
-    - Suite de pruebas completa: 80 tests en Pytest pasando al 100% (incluye tests unitarios de `UpdateProjectUseCase` y pruebas de integración HTTP de `PATCH`).
-  - Validación completa con `check.ps1`: Ruff check/format limpio (50 archivos), Mypy estricto sin errores (38 archivos) y 80 tests de Pytest pasando al 100%.
-  - **Migración Frontend a React 19 + Vite (SPA):** Finalizada con éxito. Reemplazo completo del frontend anterior por la plantilla oficial `react-ts` de Vite, sin dependencias ni configuraciones de Next.js.
-    - TypeScript estricto, alias `@/`, Tailwind CSS 4 con PostCSS y Autoprefixer, y fuentes Inter auto-alojadas mediante `@fontsource/inter` (pesos 400, 500 y 600), sin peticiones a Google Fonts ni CDNs.
-    - Base de TanStack Router con ruta de inicio y página no encontrada; `QueryClient` y proveedor global de TanStack Query preparados para integrar FastAPI.
-    - Validación `make check-frontend` aprobada (`npm run lint` y `npm run build`: `tsc -b && vite build`), con compilación de producción ejecutada sin acceso de red externa. `Makefile` y `check.ps1` actualizados al flujo de Vite.
-    - Comprobación de la compilación en Chromium: vista móvil y escritorio, estilos Tailwind, carga de Inter local y navegación SPA correctos, sin peticiones externas ni errores de JavaScript.
-    - Archivos de `backend/` conservados sin modificaciones.
-  - **Seguridad de dependencias Frontend (validación del commit `b483990`):** Actualización a ESLint 10 y override de `minimatch@>=10 <11` a `^11.0.1` para corregir GHSA-g3hv-75wg-m249; el lockfile resuelve `minimatch@11.0.4`. `npm audit` informó cero vulnerabilidades en esa revisión y `make check-frontend` pasa sin errores. Requisitos de Node actualizados a las versiones admitidas por ESLint 10.
-  - **Branding y Panel Principal (Frontend):** Implementación modular de Navbar, Hero y tarjetas de Proyectos y Obras, Registro de Gastos y Finanzas Rápidas. Navegación móvil, menú de usuario y accesos rápidos operativos.
-    - Identidad visual: marino `#0F172A`, azul eléctrico `#2563EB`, azul profundo `#1E40AF` y fondo `#F8FAFC`, definidos en `frontend/src/index.css`; Inter local (400, 500 y 600).
-    - Recursos locales iniciales: `logo.svg`, `favicon.svg` y `hero-blueprint.svg`. Los commits posteriores `6ae6c07` y `85ae4aa` incorporan `logo.png`, `logo-white.png` y `favicon.ico`, y cambian la Navbar para usar el logo de la empresa (`/logo.png`). `index.html` continúa apuntando a `/favicon.svg`; el ICO está disponible, sin activar.
-    - Rutas tipadas `/`, `/proyectos`, `/gastos` y `/configuracion`, además de página no encontrada. Solo Inicio presenta el panel; los otros módulos muestran avisos de preparación. El avatar es un icono con menú, no una sesión autenticada.
-    - Métricas marcadas como datos de ejemplo: 1 / 70 obras, gastos operativos de $84.000, obras de $161.800 y total de $245.800 CLP. Los botones navegan; no registran gastos ni consultan datos reales.
-    - Validaciones de la entrega `312284e`: lint y build aprobados. Se ejecutó el bloque frontend original de `check.ps1` con PowerShell temporal; el script completo y los tests/backend se excluyeron del alcance de esa entrega. Revisión en Chromium de 320 a 1440 px, sin desbordes, errores de JavaScript ni peticiones externas.
-    - Cambio limitado a `frontend/`, sin modificar dependencias ni backend. Los ajustes remotos posteriores de logo/Navbar se conservaron al actualizar esta documentación; no se repitieron sus validaciones de código en esta tarea documental.
-- **Estado Hito 5 de la Fase 2:** En pausa temporal por decisión técnica del usuario (el entorno de desarrollo opera con PostgreSQL nativo local; se retomará para el despliegue final en Debian).
+Actualizado: 2026-11-03. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
 
-## 🧱 Decisiones Técnicas Tomadas (Inmutables)
-- Clean Architecture pragmática sin sobreingeniería (entidades puras sin decorators de ORM).
-- Clean Architecture estricta: `domain/` y `use_cases/` no dependen de frameworks ni ORM (uso de `@dataclass` nativo).
-- Tipado estricto verificado con Mypy y Ruff vía `.\check.ps1` (prohibido `Any`/`any`).
-- Identificadores con UUIDv4 generados a nivel de caso de uso.
-- Proyectos inician siempre en estado `PLANNING` con timestamps `created_at` y `updated_at` en UTC (`datetime.now(UTC)`).
-- Soporte de Gastos Operacionales (OPEX): `Expense.project_id: UUID | None = None` y propiedad `is_project_expense -> bool`. En base de datos, `ForeignKey("projects.id", ondelete="SET NULL", nullable=True)`.
-- Manejo de comprobantes: `has_receipt: bool` y `receipt_url: str | None`. Si se suministra `receipt_url`, se normaliza automáticamente `has_receipt = True`.
-- Regla de negocio para proyectos en gastos: Se permiten gastos rezagados en proyectos `COMPLETED`. Solo se rechaza el registro si el proyecto está en estado `CANCELLED`.
-- Desacoplamiento temporal: Inyección de `date_provider: Callable[[], date] = date.today` en casos de uso que requieran determinismo de fecha.
-- Tests unitarios aislados con `pytest` usando fakes en memoria (`tests/fakes.py`) sin bases de datos ni I/O.
-- SQLAlchemy 2.0 / Pydantic v2 (reservados para capas de infraestructura/API).
-- Los repositorios de infraestructura reciben `Session` en constructor, aplican `flush()` para sincronización y nunca realizan `commit()`.
-- Prohibición de filtrado de modelos ORM: todo dato saliente de los repositorios de infraestructura pasa obligatoriamente por `mappers.py` retornando `@dataclass` puro del dominio.
-- Los routers HTTP ejecutan exclusivamente casos de uso mediante inyección de dependencias `Depends()` y no acceden directamente a la base de datos ni a los repositorios.
-- La dependencia generadora `get_db` gestiona el ciclo transaccional: ejecuta `commit()` si la petición termina con éxito y `rollback()` ante excepciones no controladas.
-- Migración Frontend a React 19 + Vite (SPA): Arquitectura Single Page Application ligera y optimizada para PWA en terreno.
-- Enrutamiento Frontend: Uso exclusivo de TanStack Router para manejo de rutas seguras y tipadas en la SPA.
-- Gestión de Estado y API: Uso de TanStack Query para control de estado asíncrono, caché y consumo de endpoints de FastAPI.
-- Estrategia de Fuentes (Offline-First): Tipografías auto-alojadas (ej. `@fontsource/inter`) instaladas como dependencias npm e integradas al bundle de Vite. Prohibición estricta de Google Fonts externos (`fonts.googleapis.com`) para evitar bloqueos de red en CI/CD y asegurar soporte offline en obra.
-- Estándares de Validación Frontend: `eslint .` para análisis estático y `tsc -b && vite build` para chequeo de tipos y compilación de producción.
+## Situación actual
 
-## 📋 Tareas de la Fase 1 y Fase 2
-- [x] Crear entidades de dominio (`Expense`, `Project`) y enums.
-- [x] Crear interfaces abstractas de repositorios (`ExpenseRepository`, `ProjectRepository`).
-- [x] Crear excepciones de dominio (`DomainException` y subtipos).
-- [x] Implementar el caso de uso `RegisterDailyExpenseUseCase` y su DTO.
-- [x] Implementar repositorios en memoria (`tests/fakes.py`) y suite de tests con `pytest`.
-- [x] Implementar casos de uso de consulta de gastos (`GetProjectExpensesUseCase`, `GetOperationalExpensesUseCase`).
-- [x] Implementar casos de uso de proyectos (`CreateProjectUseCase`, `ListProjectsUseCase`) y tests unitarios.
-- [x] Hito 1 (Infraestructura): Modelos ORM SQLAlchemy 2.0 (`ProjectORM`, `ExpenseORM`) en `infrastructure/database/models.py`.
-- [x] Hito 1 (Infraestructura): Mappers bidireccionales puros en `infrastructure/database/mappers.py`.
-- [x] Hito 1 (Infraestructura): Repositorios PostgreSQL `SQLAlchemyProjectRepository` y `SQLAlchemyExpenseRepository`.
-- [x] Hito 2: Declaración e instalación de dependencias de persistencia (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`).
-- [x] Hito 2: Configuración centralizada (`src/core/config.py`) y sesión de base de datos (`src/infrastructure/database/session.py`).
-- [x] Hito 3: Inicialización y primera migración con Alembic.
-- [x] Hito 3: Suite de pruebas de integración para repositorios SQLAlchemy (`tests/infrastructure/`).
-- [x] Hito 4: Esquemas DTO de transporte, exception handlers y routers de FastAPI (`projects`, `expenses`).
-- [x] Actualización parcial de obras (UpdateProjectUseCase, UpdateProjectRequest y endpoint PATCH /api/v1/projects/{project_id}).
-- [ ] Hito 5: Docker Compose para entorno de producción en Debian y script de seed (`scripts/seed.py`) *(Pausado temporalmente)*.
+- Rama de trabajo: `refactor/frontend-vite`.
+- Fase activa: Fase 3, integración funcional de la interfaz. Secuencia en el [plan de frontend](06_fase3_frontend.md).
+- Backend: dominio, persistencia, migraciones y API implementados; autenticación no implementada. Infraestructura final y datos semilla aplazados.
+- Frontend: migración y panel visual entregados. Las vistas de módulos están en preparación; las cifras son ejemplos, no consultas reales. No hay operaciones persistidas desde la SPA ni sesión autenticada.
+- PWA instalable, caché de aplicación y sincronización offline: pendientes.
 
-## 🛑 Bloqueos o Pendientes Inmediatos
-- Ninguno en código de backend. Hitos 1 al 4 de la Fase 2 completados, probados e integrados con base de datos real.
-- **Hito 5 en pausa temporal:** Se desarrollará al preparar el despliegue al servidor de producción con Debian.
-- **Frontend:** El árbol de navegación y las vistas de módulo ya existen. Pendientes las pantallas funcionales, autenticación, el cliente HTTP y las consultas/mutaciones a FastAPI, los formularios de obras y gastos, y las capacidades PWA (service worker, instalación y operaciones offline). La migración base no implementa todavía estas funcionalidades.
+## Entregas y evidencia histórica
 
-## 📋 Próximo Paso para el Agente
-- Leer [LLM_CONTEXT.md](LLM_CONTEXT.md) y continuar con el cliente HTTP tipado y las consultas/mutaciones de TanStack Query; sustituir las vistas de preparación por listados y formularios reales, conservando el branding y la modularidad. Seguir [06_fase3_frontend.md](06_fase3_frontend.md) y mantener visibles los datos de ejemplo hasta reemplazarlos por respuestas de FastAPI.
+| Entrega | Referencia | Evidencia registrada |
+| :--- | :--- | :--- |
+| Dominio, repositorios y API, incluida actualización parcial de proyectos | `414c9ce` | 80 pruebas aprobadas; Ruff y mypy sin errores en la validación histórica |
+| Migración de la interfaz | `e3f071c` | Lint/build y navegación de la base aprobados; build sin red externa tras instalar dependencias |
+| Corrección de dependencias de desarrollo | `b483990` | Auditoría con cero vulnerabilidades en esa fecha; lint/build aprobados |
+| Panel visual y branding | `312284e` | Lint/build, bloque frontend de check.ps1 y revisión en Chromium de 320 a 1440 px aprobados |
+| Recursos de empresa y ajuste de Navbar | `6ae6c07`, `85ae4aa` | Integrados; no atribuirles automáticamente la validación del diseño anterior |
+
+Los resultados anteriores no se vuelven vigentes por editar documentación. El detalle operativo del frontend pertenece a su [README](../frontend/README.md).
+
+## Pendientes de entrega
+
+- Cliente HTTP tipado y consultas/mutaciones con estados de carga, error y vacío.
+- Listados y formularios reales de obras y gastos; sustitución de ejemplos por datos consultados.
+- Autenticación y preferencias persistentes.
+- Captura y carga de comprobantes.
+- Capacidades PWA y resolución de operaciones sin conexión.
+- Orquestación de producción y seed, en pausa hasta preparar el despliegue final.
+
+## Actualización documental actual
+
+Consolidación SSOT preparada sin cambios de aplicación. El [índice documental](README.md#auditoría-de-consolidación) registra los documentos depurados y las propuestas aún no creadas.
+
+Validación de esta actualización: 18 archivos Markdown, 94 enlaces y anclas locales, referencias al código, identificadores ADR únicos y `git diff --check`. No se ejecutan nuevas suites de aplicación por esta tarea documental.

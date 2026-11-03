@@ -1,17 +1,20 @@
-# Contexto del Proyecto: ERP Eléctrico
+# Contexto y alcance del producto
 
 ## Objetivo
-Desarrollar un ERP modular self-hosted para un emprendimiento eléctrico. El sistema centraliza finanzas y operaciones con costo $0 en infraestructura (servidor casero + Cloudflare Tunnels/Tailscale).
+
+Centralizar la operación de un emprendimiento eléctrico, permitiendo capturar gastos en terreno y administrar obras desde escritorio. El objetivo de alojamiento es utilizar infraestructura propia sin cuotas recurrentes de servicios cloud; esto no elimina costos de hardware, energía ni conectividad.
 
 ## Usuarios
-1. Administrador (Escritorio): Liquidación de sueldos, creación de proyectos, análisis financiero.
-2. Socio en Terreno (Móvil - PWA): Registro ágil de gastos diarios (comida, transporte, materiales) y revisión de asignación a obras.
 
-## Stack
-- Backend: FastAPI, Pydantic v2, PostgreSQL, SQLAlchemy/SQLModel.
-- Frontend: React 19 + Vite (SPA), TypeScript, Tailwind CSS, TanStack Router (enrutamiento tipado) y TanStack Query (estado asíncrono y FastAPI). Fuentes auto-alojadas con @fontsource/inter en bundle de Vite, sin Google Fonts externos (fonts.googleapis.com).
-- Infraestructura: Docker, Docker Compose.
+- **Administrador:** organiza obras, revisa costos y presupuestos y prepara liquidaciones.
+- **Socio o técnico en terreno:** registra gastos y consulta la información necesaria para su jornada desde el móvil.
 
-## Estado de Entrega (2026-11-03)
+## Alcance funcional objetivo
 
-El backend dispone de los casos de uso y endpoints documentados en [PROJECT_STATE.md](PROJECT_STATE.md). El frontend cuenta con base React 19 + Vite y panel visual adaptable con cifras de ejemplo; Proyectos, Gastos y Configuración son vistas en preparación. La integración HTTP, los formularios, la autenticación y las capacidades PWA/offline son próximos entregables, no capacidades operativas de la interfaz actual.
+- Gestión de proyectos eléctricos y seguimiento de su situación operativa.
+- Trazabilidad de costos directos de obra y gastos generales de empresa.
+- Asociación de comprobantes a gastos.
+- Asignación de trabajadores y liquidación de sueldos como evolución del producto.
+- Continuidad de uso con conectividad limitada en terreno.
+
+Estos son objetivos del producto. La entrega efectiva se consulta en [PROJECT_STATE.md](PROJECT_STATE.md). Las preguntas de validación con usuarios se mantienen en la [guía de reunión](05_revision_mvp_socio.md).

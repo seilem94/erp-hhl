@@ -1,13 +1,14 @@
-# Roadmap: Fase 1 - Dominio de Gastos y Proyectos
+# Plan de Fase 1 — Dominio y casos de uso
 
-Esta fase se centra exclusivamente en el backend (Domain y Use Cases) para los módulos críticos.
-No implementar controladores HTTP ni base de datos real hasta que el dominio esté completo.
+Responsabilidad: secuencia de construcción del núcleo de negocio. El grado de entrega se registra únicamente en [PROJECT_STATE.md](PROJECT_STATE.md).
 
-## Tareas Secuenciales para el Agente:
-1. [x] Crear `domain/entities/expense.py` y `domain/entities/project.py` usando Pydantic/Dataclasses.
-2. [x] Crear las interfaces abstractas `domain/repositories/expense_repository.py` y `project_repository.py`.
-3. [x] Implementar la lógica de negocio en `use_cases/register_daily_expense.py` (debe validar que el proyecto exista y registrar el gasto).
-4. [x] Implementar un repositorio en memoria (`tests/fakes.py`) para probar los casos de uso sin PostgreSQL.
-5. [x] Implementar casos de uso de consulta (gastos por proyecto y gastos operacionales) antes de infraestructura.
-6. [x] Implementar casos de uso de proyectos (`create_project.py` y `list_projects.py` con filtro de estado) y sus tests unitarios.
-7. [x] Implementar caso de uso de actualización parcial de proyectos (`update_project.py`) y sus tests unitarios.
+## Secuencia
+
+1. Definir entidades y enumeraciones del negocio en el [dominio](../backend/src/domain/).
+2. Establecer contratos de repositorio sin detalles de persistencia.
+3. Implementar registro y consultas de gastos, y creación, consulta y actualización de proyectos en [casos de uso](../backend/src/use_cases/).
+4. Verificar las reglas con repositorios falsos y fuentes temporales deterministas.
+
+## Criterio de salida
+
+Los casos de uso deben poder ejecutarse sin transporte HTTP ni base real, cumpliendo las [reglas de arquitectura](02_reglas_arquitectura.md). La preparación y ejecución de pruebas se documenta en el [README del backend](../backend/README.md#pruebas-con-pytest).

@@ -1,68 +1,35 @@
-# Roadmap: Fase 3 — Frontend SPA / PWA (React 19 + Vite)
+# Plan de Fase 3 — Integración de la interfaz
 
-**Estado al 2026-11-03:** Base Vite y panel visual implementados. Las rutas de módulos existen como vistas en preparación; integración HTTP, formularios, autenticación y PWA siguen pendientes. Ver [PROJECT_STATE.md](PROJECT_STATE.md).
+Responsabilidad: secuencia de trabajo y criterios de aceptación. Los avances y las validaciones realizadas se registran exclusivamente en [PROJECT_STATE.md](PROJECT_STATE.md).
 
-Esta fase comprende el diseño y construcción de la interfaz de usuario para el ERP Eléctrico, implementada como una Single Page Application (SPA) con capacidades PWA, optimizada para captura de gastos en terreno desde dispositivos móviles y administración operativa de obras desde escritorio.
+Las razones de arquitectura están en el [ADR de migración](adr/0001-migracion-react-vite.md). La estructura, el branding y los comandos pertenecen al [README del frontend](../frontend/README.md).
 
----
+## 1. Cliente HTTP y estado remoto
 
-## 📐 Principios y Decisiones Arquitectónicas
+Definir funciones tipadas que consuman el contrato de la API sin introducir persistencia en componentes de presentación. Normalizar errores y diferenciar carga, vacío y fallo. Integrar las consultas y mutaciones con el proveedor existente e invalidar las consultas afectadas al confirmar cambios.
 
-1. **Stack Base:** React 19 + Vite (SPA) con TypeScript en modo estricto, priorizando ligereza, despliegue estático desacoplado y rendimiento móvil instantáneo.
-2. **Enrutamiento Tipado:** Uso exclusivo de **TanStack Router** para gestionar la navegación del cliente con validación estricta de rutas, parámetros de URL y carga paralela de datos sin acoplamiento a frameworks de backend.
-3. **Gestión de Estado Asíncrono y API:** Uso de **TanStack Query** para la orquestación de llamadas a la API REST de FastAPI (`/api/v1/projects`, `/api/v1/expenses`), manejo de caché reactiva, revalidaciones automáticas y mutaciones con optimistic updates.
-4. **Estrategia de Fuentes (Offline-First):**
-   - Las tipografías del sistema (ej. `@fontsource/inter`) deben instalarse exclusivamente como dependencias npm y auto-alojarse dentro del bundle generado por Vite.
-   - **Prohibición estricta:** Queda prohibido el uso de enlaces externos a Google Fonts (`fonts.googleapis.com` o `fonts.gstatic.com`) o CDNs de fuentes en línea. Esto permite compilar sin descargas externas tras instalar dependencias; la operativa offline completa requiere service worker, caché y sincronización de datos.
-5. **Comandos de Validación y Compilación:**
-   - Análisis estático / Linter: `eslint .`
-   - Chequeo de tipos y empaquetado para producción: `tsc -b && vite build`
-   - Comandos estándar oficiales requeridos para el pipeline y desarrollo: `eslint .` y `tsc -b && vite build`.
+**Aceptación:** datos consultados verificables, fallos visibles y ausencia de métricas ficticias presentadas como resultados reales.
 
----
+## 2. Obras y gastos
 
-## 📋 Hitos y Tareas Secuenciales
+Sustituir progresivamente las vistas en preparación por listados, filtros y formularios. Permitir consultar detalles de una obra y distinguir costos asociados de gastos generales. Utilizar los criterios de interacción acordados en la [revisión con el socio](05_revision_mvp_socio.md).
 
-### 🔹 Hito 1: Configuración Base del Entorno y Dependencias (Vite + TanStack)
-- [x] Inicialización del proyecto con Vite y React 19 en TypeScript estricto.
-- [x] Dependencias instaladas: `react`, `react-dom`, `@tanstack/react-router`, `@tanstack/react-query` y `@fontsource/inter`.
-- [x] Tailwind CSS 4, `@tailwindcss/postcss`, PostCSS y Autoprefixer configurados.
-- [x] Configuración de `vite.config.ts` y alias `@/` en Vite y TypeScript.
-- [x] ESLint 10 (`eslint .`) y script de compilación (`tsc -b && vite build`).
-- [x] Corrección de GHSA-g3hv-75wg-m249 mediante override limitado de minimatch; lockfile actualizado.
+**Aceptación:** formularios tipados, validación de entrada, estados de envío y recuperación de errores; el cliente no reemplaza las reglas de negocio del servicio.
 
-Los iconos actuales son SVG locales tipados. `lucide-react`, `clsx` y `tailwind-merge` no están instalados; evaluar su necesidad antes de añadir dependencias.
+## 3. Identidad y preferencias
 
-### 🔹 Hito 2: Enrutamiento y Capa de Consumo API (FastAPI Client)
-- [x] Árbol de rutas tipadas con Inicio, Proyectos, Gastos, Configuración y página no encontrada.
-- [ ] Reemplazar las vistas de preparación por pantallas funcionales y definir el flujo de autenticación.
-- [x] Configuración del `QueryClient` de TanStack Query y proveedor global.
-- [ ] Capa de servicios HTTP / funciones de fetch hacia la API FastAPI (`/api/v1/projects`, `/api/v1/expenses`) con tipado estricto alineado a los esquemas Pydantic v2 del backend.
-- [ ] Manejo estandarizado de errores HTTP (400, 404, 422) y estados de carga (`isPending`, `isError`).
+Definir el flujo de autenticación, expiración y permisos antes de conectar el menú de usuario a una identidad real. Precisar qué preferencias se conservan y con qué alcance.
 
-### 🔹 Diseño Visual del Panel (Completado)
-- [x] Navbar con logo local, enlaces activos, menú móvil y menú de usuario con cierre por Escape.
-- [x] Hero con título original, texto descriptivo, degradado sutil e ilustración local.
-- [x] Tarjetas de Proyectos y Obras, Registro de Gastos y Finanzas Rápidas; tres columnas en escritorio y una en móvil.
-- [x] Paleta de marca, Inter local, favicon y barras de distribución financiera accesibles.
-- [x] Datos de ejemplo identificados; navegación a vistas de módulo en preparación sin simular persistencia.
-- [x] Revisión visual y de interacción en Chromium de 320 a 1440 px.
+**Aceptación:** rutas protegidas y permisos basados en un contrato de seguridad aprobado; un icono de usuario no prueba autenticación.
 
-### 🔹 Hito 3: Interfaz Móvil de Terreno (Registro Rápido de Gastos)
-- [ ] Formulario móvil optimizado para terreno: captura en 20 segundos de compras con validación de montos positivos y fechas.
-- [ ] Selector interactivo de imputación: Costo directo de Obra (CapEx) vs. Gasto Operativo de la Empresa (OPEX).
-- [ ] Control de comprobantes: switch para marcar boleta física o captura fotográfica desde la cámara del dispositivo móvil.
-- [ ] Feedback visual inmediato mediante notificaciones o toast de confirmación.
+## 4. Comprobantes
 
-### 🔹 Hito 4: Panel de Obras y Administración
-- [ ] Vista de listado de obras con filtro rápido por estado (*Planificación*, *En Ejecución*, *Pausada*, *Completada*, *Cancelada*).
-- [ ] Modal / formulario para creación de nueva obra (`POST /api/v1/projects`) y actualización de estado/presupuesto (`PATCH /api/v1/projects/{project_id}`).
-- [ ] Vista de detalle de proyecto con balance financiero: presupuesto estimado vs. costos directos acumulados.
-- [ ] Reporte y consulta de gastos generales operativos (OPEX) y gastos por período.
+Acordar formatos, límites, almacenamiento y tratamiento de archivos antes de habilitar cámara o carga. Asociar el resultado al gasto mediante el contrato correspondiente.
 
-### 🔹 Hito 5: Capacidades PWA y Optimización Offline
-- [ ] Configuración de manifiesto de aplicación web (`manifest.json` o plugin `vite-plugin-pwa`).
-- [ ] Service Worker para caching de assets estáticos y tipografías locales `@fontsource/inter`.
-- [ ] Soporte para instalación directa en pantalla de inicio en Android e iOS sin pasar por tiendas de aplicaciones.
-- [x] Validación de la base y el diseño actual con `eslint .` y `tsc -b && vite build` (exit code 0).
-- [ ] Validación específica de instalación PWA, caché y sincronización offline cuando se implementen.
+**Aceptación:** límites visibles, errores recuperables y verificación de acceso al comprobante.
+
+## 5. PWA y operación offline
+
+Diseñar manifiesto, service worker, caché de recursos y datos, política de actualización y cola de operaciones. Definir identificación de solicitudes, reintentos y resolución de conflictos antes de habilitar escrituras offline.
+
+**Aceptación:** comprobar instalación, recarga sin señal, actualización de recursos y recuperación de operaciones sin duplicación. Auto-alojar fuentes no satisface por sí solo estos criterios.
