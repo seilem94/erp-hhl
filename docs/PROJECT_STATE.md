@@ -3,22 +3,18 @@
 ## 📌 Estado Actual
 - **Fase Activa:** Fase 2 - Infraestructura y Persistencia (Backend).
 - **Rama:** `feat/backend-projects-domain`
-- **Último hito completado:** Implementación de la capa de persistencia PostgreSQL (SQLAlchemy 2.0) sin acoplar el dominio:
-  - Modelos ORM en `src/infrastructure/database/models.py`:
-    - `Base(DeclarativeBase)` como base compartida tipada para SQLAlchemy 2.0.
-    - `ProjectORM` (`projects`): Mapeo con `Mapped` y `mapped_column` para identificador UUID, atributos de texto, fechas, timestamps UTC y presupuesto (`Numeric(12, 2)`).
-    - `ExpenseORM` (`expenses`): Mapeo con clave foránea a `projects.id` (`nullable=True`, `ondelete="SET NULL"`) para soportar gastos operativos (OPEX) y costos directos de obra (CapEx).
-  - Funciones puras de mapeo bidireccional en `src/infrastructure/database/mappers.py`:
-    - `project_to_domain(orm: ProjectORM) -> Project` y `domain_to_project_orm(project: Project) -> ProjectORM`.
-    - `expense_to_domain(orm: ExpenseORM) -> Expense` y `domain_to_expense_orm(expense: Expense) -> ExpenseORM`.
-    - Traducción segura entre `StrEnum` de dominio (`ProjectStatus`, `ExpenseCategory`) y cadenas de texto en persistencia.
-  - Repositorios concretos de PostgreSQL en `src/infrastructure/database/repositories/`:
-    - `SQLAlchemyProjectRepository` (`sqlalchemy_project_repository.py`): Implementa `ProjectRepository` (`save`, `update`, `delete`, `get_by_id`, `list_all`, `list_by_status`).
-    - `SQLAlchemyExpenseRepository` (`sqlalchemy_expense_repository.py`): Implementa `ExpenseRepository` (`save`, `delete`, `get_by_id`, `list_all`, `get_by_project`, `get_operational_expenses`).
-    - Todos los métodos de lectura devuelven entidades `@dataclass` puras del dominio vía mappers; los modelos ORM nunca se exponen al exterior.
-    - Ciclo de vida transaccional delegado: los repositorios ejecutan `session.flush()` para materializar identidades sin hacer `commit()`, delegando el control de la transacción al llamador (UoW / middleware / FastAPI dependency).
-  - Validación estricta con `check.ps1` limpia (Ruff check/format, Mypy en 23 archivos y 32 tests de Pytest pasando).
-- **En progreso:** Configuración de conexión de base de datos (engine/sessionmaker), migraciones con Alembic y exposición de endpoints API en FastAPI.
+- **Último hito completado:**
+  - **Hito 1 (Modelado y Repositorios):** Modelos ORM (`ProjectORM`, `ExpenseORM`), mappers bidireccionales puros (`mappers.py`) y repositorios concretos (`SQLAlchemyProjectRepository`, `SQLAlchemyExpenseRepository`).
+  - **Hito 2 (Configuración y Dependencias):** Declaración e instalación de dependencias en `pyproject.toml` (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`), configuración centralizada con `pydantic-settings` (`src/core/config.py`) y sesión de base de datos con factoría y dependencia generadora `get_db` (`src/infrastructure/database/session.py`).
+  - **Hito 3 (Migraciones y Pruebas de Integración):**
+    - Configuración de Alembic y generación de la primera migración de esquema (`0001_create_projects_and_expenses_tables.py`).
+    - Suite completa de pruebas de integración en `tests/infrastructure/test_sqlalchemy_repositories.py`:
+      - Fixture de SQLite en memoria (`StaticPool`) con aislamiento transaccional por test.
+      - CRUD completo para `SQLAlchemyProjectRepository` (guardar, actualizar, listar todo, filtrar por estado, obtener por ID, eliminar).
+      - Cobertura exhaustiva para `SQLAlchemyExpenseRepository` (gastos directos CapEx con FK a proyectos, gastos operacionales OPEX con `project_id = None`, filtros de rango de fechas, listar todo y eliminar).
+      - Verificación rigurosa de aislamiento arquitectónico: 100% de los métodos retornan entidades `@dataclass` puras del dominio y nunca exponen modelos ORM.
+  - Validación completa y limpia con `check.ps1`: Ruff check/format sin incidencias, Mypy estricto sin errores (26 archivos) y 65 tests de Pytest pasando al 100%.
+- **En progreso:** Hito 4 - Capa de presentación HTTP con FastAPI (Esquemas DTO de transporte, Exception Handlers, dependencias y routers para `projects` y `expenses`).
 
 ## 🧱 Decisiones Técnicas Tomadas (Inmutables)
 - Clean Architecture pragmática sin sobreingeniería (entidades puras sin decorators de ORM).
@@ -46,17 +42,16 @@
 - [x] Hito 1 (Infraestructura): Modelos ORM SQLAlchemy 2.0 (`ProjectORM`, `ExpenseORM`) en `infrastructure/database/models.py`.
 - [x] Hito 1 (Infraestructura): Mappers bidireccionales puros en `infrastructure/database/mappers.py`.
 - [x] Hito 1 (Infraestructura): Repositorios PostgreSQL `SQLAlchemyProjectRepository` y `SQLAlchemyExpenseRepository`.
-- [ ] Hito 2: Declaración e instalación de dependencias de persistencia (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`).
-- [ ] Hito 2: Configuración centralizada (`src/core/config.py`) y sesión de base de datos (`src/infrastructure/database/session.py`).
-- [ ] Hito 3: Inicialización y primera migración con Alembic.
-- [ ] Hito 3: Suite de pruebas de integración para repositorios SQLAlchemy (`tests/infrastructure/`).
+- [x] Hito 2: Declaración e instalación de dependencias de persistencia (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`).
+- [x] Hito 2: Configuración centralizada (`src/core/config.py`) y sesión de base de datos (`src/infrastructure/database/session.py`).
+- [x] Hito 3: Inicialización y primera migración con Alembic.
+- [x] Hito 3: Suite de pruebas de integración para repositorios SQLAlchemy (`tests/infrastructure/`).
 - [ ] Hito 4: Esquemas DTO de transporte, exception handlers y routers de FastAPI (`projects`, `expenses`).
 - [ ] Hito 5: Docker Compose para PostgreSQL local y script de seed (`scripts/seed.py`).
 
 ## 🛑 Bloqueos o Pendientes Inmediatos
-- **Pendiente de Autorización:** Instalación de librerías (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`) en `backend/pyproject.toml` según protocolo de autonomía en `AGENT.md`.
-- **Pendiente:** Creación de `src/core/config.py` y `src/infrastructure/database/session.py`.
-- **Pendiente:** Inicialización de migraciones Alembic y suite de tests de integración.
+- Ninguno en persistencia ni infraestructura de base de datos.
+- **Pendiente:** Implementar Hito 4 (Capa de presentación HTTP con FastAPI).
 
 ## 📋 Próximo Paso para el Agente
-- Solicitar autorización para declarar e instalar las dependencias de persistencia (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`), para luego implementar la configuración de base de datos (`session.py` y `config.py`) y Alembic. Consultar `docs/04_fase2_infraestructura.md` para el desglose detallado.
+- Ejecutar el Hito 4: Desarrollar esquemas Pydantic DTO (`CreateProjectRequest`, `ProjectResponse`, `RegisterExpenseRequest`, `ExpenseResponse`), manejadores globales de excepciones (`error_handlers.py`), dependencias de inyección (`dependencies.py`) y routers FastAPI para proyectos y gastos en `src/infrastructure/http/`.
