@@ -41,10 +41,10 @@ export function Navbar() {
 
   return (
     <header className="relative z-20 border-b border-brand-border bg-white">
-      <div className="page-container flex h-22 items-center justify-between gap-6">
-        <Link to="/" aria-label="HHL ERP — Inicio" className="flex shrink-0 items-center gap-3" onClick={() => setMobileOpen(false)}>
-          <img src="/logo.svg" alt="" width="44" height="44" className="size-11" />
-          <span className="text-xl font-semibold tracking-tight">HHL <span className="font-normal text-slate-500">ERP</span></span>
+      <div className="page-container flex h-24 items-center justify-between gap-6">
+        <Link to="/" aria-label="HHL ERP — Inicio" className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
+          <img src="/logo.png" alt="HHL SpA - Electricidad y Electrónica" width="160" height="auto" />
+          <span className="text-2xl font-semibold text-slate-500">ERP<span className="font-normal"></span></span>
         </Link>
         <div className="flex items-center gap-4 lg:gap-10">
           <nav aria-label="Navegación principal" className="hidden items-center gap-1 lg:flex">
