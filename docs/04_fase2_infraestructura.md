@@ -63,7 +63,7 @@ Esta fase implementa la capa de persistencia real en PostgreSQL (modelos ORM, ma
 
 ---
 
-### ⏳ Hito 4: Capa de Presentación HTTP con FastAPI
+### ✅ Hito 4: Capa de Presentación HTTP con FastAPI (Completado)
 
 #### Paso 5: Esquemas de Transporte (DTOs HTTP) y Manejador de Errores
 - **Archivos a crear:**
