@@ -2,6 +2,12 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-navy: #0f172a;
+  --color-brand-blue: #2563eb;
+  --color-brand-deep-blue: #1e40af;
+  --color-brand-canvas: #f8fafc;
+  --color-brand-tint: #eff6ff;
+  --color-brand-border: #e2e8f0;
 }
 
 @layer base {
@@ -14,9 +20,85 @@
   body {
     margin: 0;
     min-width: 320px;
+    background: var(--color-brand-canvas);
   }
 
-  a:focus-visible {
-    @apply outline-2 outline-offset-4 outline-blue-700;
+  :where(a, button, summary):focus-visible {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 4px;
+  }
+
+  :where(.feature-card):has(:focus-visible) {
+    outline: 2px solid var(--color-brand-blue);
+    outline-offset: 4px;
+  }
+
+  button, summary, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12;
+  }
+
+  .nav-link {
+    @apply rounded-lg px-4 py-2.5 text-sm font-medium transition-colors;
+  }
+
+  .dashboard-hero {
+    background: radial-gradient(ellipse at 85% 30%, #dbeafe99, transparent 60%), linear-gradient(135deg, #f8fafc 30%, #eff6ff66);
+  }
+
+  .feature-card {
+    @apply flex flex-col rounded-2xl p-7 shadow-sm shadow-brand-navy/3 sm:p-8;
+  }
+
+  .card-icon {
+    @apply flex size-12 shrink-0 items-center justify-center rounded-xl;
+  }
+
+  .card-button {
+    @apply flex min-h-12 w-full items-center rounded-xl px-4 py-3 text-sm font-semibold transition-colors;
+  }
+
+  .expense-card {
+    background: linear-gradient(135deg, var(--color-brand-blue), var(--color-brand-deep-blue));
+    border: 1px solid var(--color-brand-deep-blue);
+  }
+
+  .project-progress {
+    appearance: none;
+    border: none;
+    background: #ffffff1a;
+    color: #60a5fa;
+  }
+
+  .project-progress::-webkit-progress-bar {
+    background: #ffffff1a;
+    border-radius: 999px;
+  }
+
+  .project-progress::-webkit-progress-value {
+    background: #60a5fa;
+    border-radius: 999px;
+    min-width: 4px;
+  }
+
+  .project-progress::-moz-progress-bar {
+    background: #60a5fa;
+    border-radius: 999px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 
 export function NotFoundPage() {
   return (
-    <section aria-labelledby="not-found-title">
+    <section aria-labelledby="not-found-title" className="page-container py-20">
       <h1 id="not-found-title" className="text-3xl font-semibold tracking-tight">
         Página no encontrada
       </h1>
