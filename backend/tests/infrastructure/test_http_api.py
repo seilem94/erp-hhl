@@ -64,6 +64,47 @@ def test_create_project_success(client: TestClient) -> None:
     assert "id" in data
 
 
+def test_update_project_success(
+    client: TestClient, project_repo: InMemoryProjectRepository
+) -> None:
+    p = Project(
+        id=uuid4(),
+        name="Obra Antigua",
+        client="Cliente Antiguo",
+        status=ProjectStatus.PLANNING,
+        start_date=date.today(),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+        budget=Decimal("500000.00"),
+        description="Alcance original",
+    )
+    project_repo.save(p)
+
+    payload = {
+        "name": "Obra Nueva",
+        "status": ProjectStatus.IN_PROGRESS.value,
+        "estimated_budget": "750000.00",
+        "description": "Alcance modificado",
+    }
+    response = client.patch(f"/api/v1/projects/{p.id}", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == str(p.id)
+    assert data["name"] == "Obra Nueva"
+    assert data["client"] == "Cliente Antiguo"  # Inalterado
+    assert data["status"] == ProjectStatus.IN_PROGRESS.value
+    assert data["budget"] == "750000.00"
+    assert data["description"] == "Alcance modificado"
+
+
+def test_update_project_not_found(client: TestClient) -> None:
+    random_id = uuid4()
+    payload = {"name": "No existe"}
+    response = client.patch(f"/api/v1/projects/{random_id}", json=payload)
+    assert response.status_code == 404
+    assert str(random_id) in response.json()["detail"]
+
+
 def test_list_projects(
     client: TestClient, project_repo: InMemoryProjectRepository
 ) -> None:

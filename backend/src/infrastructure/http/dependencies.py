@@ -21,6 +21,7 @@ from src.use_cases.get_operational_expenses import GetOperationalExpensesUseCase
 from src.use_cases.get_project_expenses import GetProjectExpensesUseCase
 from src.use_cases.list_projects import ListProjectsUseCase
 from src.use_cases.register_daily_expense import RegisterDailyExpenseUseCase
+from src.use_cases.update_project import UpdateProjectUseCase
 
 SessionDep = Annotated[Session, Depends(get_db)]
 
@@ -48,6 +49,13 @@ def get_create_project_uc(
 ) -> CreateProjectUseCase:
     """Instantiate CreateProjectUseCase with injected repository."""
     return CreateProjectUseCase(project_repo)
+
+
+def get_update_project_uc(
+    project_repo: ProjectRepoDep,
+) -> UpdateProjectUseCase:
+    """Instantiate UpdateProjectUseCase with injected repository."""
+    return UpdateProjectUseCase(project_repo)
 
 
 def get_list_projects_uc(

@@ -38,6 +38,36 @@ class CreateProjectRequest(BaseModel):
     )
 
 
+class UpdateProjectRequest(BaseModel):
+    """Cuerpo de la petición para actualización parcial de una obra eléctrica."""
+
+    name: str | None = Field(
+        default=None,
+        description="Nuevo nombre descriptivo de la obra eléctrica (opcional).",
+        examples=["Instalación Tablero General Edificio Central - Fase 2"],
+    )
+    client: str | None = Field(
+        default=None,
+        description="Nuevo nombre de la empresa mandante o cliente (opcional).",
+        examples=["Constructora Alerce S.A."],
+    )
+    estimated_budget: Decimal | None = Field(
+        default=None,
+        description="Nuevo presupuesto acordado o estimado para la obra (opcional).",
+        examples=[Decimal("7500000.00")],
+    )
+    status: ProjectStatus | None = Field(
+        default=None,
+        description="Nuevo estado del ciclo de vida de la obra (opcional).",
+        examples=[ProjectStatus.IN_PROGRESS],
+    )
+    description: str | None = Field(
+        default=None,
+        description="Nuevo alcance técnico o notas de la obra (opcional).",
+        examples=["Ampliación de tablero de distribución y alimentadores."],
+    )
+
+
 class ProjectResponse(BaseModel):
     """Representación completa de una obra eléctrica en el sistema."""
 

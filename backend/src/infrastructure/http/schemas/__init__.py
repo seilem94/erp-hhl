@@ -8,6 +8,7 @@ from src.infrastructure.http.schemas.expense import (
 from src.infrastructure.http.schemas.project import (
     CreateProjectRequest,
     ProjectResponse,
+    UpdateProjectRequest,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "ExpenseResponse",
     "ProjectResponse",
     "RegisterExpenseRequest",
+    "UpdateProjectRequest",
 ]

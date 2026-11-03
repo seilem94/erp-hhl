@@ -3,21 +3,25 @@
 from __future__ import annotations
 
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Path, Query, status
 
 from src.domain.enums import ProjectStatus
 from src.infrastructure.http.dependencies import (
     get_create_project_uc,
     get_list_projects_uc,
+    get_update_project_uc,
 )
 from src.infrastructure.http.schemas.error import ErrorResponse
 from src.infrastructure.http.schemas.project import (
     CreateProjectRequest,
     ProjectResponse,
+    UpdateProjectRequest,
 )
 from src.use_cases.create_project import CreateProjectDTO, CreateProjectUseCase
 from src.use_cases.list_projects import ListProjectsUseCase
+from src.use_cases.update_project import UpdateProjectDTO, UpdateProjectUseCase
 
 router = APIRouter(prefix="/api/v1/projects", tags=["Proyectos"])
 
@@ -65,6 +69,50 @@ def create_project(
     )
     project = use_case.execute(dto)
     return ProjectResponse.model_validate(project)
+
+
+@router.patch(
+    "/{project_id}",
+    response_model=ProjectResponse,
+    summary="Actualizar parcialmente una obra o proyecto",
+    description=(
+        "Modifica uno o más campos de una obra existente (nombre, cliente, "
+        "presupuesto, estado o descripción). Si el proyecto no existe, retorna 404."
+    ),
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Proyecto actualizado exitosamente.",
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": "La obra o proyecto especificado no fue encontrado.",
+        },
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "description": (
+                "Identificador UUID o datos en el JSON con formato incorrecto."
+            ),
+        },
+    },
+)
+def update_project(
+    project_id: Annotated[
+        UUID,
+        Path(description="Identificador único universal (UUIDv4) de la obra"),
+    ],
+    request: UpdateProjectRequest,
+    use_case: Annotated[UpdateProjectUseCase, Depends(get_update_project_uc)],
+) -> ProjectResponse:
+    """Actualiza parcialmente los campos especificados de un proyecto existente."""
+    dto = UpdateProjectDTO(
+        project_id=project_id,
+        name=request.name,
+        client=request.client,
+        estimated_budget=request.estimated_budget,
+        status=request.status,
+        description=request.description,
+    )
+    updated = use_case.execute(dto)
+    return ProjectResponse.model_validate(updated)
 
 
 @router.get(
