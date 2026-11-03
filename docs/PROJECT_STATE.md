@@ -1,16 +1,16 @@
-# PROJECT_STATE.md (Última actualización: 2026-11-02)
+# PROJECT_STATE.md (Última actualización: 2026-11-03)
 
 ## 📌 Estado Actual
 - **Fase Activa:** Fase 2 - Infraestructura y Persistencia (Backend).
 - **Rama:** `feat/backend-projects-domain`
 - **Últimos hitos completados:**
   - **Hito 1 (Modelado y Repositorios):** Modelos ORM (`ProjectORM`, `ExpenseORM`), mappers bidireccionales puros (`mappers.py`) y repositorios concretos (`SQLAlchemyProjectRepository`, `SQLAlchemyExpenseRepository`).
-  - **Hito 2 (Configuración y Dependencias):** Declaración e instalación de dependencias en `pyproject.toml` (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`), configuración centralizada con `pydantic-settings` (`src/core/config.py`) y sesión de base de datos con factoría y dependencia generadora `get_db` (`src/infrastructure/database/session.py`).
+  - **Hito 2 (Configuración y Dependencias):** Declaración e instalación de dependencias en `pyproject.toml` (`sqlalchemy`, `psycopg[binary]`, `alembic`, `pydantic-settings`), configuración centralizada con `pydantic-settings` (`src/core/config.py`) y sesión de base de datos con factoría y dependencia generadora `get_db` (`src/infrastructure/database/session.py`) con commit automático al finalizar peticiones exitosas y rollback ante excepciones.
   - **Hito 3 (Migraciones y Pruebas de Integración):**
     - Configuración de Alembic y generación de la primera migración de esquema (`0001_create_projects_and_expenses_tables.py`).
     - Suite completa de pruebas de integración en `tests/infrastructure/test_sqlalchemy_repositories.py` (65 tests pasando).
   - **Hito 4 (Capa de Presentación HTTP con FastAPI):**
-    - Esquemas Pydantic v2 DTO en `src/infrastructure/http/schemas/`: `CreateProjectRequest`, `ProjectResponse`, `RegisterExpenseRequest`, `ExpenseResponse` con `model_config = ConfigDict(from_attributes=True)` para serialización directa desde dataclasses de dominio.
+    - Esquemas Pydantic v2 DTO en `src/infrastructure/http/schemas/`: `CreateProjectRequest` (con soporte para `description`), `UpdateProjectRequest`, `ProjectResponse`, `RegisterExpenseRequest`, `ExpenseResponse` con `model_config = ConfigDict(from_attributes=True)` para serialización directa desde dataclasses de dominio.
     - Manejador global de excepciones en `src/infrastructure/http/error_handlers.py`: `domain_exception_handler` mapeando `ProjectNotFoundError` a 404, validaciones de negocio (`InvalidExpenseAmountError`, `InvalidExpenseDateError`, `ProjectCancelledError`) a 422 y `DomainException` genéricas a 400.
     - Inyección de dependencias en `src/infrastructure/http/dependencies.py`: factorías para repositorios (`get_project_repo`, `get_expense_repo`) y casos de uso (`get_create_project_uc`, `get_update_project_uc`, `get_list_projects_uc`, `get_register_expense_uc`, `get_project_expenses_uc`, `get_operational_expenses_uc`) utilizando `typing.Annotated`.
     - Routers modulares en `src/infrastructure/http/routers/`:
@@ -24,7 +24,7 @@
       - Descripciones, resúmenes, parámetros y ejemplos de campos en español para facilitar pruebas e integración con frontend.
     - Suite de pruebas completa: 80 tests en Pytest pasando al 100% (incluye tests unitarios de `UpdateProjectUseCase` y pruebas de integración HTTP de `PATCH`).
   - Validación completa con `check.ps1`: Ruff check/format limpio (50 archivos), Mypy estricto sin errores (38 archivos) y 80 tests de Pytest pasando al 100%.
-- **En progreso:** Hito 5 - Entorno Docker Local y Datos Semilla (`docker-compose.yml`, `backend/scripts/seed.py`).
+- **Estado Hito 5:** En pausa temporal por decisión técnica del usuario (el entorno de desarrollo opera con PostgreSQL nativo local; se retomará para el despliegue final en Debian).
 
 ## 🧱 Decisiones Técnicas Tomadas (Inmutables)
 - Clean Architecture pragmática sin sobreingeniería (entidades puras sin decorators de ORM).
@@ -41,6 +41,7 @@
 - Los repositorios de infraestructura reciben `Session` en constructor, aplican `flush()` para sincronización y nunca realizan `commit()`.
 - Prohibición de filtrado de modelos ORM: todo dato saliente de los repositorios de infraestructura pasa obligatoriamente por `mappers.py` retornando `@dataclass` puro del dominio.
 - Los routers HTTP ejecutan exclusivamente casos de uso mediante inyección de dependencias `Depends()` y no acceden directamente a la base de datos ni a los repositorios.
+- La dependencia generadora `get_db` gestiona el ciclo transaccional: ejecuta `commit()` si la petición termina con éxito y `rollback()` ante excepciones no controladas.
 
 ## 📋 Tareas de la Fase 1 y Fase 2
 - [x] Crear entidades de dominio (`Expense`, `Project`) y enums.
@@ -59,11 +60,11 @@
 - [x] Hito 3: Suite de pruebas de integración para repositorios SQLAlchemy (`tests/infrastructure/`).
 - [x] Hito 4: Esquemas DTO de transporte, exception handlers y routers de FastAPI (`projects`, `expenses`).
 - [x] Actualización parcial de obras (UpdateProjectUseCase, UpdateProjectRequest y endpoint PATCH /api/v1/projects/{project_id}).
-- [ ] Hito 5: Docker Compose para PostgreSQL local y script de seed (`scripts/seed.py`).
+- [ ] Hito 5: Docker Compose para entorno de producción en Debian y script de seed (`scripts/seed.py`) *(Pausado temporalmente)*.
 
 ## 🛑 Bloqueos o Pendientes Inmediatos
-- Ninguno. Hitos 1 al 4 de la Fase 2 completados y validados.
-- **Pendiente:** Implementar Hito 5 (Entorno Docker Local y Datos Semilla).
+- Ninguno en código de backend. Hitos 1 al 4 de la Fase 2 completados, probados e integrados con base de datos real.
+- **Hito 5 en pausa temporal:** Se desarrollará al preparar el despliegue al servidor de producción con Debian.
 
 ## 📋 Próximo Paso para el Agente
-- Ejecutar el Hito 5: Configurar `docker-compose.yml` con servicio `postgres:16-alpine`, healthcheck y red interna, y desarrollar el script de inicialización de datos de prueba (`backend/scripts/seed.py`).
+- Iniciar la Fase 3 (Frontend PWA con Next.js) o incorporar nuevas funcionalidades/consultas que el usuario solicite para el backend.

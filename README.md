@@ -49,7 +49,7 @@ backend/
 ## 🗺️ Fases del Proyecto
 
 - [x] **Fase 1: Núcleo y Dominio (MVP)** — Entidades de dominio, contratos de repositorios y casos de uso de proyectos y gastos diarios.
-- [ ] **Fase 2: API e Infraestructura (En progreso)** — Modelos SQLAlchemy 2.0, mappers, repositorios PostgreSQL, migraciones con Alembic, esquemas Pydantic v2 DTO, manejadores de errores y routers FastAPI completados (Hitos 1-4); pendiente entorno Docker Compose y seed scripts (Hito 5).
+- [ ] **Fase 2: API e Infraestructura (En progreso)** — Modelos SQLAlchemy 2.0, mappers, repositorios PostgreSQL, migraciones con Alembic, esquemas Pydantic v2 DTO, manejadores de errores y routers FastAPI completados (incluyendo actualización parcial PATCH de obras); pendiente entorno Docker Compose y seed scripts (Hito 5).
 - [ ] **Fase 3: Frontend PWA** — UI móvil para registro rápido en terreno y panel de administración en escritorio.
 - [ ] **Fase 4: Despliegue y DevOps** — Orquestación completa con Docker Compose y túnel seguro en servidor local.
 
