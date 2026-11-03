@@ -30,6 +30,7 @@
     - Validación `make check-frontend` aprobada (`npm run lint` y `npm run build`: `tsc -b && vite build`), con compilación de producción ejecutada sin acceso de red externa. `Makefile` y `check.ps1` actualizados al flujo de Vite.
     - Comprobación de la compilación en Chromium: vista móvil y escritorio, estilos Tailwind, carga de Inter local y navegación SPA correctos, sin peticiones externas ni errores de JavaScript.
     - Archivos de `backend/` conservados sin modificaciones.
+  - **Seguridad de dependencias Frontend:** Actualización a ESLint 10 y override de `minimatch@>=10 <11` a `^11.0.1` para corregir GHSA-g3hv-75wg-m249; el lockfile resuelve `minimatch@11.0.4`. `npm audit` informa cero vulnerabilidades y `make check-frontend` pasa sin errores. Requisitos de Node actualizados a las versiones admitidas por ESLint 10.
 - **Estado Hito 5:** En pausa temporal por decisión técnica del usuario (el entorno de desarrollo opera con PostgreSQL nativo local; se retomará para el despliegue final en Debian).
 
 ## 🧱 Decisiones Técnicas Tomadas (Inmutables)

@@ -60,7 +60,7 @@ backend/
 ### Requisitos Previos
 * Python 3.11+
 * PostgreSQL local (instalado como servicio) o en la nube (Supabase, Neon, etc.)
-* Node.js 20.19+ o 22.12+ y npm (para el frontend)
+* Node.js 20.19+, 22.13+ o 24+ y npm (para el frontend)
 * Docker y Docker Compose *(opcional, reservado para despliegue final en producción / servidor Debian)*
 
 ---

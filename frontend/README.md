@@ -19,7 +19,7 @@ Base de la interfaz de HHL ERP, generada con la plantilla oficial `react-ts` de 
 
 ## 🚀 Puesta en Marcha
 
-Requiere Node.js 20.19+ o 22.12+ y npm. Ejecutar desde `frontend/`:
+Requiere Node.js 20.19+, 22.13+ o 24+ y npm. Ejecutar desde `frontend/`:
 
 ```bash
 npm ci
@@ -56,3 +56,7 @@ Para desplegar, servir `dist/` con un servidor estático que redirija las rutas 
 Inter se importa desde `@fontsource/inter` en `src/main.tsx`. Vite copia los archivos `.woff` y `.woff2` a `dist/assets/`; el navegador los obtiene del mismo servidor que la aplicación. No se utilizan hojas de estilo, fuentes ni scripts desde CDNs externos.
 
 Esta base no incluye todavía un service worker ni una cola de operaciones offline. Las capacidades PWA completas y la integración funcional con FastAPI siguen pendientes según `docs/06_fase3_frontend.md`.
+
+## 🔒 Dependencias de desarrollo
+
+ESLint 10 elimina los consumidores antiguos de `minimatch`. El override `minimatch@>=10 <11` selecciona la API moderna corregida (`^11.0.1`) para ESLint y TypeScript ESLint, mitigando GHSA-g3hv-75wg-m249. Revisar este override cuando ambas herramientas dependan directamente de una versión corregida. El cambio está validado con `npm audit`, lint y build; no se utiliza `npm audit fix --force`.
