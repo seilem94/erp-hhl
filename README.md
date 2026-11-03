@@ -58,22 +58,73 @@ backend/
 ## 🚀 Puesta en Marcha (Entorno Local)
 
 ### Requisitos Previos
-* Docker y Docker Compose
-* Python 3.12+ (para desarrollo local backend)
-* Node.js 20+ y pnpm / npm (para desarrollo local frontend)
+* Python 3.11+
+* PostgreSQL local (instalado como servicio) o en la nube (Supabase, Neon, etc.)
+* Node.js 20+ y npm (para el frontend)
+* Docker y Docker Compose *(opcional, reservado para despliegue final en producción / servidor Debian)*
 
-### 1. Clonar el repositorio
+---
+
+### Opción A: Ejecución Local Nativa (Sin Docker) — Recomendada para Desarrollo
+
+#### 1. Backend (FastAPI + PostgreSQL)
+
+1. **Configurar el entorno virtual e instalar dependencias:**
+   ```bash
+   cd backend
+   python -m venv venv
+   # En Windows PowerShell:
+   .\venv\Scripts\Activate.ps1
+   # En Linux/macOS:
+   # source venv/bin/activate
+
+   pip install -e .
+   pip install -e ".[dev]"
+   ```
+
+2. **Configurar variables de entorno:**
+   Copia el archivo de ejemplo y ajusta las credenciales de tu PostgreSQL local:
+   ```bash
+   cp .env.example .env
+   ```
+   Ejemplo de `.env`:
+   ```env
+   DATABASE_URL=postgresql+psycopg://postgres:tu_password@localhost:5432/erp_hhl
+   ```
+
+3. **Aplicar migraciones de base de datos:**
+   ```bash
+   alembic upgrade head
+   ```
+
+4. **Iniciar el servidor de desarrollo:**
+   ```bash
+   uvicorn src.main:app --reload --port 8000
+   ```
+   * **Swagger / Documentación interactiva:** [http://localhost:8000/docs](http://localhost:8000/docs)
+   * **ReDoc:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
+   * **Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
+
+5. **Validar calidad de código y tests:**
+   ```bash
+   # Desde la raíz del repositorio:
+   .\check.ps1
+   ```
+
+#### 2. Frontend (Next.js PWA)
 ```bash
-git clone https://github.com/tu-usuario/erp-electrico.git
-cd erp-electrico
+cd frontend
+npm install
+npm run dev
 ```
+Disponible en: [http://localhost:3000](http://localhost:3000)
 
-### 2. Configurar variables de entorno
-```bash
-cp .env.example .env
-```
+---
 
-### 3. Levantar con Docker Compose
+### Opción B: Despliegue con Docker Compose (Servidor Final / Producción Debian)
+
+Para levantar todos los servicios (PostgreSQL, Backend y Frontend) de manera orquestada y autocontenida:
+
 ```bash
 docker compose up -d --build
 ```
