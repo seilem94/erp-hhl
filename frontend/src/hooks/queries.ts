@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createProject, getProjects } from '@/api/projects'
 import { getExpenses, registerExpense } from '@/api/expenses'
 import type { ApiError } from '@/api/client'
@@ -20,6 +20,18 @@ export function useProjects() {
   })
 }
 
+export function useProject(projectId: string) {
+  // OpenAPI only provides a project collection GET; share its cache and select the item.
+  return useQuery<ProjectResponse[], ApiError, ProjectResponse | null>({
+    queryKey: queryKeys.projects,
+    queryFn: ({ signal }) => getProjects(signal),
+    select: (projects) => projects.find((project) => project.id === projectId) ?? null,
+    staleTime: 30000,
+    networkMode: 'always',
+    retry: false,
+  })
+}
+
 export function useCreateProject() {
   const client = useQueryClient()
   return useMutation<ProjectResponse, ApiError, CreateProjectRequest>({
@@ -31,14 +43,18 @@ export function useCreateProject() {
   })
 }
 
-export function useExpenses(projectId: string | null = null) {
-  return useQuery<ExpenseResponse[], ApiError>({
+export function expenseQueryOptions(projectId: string | null) {
+  return queryOptions<ExpenseResponse[], ApiError>({
     queryKey: queryKeys.expenseList(projectId),
     queryFn: ({ signal }) => getExpenses(projectId, signal),
     staleTime: 30000,
     networkMode: 'always',
     retry: false,
   })
+}
+
+export function useExpenses(projectId: string | null = null, enabled = true) {
+  return useQuery({ ...expenseQueryOptions(projectId), enabled })
 }
 
 export function useRegisterExpense() {

@@ -49,7 +49,7 @@ export function Navbar() {
         <div className="flex items-center gap-4 lg:gap-10">
           <nav aria-label="Navegación principal" className="hidden items-center gap-1 lg:flex">
             {navigation.map(({ to, label }) => (
-              <Link key={to} to={to} activeOptions={{ exact: true }} className="nav-link" activeProps={{ className: 'bg-brand-tint text-brand-blue' }} inactiveProps={{ className: 'text-slate-500 hover:bg-brand-canvas hover:text-brand-navy' }}>
+              <Link key={to} to={to} activeOptions={{ exact: to === '/' }} className="nav-link" activeProps={{ className: 'bg-brand-tint text-brand-blue' }} inactiveProps={{ className: 'text-slate-500 hover:bg-brand-canvas hover:text-brand-navy' }}>
                 {label}
               </Link>
             ))}
@@ -64,7 +64,7 @@ export function Navbar() {
       <nav id="mobile-navigation" aria-label="Navegación móvil" hidden={!mobileOpen} className="border-t border-brand-border bg-white lg:hidden">
         <div className="page-container grid gap-1 py-3">
           {navigation.map(({ to, label }) => (
-            <Link key={to} to={to} activeOptions={{ exact: true }} className="nav-link" activeProps={{ className: 'bg-brand-tint text-brand-blue' }} inactiveProps={{ className: 'text-slate-500' }} onClick={() => setMobileOpen(false)}>
+            <Link key={to} to={to} activeOptions={{ exact: to === '/' }} className="nav-link" activeProps={{ className: 'bg-brand-tint text-brand-blue' }} inactiveProps={{ className: 'text-slate-500' }} onClick={() => setMobileOpen(false)}>
               {label}
             </Link>
           ))}

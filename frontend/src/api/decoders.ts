@@ -2,7 +2,7 @@ import { ApiError, isRecord } from '@/api/client'
 import { expenseCategories, projectStatuses, type ExpenseResponse, type ProjectResponse } from '@/api/types'
 
 const optionalString = (value: unknown) => value === undefined || value === null || typeof value === 'string'
-const decimalString = (value: unknown) => typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value))
+const decimalString = (value: unknown) => typeof value === 'string' && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value) && Number.isFinite(Number(value))
 const calendarDate = (value: unknown) => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
   const date = new Date(`${value}T00:00:00Z`)

@@ -47,7 +47,9 @@ Ejecutar lint y build al modificar código. Los comandos efectivos se definen en
 | `src/router.ts` | Árbol de rutas tipadas y restauración de scroll |
 | `src/query-client.ts` | Instancia de QueryClient |
 | `src/api/` | Cliente HTTP, DTO, validación de respuestas y servicios tipados |
-| `src/hooks/queries.ts` | Consultas, mutaciones e invalidación de caché |
+| `src/hooks/queries.ts` | Consultas compartidas, selección de una obra, mutaciones e invalidación de caché |
+| `src/hooks/dashboard.ts` | Composición de consultas y métricas del Dashboard |
+| `src/utils/decimal.ts` | Suma decimal exacta antes del formato visual |
 | `src/components/projects/` | Formulario de alta de proyectos |
 | `src/components/expenses/` | Registro rápido y consulta de gastos |
 | `src/utils/` | Formato de importes/fechas y utilidades de formularios |
@@ -67,6 +69,7 @@ El alias `@/` apunta a `src/` y se configura en [Vite](vite.config.ts) y [TypeSc
 | :--- | :--- |
 | `/` | Inicio |
 | `/proyectos` | Proyectos y Obras |
+| `/proyectos/$projectId` | Información y todos los gastos asociados a una obra |
 | `/gastos` | Registro de Gastos |
 | `/configuracion` | Configuración |
 | Otras | Página no encontrada |
@@ -97,6 +100,14 @@ Las tarjetas usan tres columnas desde `lg` y una en pantallas menores. Conservar
 El build genera `dist/` sin descargar recursos externos una vez instaladas las dependencias. Comprobar ese resultado con el script de preview; no usar preview como servidor de producción.
 
 Publicar `dist/` en un alojamiento estático con redirección de rutas SPA a `index.html`, para permitir aperturas y recargas directas de las rutas internas.
+
+## Consultas del Dashboard y del detalle
+
+El resumen obtiene el listado de obras, los gastos operativos y los gastos de cada obra, incluidas las canceladas con gastos históricos. Cuenta las obras registradas y calcula el avance como obras completadas respecto al total. Los importes reflejan todos los registros devueltos, sin limitarse al historial rápido de diez gastos ni aplicar un período de fechas.
+
+Los importes decimales se suman de forma exacta antes de darles formato. Si una consulta necesaria falla, el total dependiente queda sin valor y se ofrece reintento; no se presenta una suma parcial como total definitivo.
+
+La API actual no proporciona un GET individual de proyecto: el detalle selecciona la obra del listado compartido en caché y consulta sus gastos por identificador. El detalle muestra todos esos gastos; comparte caché con el Dashboard y el historial para reflejar las mutaciones existentes. El número de consultas de gastos del resumen crece con el número de obras hasta disponer de un endpoint agregado.
 
 ## Mantenimiento de dependencias
 

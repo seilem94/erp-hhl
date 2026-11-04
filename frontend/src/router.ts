@@ -5,6 +5,7 @@ import { NotFoundPage } from '@/pages/not-found-page'
 import { SettingsPage } from '@/pages/workspace-pages'
 import { ProjectsPage } from '@/pages/proyectos'
 import { ExpensesPage } from '@/pages/gastos'
+import { ProjectDetailPage } from '@/pages/proyecto-detalle'
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -18,11 +19,12 @@ const indexRoute = createRoute({
 })
 
 const projectsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/proyectos', component: ProjectsPage })
+const projectDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: '/proyectos/$projectId', component: ProjectDetailPage })
 const expensesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gastos', component: ExpensesPage })
 const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/configuracion', component: SettingsPage })
 
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([indexRoute, projectsRoute, expensesRoute, settingsRoute]),
+  routeTree: rootRoute.addChildren([indexRoute, projectsRoute, projectDetailRoute, expensesRoute, settingsRoute]),
   defaultHashScrollIntoView: true,
   scrollRestoration: true,
 })

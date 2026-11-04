@@ -13,7 +13,21 @@ ERP para administrar obras eléctricas y gastos en terreno, orientado al uso mó
 
 ## Arranque rápido
 
-Preparar primero el [entorno de datos](backend/README.md) y las [dependencias del frontend](frontend/README.md#instalación-y-desarrollo). Con el entorno virtual activado y la configuración local lista, ejecutar en terminales separadas desde la raíz:
+Preparar primero el [entorno de datos](backend/README.md) y las [dependencias del frontend](frontend/README.md#instalación-y-desarrollo).
+
+### Windows
+
+Desde la raíz del repositorio:
+
+```powershell
+.\start_dev.ps1
+```
+
+El [script de desarrollo](start_dev.ps1) abre cada servicio en una ventana de PowerShell separada. Requiere las dependencias y la configuración local preparadas; debe ejecutarse desde esta carpeta.
+
+### Arranque manual
+
+Con el entorno virtual activado y la configuración local lista, ejecutar en terminales separadas desde la raíz:
 
 ```bash
 cd backend

@@ -1,7 +1,7 @@
 import type { ProjectResponse } from '@/api/types'
 import { useExpenses } from '@/hooks/queries'
 import { Feedback, QueryError } from '@/components/ui/feedback'
-import { categoryLabels, formatDate, formatMoney } from '@/utils/format'
+import { ExpenseList } from '@/components/expenses/expense-list'
 
 type ExpenseHistoryProps = { projectId: string | null; onProjectChange: (id: string | null) => void; projects: ProjectResponse[] }
 
@@ -21,10 +21,7 @@ export function ExpenseHistory({ projectId, onProjectChange, projects }: Expense
         {query.isPending && <Feedback>Cargando gastos…</Feedback>}
         {query.isError && <QueryError message={query.error.message} onRetry={() => { void query.refetch() }} retrying={query.isFetching} />}
         {query.isSuccess && expenses.length === 0 && <Feedback>No hay gastos registrados en esta cuenta.</Feedback>}
-        {expenses.map((expense) => <article key={expense.id} className="rounded-xl border border-brand-border bg-white p-5">
-          <div className="flex items-start justify-between gap-4"><h3 className="min-w-0 break-words text-sm font-semibold">{expense.description}</h3><p className="shrink-0 text-sm font-semibold text-brand-navy tabular-nums">{formatMoney(expense.amount)}</p></div>
-          <p className="mt-2 text-xs text-slate-500">{categoryLabels[expense.category]} · {formatDate(expense.date)}</p>
-        </article>)}
+        {expenses.length > 0 && <ExpenseList expenses={expenses} />}
       </div>
     </section>
   )

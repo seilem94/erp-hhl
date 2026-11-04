@@ -17,7 +17,7 @@ function ModulePage({ title, description, icon }: ModulePageProps) {
       <p className="mt-4 max-w-xl text-base leading-7 text-slate-500">{description}</p>
       <div className="mt-10 max-w-2xl rounded-2xl border border-brand-border bg-white p-6 sm:p-8">
         <p className="text-sm font-semibold">Próximamente en tu espacio de trabajo</p>
-        <p className="mt-2 text-sm leading-6 text-slate-500">Estamos preparando este módulo. Por ahora puedes explorar la vista de ejemplo del panel de inicio.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500">Estamos preparando este módulo. Por ahora puedes consultar tus obras y gastos desde el panel de inicio.</p>
       </div>
     </section>
   )
