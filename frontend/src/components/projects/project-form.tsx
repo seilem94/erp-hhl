@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react'
 import { useCreateProject } from '@/hooks/queries'
 import { Feedback } from '@/components/ui/feedback'
+import { Spinner } from '@/components/ui/spinner'
 import { FormField } from '@/components/ui/form-field'
 import { Icon } from '@/components/ui/icon'
 import { focusInvalid, formString } from '@/utils/forms'
@@ -51,7 +52,7 @@ export function ProjectForm() {
       <span className="card-icon bg-brand-tint text-brand-blue dark:text-blue-400"><Icon name="blueprint" className="size-6" /></span>
       <h2 id="create-project-title" className="mt-5 text-xl font-semibold tracking-tight">Nueva obra</h2>
       <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Registra el proyecto y su presupuesto inicial.</p>
-      <form ref={formRef} onSubmit={submit} onChange={clearFeedback} noValidate aria-labelledby="create-project-title" className="mt-6">
+      <form ref={formRef} onSubmit={submit} onChange={clearFeedback} noValidate aria-busy={mutation.isPending} aria-labelledby="create-project-title" className="mt-6">
         <fieldset disabled={mutation.isPending} className="grid min-w-0 gap-5">
           <legend className="sr-only">Datos del nuevo proyecto</legend>
           <FormField id="project-name" label="Nombre" required error={errors.name}>
@@ -64,7 +65,7 @@ export function ProjectForm() {
             <input id="project-budget" name="estimated_budget" type="number" inputMode="decimal" min="0" step="0.01" className="form-input" placeholder="Ej. 2500000" aria-invalid={Boolean(errors.estimated_budget)} aria-describedby={`project-budget-hint${errors.estimated_budget ? ' project-budget-error' : ''}`} />
           </FormField>
           <button type="submit" className="button-primary mt-1">
-            <Icon name="plus" className="size-4" />{mutation.isPending ? 'Guardando obra…' : 'Crear Proyecto'}
+            {mutation.isPending ? <Spinner /> : <Icon name="plus" className="size-4" />}{mutation.isPending ? 'Guardando obra…' : 'Crear Proyecto'}
           </button>
         </fieldset>
         <div className="mt-4 grid gap-3">

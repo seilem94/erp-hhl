@@ -1,4 +1,4 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { queryOptions, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { createProject, getProjects, updateProject } from '@/api/projects'
 import { getExpenses, registerExpense } from '@/api/expenses'
 import type { ApiError } from '@/api/client'
@@ -8,6 +8,7 @@ export const queryKeys = {
   projects: ['projects'] as const,
   project: (projectId: string) => ['projects', 'detail', projectId] as const,
   expenses: ['expenses'] as const,
+  expenseAccount: (projectId: string | null) => ['expenses', projectId] as const,
   expenseList: (projectId: string | null, filters: ExpenseFilters = {}) => ['expenses', projectId, { start_date: filters.start_date || null, end_date: filters.end_date || null }] as const,
 }
 
@@ -31,10 +32,41 @@ export function useProject(projectId: string) {
   return useQuery<ProjectResponse | null, ApiError>({
     queryKey: queryKeys.project(projectId),
     queryFn: async () => (await client.fetchQuery(projectsQueryOptions())).find((project) => project.id === projectId) ?? null,
-    staleTime: 30000,
+    // A derived snapshot must not stay fresh after the shared collection changes.
+    staleTime: 0,
     networkMode: 'always',
     retry: false,
   })
+}
+
+async function cancelProjectReads(client: QueryClient, projectId?: string) {
+  await client.cancelQueries({ queryKey: queryKeys.projects, exact: true })
+  if (projectId) await client.cancelQueries({ queryKey: queryKeys.project(projectId), exact: true })
+}
+
+async function refreshProject(client: QueryClient, projectId?: string) {
+  await client.invalidateQueries({ queryKey: queryKeys.projects, exact: true })
+  if (projectId) await client.invalidateQueries({ queryKey: queryKeys.project(projectId), exact: true })
+}
+
+async function cacheProject(client: QueryClient, project: ProjectResponse) {
+  // Stop older GET responses from overwriting the confirmed mutation result.
+  await cancelProjectReads(client, project.id)
+  client.setQueryData(queryKeys.project(project.id), project)
+  client.setQueryData<ProjectResponse[]>(queryKeys.projects, (projects) => {
+    if (!projects) return undefined
+    return projects.some((item) => item.id === project.id)
+      ? projects.map((item) => item.id === project.id ? project : item)
+      : [...projects, project]
+  })
+  await refreshProject(client, project.id)
+}
+
+async function refreshExpenseAccount(client: QueryClient, projectId: string | null) {
+  // All date ranges for this account, including the unfiltered Dashboard/detail.
+  const queryKey = queryKeys.expenseAccount(projectId)
+  await client.cancelQueries({ queryKey })
+  await client.invalidateQueries({ queryKey })
 }
 
 export function useUpdateProject(projectId: string) {
@@ -43,11 +75,11 @@ export function useUpdateProject(projectId: string) {
     mutationFn: (body) => updateProject(projectId, body),
     networkMode: 'always',
     retry: false,
-    onSuccess: async (project) => {
-      client.setQueryData(queryKeys.project(projectId), project)
-      client.setQueryData<ProjectResponse[]>(queryKeys.projects, (projects) => projects?.map((item) => item.id === projectId ? project : item))
-      await client.invalidateQueries({ queryKey: queryKeys.projects, exact: true })
-      await client.invalidateQueries({ queryKey: queryKeys.project(projectId), exact: true })
+    onSuccess: (project) => cacheProject(client, project),
+    onError: async (error) => {
+      if (!error.outcomeUnknown) return
+      await cancelProjectReads(client, projectId)
+      await refreshProject(client, projectId)
     },
   })
 }
@@ -59,7 +91,12 @@ export function useCreateProject() {
     // Fail offline instead of queuing a write to resume without user confirmation.
     networkMode: 'always',
     retry: false,
-    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.projects }),
+    onSuccess: (project) => cacheProject(client, project),
+    onError: async (error) => {
+      if (!error.outcomeUnknown) return
+      await cancelProjectReads(client)
+      await refreshProject(client)
+    },
   })
 }
 
@@ -83,6 +120,7 @@ export function useRegisterExpense() {
     mutationFn: registerExpense,
     networkMode: 'always',
     retry: false,
-    onSuccess: () => client.invalidateQueries({ queryKey: queryKeys.expenses }),
+    onSuccess: (expense) => refreshExpenseAccount(client, expense.project_id ?? null),
+    onError: (error, body) => error.outcomeUnknown ? refreshExpenseAccount(client, body.project_id ?? null) : undefined,
   })
 }

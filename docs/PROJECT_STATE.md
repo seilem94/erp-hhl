@@ -11,6 +11,7 @@ Actualizado: 2026-11-04. Fuente canónica de entregas, pendientes y evidencia; n
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
 - Configuración permite elegir tema claro u oscuro, persistirlo en el navegador y consultar la versión del ERP. El tema se aplica en todas las vistas. No existe todavía una sesión autenticada ni sincronización de preferencias con una cuenta.
+- Frontend auditado y pulido en UX/UI, manejo de errores y caché, cerrando la estabilidad de la Fase 3 para los flujos implementados. Las mejoras que requieren ampliar el contrato del servicio se reservan en [propuestas de UX/UI](UX_UI_SUGGESTIONS.md).
 - PWA instalable, caché de aplicación y sincronización offline: pendientes.
 
 ## Entregas y evidencia histórica
@@ -25,6 +26,7 @@ Actualizado: 2026-11-04. Fuente canónica de entregas, pendientes y evidencia; n
 | Cliente HTTP y formularios funcionales de obras y gastos | Entrega de 2026-11-03 | DTO contrastados con OpenAPI; lint/build aprobados; Chromium con casos controlados y API local real |
 | Dashboard con métricas reales, detalle de obra y arranque local | Entrega de 2026-11-03 | Lint/build aprobados; consultas verificadas en Chromium con respuestas controladas y API local; script exacto con sintaxis y argumentos comprobados |
 | Edición parcial y estados de obras, filtros de fecha y Configuración básica | Entrega de 2026-11-04 | PATCH y filtros contrastados con OpenAPI y API local; caché y errores comprobados en Chromium; temas persistentes y vistas revisadas de 320 a 1440 px; lint/build aprobados |
+| Auditoría y pulido de estabilidad de la Fase 3 | Entrega de 2026-11-04 | Lint/build sin advertencias; carreras de caché, errores de escritura, controles táctiles, precisión de importes y casos extremos a 320 px verificados en Chromium con API simulada |
 
 Los resultados anteriores no se vuelven vigentes por editar documentación. El detalle operativo del frontend pertenece a su [README](../frontend/README.md).
 
@@ -63,6 +65,15 @@ Se consultó el OpenAPI servido por la API local sin inspeccionar ni modificar c
 - La API local confirmó PATCH de nombre, cliente, presupuesto y estado, persistencia tras recarga y filtros inclusivos reales. Se usó una obra identificada con `[Verificación frontend]` y se restauraron sus campos de negocio al terminar; no se crearon registros.
 - Se comprobó persistencia de tema claro y oscuro tras recarga, aplicación entre rutas y respuesta visible al bloqueo de `localStorage`. Las vistas se revisaron en Chromium entre 320 y 1440 px, sin desbordes horizontales ni errores de JavaScript.
 - La regresión del Dashboard y el detalle confirmó totales completos, recuperación de fallos parciales, estados vacíos, acceso directo y actualización de caché tras las mutaciones existentes.
+
+## Validación de auditoría y estabilidad del frontend
+
+- `make check-frontend` ejecutó `npm run lint` y `npm run build` sin errores ni advertencias. Se revisaron imports, tipado estricto y ausencia de logs de depuración. No se añadieron dependencias.
+- Las pruebas controladas comprobaron que una lectura tardía no sobrescribe un PATCH confirmado y que el detalle usa la colección actualizada al volver a entrar. Las altas no invalidan detalles ajenos; los gastos refrescan todos los rangos de su cuenta y el resumen correspondiente, preservando las otras cuentas.
+- Se verificaron respuestas POST/PATCH ilegibles tras una escritura aceptada: aviso visible, conservación del formulario, actualización de las consultas y ausencia de reenvíos automáticos. La regresión de formularios, errores 422/500/de conexión, filtros, Dashboard y temas siguió aprobada.
+- Chromium comprobó cargas y actualizaciones visibles, navegación por teclado y controles táctiles de al menos 44 px. Los campos numéricos conservan teclado decimal y texto de 16 px en móvil. Mensajes, nombres, clientes e importes extensos se revisaron a 320 px en ambos temas sin desbordes horizontales; se midió contraste mínimo de 4,5:1 en los textos de la tarjeta azul.
+- Diez casos comprobaron el formato monetario exacto, incluidos importes por encima del entero seguro de JavaScript, redondeo y notación científica. Los recorridos de regresión también se comprobaron entre 320 y 1440 px, sin errores de JavaScript.
+- Esta auditoría usó exclusivamente respuestas de API simuladas para probar el frontend: no ejecutó, consultó ni modificó el backend, ni creó datos de negocio. Las propuestas que requieren cambios del servicio se documentaron sin implementarlas.
 
 ## Historial documental
 

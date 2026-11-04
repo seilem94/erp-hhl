@@ -53,11 +53,11 @@
 
 @layer components {
   .page-container {
-    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12;
+    @apply mx-auto w-full min-w-0 max-w-7xl px-5 sm:px-8 lg:px-12;
   }
 
   .nav-link {
-    @apply rounded-lg px-4 py-2.5 text-sm font-medium transition-colors;
+    @apply inline-flex min-h-11 items-center rounded-lg px-4 py-2.5 text-sm font-medium transition-colors;
   }
 
   .dashboard-hero {
@@ -68,7 +68,7 @@
   }
 
   .feature-card {
-    @apply flex flex-col rounded-2xl p-7 shadow-sm shadow-brand-navy/3 sm:p-8;
+    @apply flex min-w-0 flex-col rounded-2xl p-7 shadow-sm shadow-brand-navy/3 sm:p-8;
   }
 
   .card-icon {
@@ -85,11 +85,15 @@
   }
 
   .form-panel {
-    @apply rounded-2xl border border-brand-border bg-white p-5 shadow-sm shadow-brand-navy/3 sm:p-7 dark:bg-slate-900;
+    @apply min-w-0 rounded-2xl border border-brand-border bg-white p-5 shadow-sm shadow-brand-navy/3 sm:p-7 dark:bg-slate-900;
   }
 
   .form-input {
-    @apply min-h-12 w-full min-w-0 rounded-xl border border-brand-border bg-white px-3.5 py-3 text-sm text-brand-navy outline-none transition-shadow placeholder:text-slate-400 focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/10 disabled:bg-brand-canvas disabled:text-slate-500 aria-invalid:border-red-500 aria-invalid:focus:ring-red-500/10 dark:bg-slate-900 dark:text-slate-100 dark:disabled:text-slate-400;
+    @apply min-h-12 w-full min-w-0 rounded-xl border border-brand-border bg-white px-3.5 py-3 text-base text-brand-navy outline-none transition-shadow placeholder:text-slate-500 focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/10 disabled:bg-brand-canvas disabled:text-slate-500 aria-invalid:border-red-500 aria-invalid:focus:ring-red-500/10 sm:text-sm dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400 dark:disabled:text-slate-400;
+  }
+
+  .money-value {
+    @apply min-w-0 max-w-full tabular-nums [overflow-wrap:anywhere];
   }
 
   .button-primary {
@@ -115,7 +119,6 @@
   .project-progress::-webkit-progress-value {
     background: #60a5fa;
     border-radius: 999px;
-    min-width: 4px;
   }
 
   .project-progress::-moz-progress-bar {

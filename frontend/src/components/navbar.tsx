@@ -19,7 +19,7 @@ function UserMenu() {
         event.currentTarget.querySelector('summary')?.focus()
       }
     }}>
-      <summary className="flex cursor-pointer list-none items-center gap-2 rounded-full p-1" aria-label="Abrir menú de usuario">
+      <summary className="flex min-h-11 min-w-11 cursor-pointer list-none items-center gap-2 rounded-full p-1" aria-label="Abrir menú de usuario">
         <span className="flex size-10 items-center justify-center rounded-full border border-brand-border bg-brand-canvas text-brand-navy dark:text-slate-100">
           <Icon name="user" className="size-5" />
         </span>
@@ -41,13 +41,13 @@ export function Navbar() {
 
   return (
     <header className="relative z-20 border-b border-brand-border bg-white dark:bg-slate-900">
-      <div className="page-container flex h-24 items-center justify-between gap-6">
-        <Link to="/" aria-label="HHL ERP — Inicio" className="flex items-center gap-3" onClick={() => setMobileOpen(false)}>
-          <img src="/logo.png" alt="HHL SpA - Electricidad y Electrónica" width="160" height="auto" className="dark:hidden" />
-          <img src="/logo-white.png" alt="HHL SpA - Electricidad y Electrónica" width="160" height="auto" className="hidden dark:block" />
-          <span className="text-2xl font-semibold text-slate-500 dark:text-slate-400">ERP<span className="font-normal"></span></span>
+      <div className="page-container flex h-24 items-center justify-between gap-3 sm:gap-6">
+        <Link to="/" aria-label="HHL ERP — Inicio" className="flex min-w-0 items-center gap-2 sm:gap-3" onClick={() => setMobileOpen(false)}>
+          <img src="/logo.png" alt="HHL SpA - Electricidad y Electrónica" width="160" className="h-auto w-24 sm:w-40 dark:hidden" />
+          <img src="/logo-white.png" alt="HHL SpA - Electricidad y Electrónica" width="160" className="hidden h-auto w-24 sm:w-40 dark:block" />
+          <span className="text-xl font-semibold text-slate-500 dark:text-slate-400 sm:text-2xl">ERP</span>
         </Link>
-        <div className="flex items-center gap-4 lg:gap-10">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4 lg:gap-10">
           <nav aria-label="Navegación principal" className="hidden items-center gap-1 lg:flex">
             {navigation.map(({ to, label }) => (
               <Link key={to} to={to} activeOptions={{ exact: to === '/' }} className="nav-link" activeProps={{ className: 'bg-brand-tint text-brand-blue dark:text-blue-400' }} inactiveProps={{ className: 'text-slate-500 dark:text-slate-400 hover:bg-brand-canvas hover:text-brand-navy dark:hover:text-slate-100' }}>
@@ -57,7 +57,7 @@ export function Navbar() {
           </nav>
           <div className="hidden h-7 w-px bg-brand-border lg:block" />
           <UserMenu />
-          <button type="button" className="rounded-lg p-2 text-brand-navy dark:text-slate-100 hover:bg-brand-canvas lg:hidden" aria-expanded={mobileOpen} aria-controls="mobile-navigation" aria-label={mobileOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'} onClick={() => setMobileOpen(!mobileOpen)}>
+          <button type="button" className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-brand-navy dark:text-slate-100 hover:bg-brand-canvas lg:hidden" aria-expanded={mobileOpen} aria-controls="mobile-navigation" aria-label={mobileOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'} onClick={() => setMobileOpen(!mobileOpen)}>
             <Icon name={mobileOpen ? 'close' : 'menu'} className="size-6" />
           </button>
         </div>

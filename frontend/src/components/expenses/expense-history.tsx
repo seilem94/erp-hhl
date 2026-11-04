@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { ProjectResponse } from '@/api/types'
 import { useExpenses } from '@/hooks/queries'
-import { Feedback, QueryError } from '@/components/ui/feedback'
+import { Feedback, LoadingState, QueryError } from '@/components/ui/feedback'
 import { ExpenseList } from '@/components/expenses/expense-list'
 
 type ExpenseHistoryProps = { projectId: string | null; onProjectChange: (id: string | null) => void; projects: ProjectResponse[] }
@@ -26,9 +26,10 @@ export function ExpenseHistory({ projectId, onProjectChange, projects }: Expense
         <div><label htmlFor="expenses-until" className="mb-2 block text-sm text-slate-600 dark:text-slate-300">Hasta</label><input id="expenses-until" type="date" className="form-input" value={endDate} onChange={(event) => setEndDate(event.target.value)} aria-invalid={invalidRange} aria-describedby={invalidRange ? 'expenses-range-error' : undefined} /></div>
         <button type="button" className="button-secondary" disabled={!startDate && !endDate} onClick={() => { setStartDate(''); setEndDate('') }}>Limpiar fechas</button>
       </div>
-      <div className="grid gap-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3">
         {invalidRange && <div id="expenses-range-error"><Feedback tone="error">La fecha Desde no puede ser posterior a Hasta.</Feedback></div>}
-        {!invalidRange && query.isPending && <Feedback>Cargando gastos…</Feedback>}
+        {!invalidRange && query.isPending && <LoadingState>Cargando gastos…</LoadingState>}
+        {!invalidRange && !query.isPending && query.isFetching && !query.isError && <LoadingState>Actualizando gastos…</LoadingState>}
         {!invalidRange && query.isError && <QueryError message={query.error.message} onRetry={() => { void query.refetch() }} retrying={query.isFetching} />}
         {!invalidRange && query.isSuccess && expenses.length === 0 && <Feedback>No hay gastos registrados para esta cuenta y período.</Feedback>}
         {!invalidRange && expenses.length > 0 && <ExpenseList expenses={expenses} />}

@@ -17,7 +17,7 @@ export function FormField({ id, label, error, hint, required, children }: FormFi
       </label>
       {children}
       {hint && <p id={`${id}-hint`} className="mt-2 text-xs leading-5 text-slate-500 dark:text-slate-400">{hint}</p>}
-      {error && <p id={`${id}-error`} className="mt-2 text-sm text-red-700 dark:text-red-300">{error}</p>}
+      {error && <p id={`${id}-error`} className="mt-2 text-sm text-red-700 dark:text-red-300 [overflow-wrap:anywhere]">{error}</p>}
     </div>
   )
 }

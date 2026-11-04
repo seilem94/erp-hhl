@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { projectStatuses, type ProjectResponse, type UpdateProjectRequest } from '@/api/types'
 import { useUpdateProject } from '@/hooks/queries'
 import { Feedback } from '@/components/ui/feedback'
+import { Spinner } from '@/components/ui/spinner'
 import { FormField } from '@/components/ui/form-field'
 import { focusInvalid, formString } from '@/utils/forms'
 import { statusLabels } from '@/utils/format'
@@ -68,7 +69,7 @@ export function ProjectEditForm({ project, onClose, onUpdated }: ProjectEditForm
     <section id="edit-project" aria-labelledby="edit-project-title" className="form-panel mt-6">
       <h2 id="edit-project-title" className="text-xl font-semibold">Editar Proyecto</h2>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Se actualizarán únicamente los campos modificados.</p>
-      <form onSubmit={submit} onChange={clearFeedback} noValidate aria-labelledby="edit-project-title" className="mt-6">
+      <form onSubmit={submit} onChange={clearFeedback} noValidate aria-busy={mutation.isPending} aria-labelledby="edit-project-title" className="mt-6">
         <fieldset disabled={mutation.isPending} className="grid min-w-0 gap-5 sm:grid-cols-2">
           <legend className="sr-only">Actualizar datos de la obra</legend>
           <FormField id="edit-project-name" label="Nombre" error={errors.name}>
@@ -86,7 +87,7 @@ export function ProjectEditForm({ project, onClose, onUpdated }: ProjectEditForm
             </select>
           </FormField>
           <div className="flex flex-wrap gap-3 sm:col-span-2">
-            <button type="submit" className="button-primary">{mutation.isPending ? 'Guardando cambios…' : 'Guardar cambios'}</button>
+            <button type="submit" className="button-primary">{mutation.isPending && <Spinner />}{mutation.isPending ? 'Guardando cambios…' : 'Guardar cambios'}</button>
             <button type="button" onClick={onClose} className="button-secondary">Cancelar</button>
           </div>
         </fieldset>

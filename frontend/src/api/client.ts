@@ -3,12 +3,14 @@ export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL?.trim() || 'http:
 export class ApiError extends Error {
   readonly status: number
   readonly fieldErrors: Record<string, string>
+  readonly outcomeUnknown: boolean
 
-  constructor(message: string, status = 0, fieldErrors: Record<string, string> = {}) {
+  constructor(message: string, status = 0, fieldErrors: Record<string, string> = {}, outcomeUnknown = false) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.fieldErrors = fieldErrors
+    this.outcomeUnknown = outcomeUnknown
   }
 }
 
@@ -47,6 +49,8 @@ type RequestOptions = {
 }
 
 export async function request<T>(path: string, decode: (value: unknown) => T, options: RequestOptions = {}): Promise<T> {
+  const isWrite = options.method === 'POST' || options.method === 'PATCH'
+  let acceptedWrite = false
   const controller = new AbortController()
   const abort = () => controller.abort(options.signal?.reason)
   if (options.signal?.aborted) abort()
@@ -72,6 +76,7 @@ export async function request<T>(path: string, decode: (value: unknown) => T, op
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: controller.signal,
     })
+    acceptedWrite = isWrite && response.ok
     let payload: unknown
     try {
       payload = await response.json()
@@ -83,10 +88,12 @@ export async function request<T>(path: string, decode: (value: unknown) => T, op
     return decode(payload)
   } catch (error) {
     if (options.signal?.aborted) throw error
-    if (!timedOut && error instanceof ApiError) throw error
-    if (options.method === 'POST') {
-      throw new ApiError('No pudimos confirmar el registro. Revisa el listado antes de volver a enviarlo.')
+    if (isWrite && (acceptedWrite || timedOut || !(error instanceof ApiError))) {
+      throw new ApiError(options.method === 'PATCH'
+        ? 'No pudimos confirmar los cambios. Revisa el detalle actualizado antes de volver a guardarlos.'
+        : 'No pudimos confirmar el registro. Revisa el listado antes de volver a enviarlo.', error instanceof ApiError ? error.status : 0, {}, true)
     }
+    if (!timedOut && error instanceof ApiError) throw error
     throw new ApiError(timedOut
       ? 'La consulta está tardando demasiado. Inténtalo nuevamente.'
       : 'No se pudo conectar con el servicio. Comprueba tu conexión e inténtalo nuevamente.')

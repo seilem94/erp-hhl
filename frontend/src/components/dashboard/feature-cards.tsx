@@ -24,7 +24,7 @@ function ProjectsCard({ metrics }: CardProps) {
       </div>
       <h3 id="projects-title" className="mt-5 text-xl font-semibold tracking-tight">Proyectos y Obras</h3>
       <p className="mt-2 text-sm text-slate-400">Cada proyecto, un paso adelante.</p>
-      <p className="mt-7 text-[2.75rem] leading-none font-semibold tracking-tight tabular-nums"><Metric value={projectCount === null ? null : String(projectCount)} loading={loadingProjects} /></p>
+      <p className="money-value mt-7 text-[2.75rem] leading-none font-semibold tracking-tight"><Metric value={projectCount === null ? null : String(projectCount)} loading={loadingProjects} /></p>
       <p className="mt-3 text-xs text-slate-400">Obras registradas</p>
       <div className="mt-5">
         {projectCount !== null && projectCount > 0 && completedCount !== null
@@ -52,20 +52,20 @@ function ExpensesCard({ metrics }: CardProps) {
             event.currentTarget.querySelector('summary')?.focus()
           }
         }} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) event.currentTarget.open = false }}>
-          <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/20 px-2.5 py-2 text-[11px] font-medium hover:bg-white/10">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/20 px-2.5 py-2 text-[11px] font-medium hover:bg-white/10">
             Accesos rápidos <Icon name="chevron-down" className="size-3 transition-transform group-open:rotate-180" />
           </summary>
           <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-xl border border-brand-border bg-white dark:bg-slate-900 p-1.5 text-brand-navy dark:text-slate-100 shadow-lg">
-            <Link to="/gastos" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="plus" className="size-4" /> Registrar gasto</Link>
-            <Link to="/gastos" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="receipt" className="size-4" /> Consultar gastos</Link>
+            <Link to="/gastos" className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="plus" className="size-4" /> Registrar gasto</Link>
+            <Link to="/gastos" className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="receipt" className="size-4" /> Consultar gastos</Link>
           </div>
         </details>
       </div>
       <h3 id="expenses-title" className="mt-5 text-xl font-semibold tracking-tight">Registro de Gastos</h3>
-      <p className="mt-2 text-sm text-blue-100">Los pequeños gastos también cuentan.</p>
-      <p className="mt-7 text-[2.5rem] leading-none font-semibold tracking-tight tabular-nums"><Metric value={metrics.total === null ? null : formatMoney(metrics.total)} loading={metrics.loadingExpenses} /></p>
-      <p className="mt-3 text-xs text-blue-100">Gastos acumulados</p>
-      <p className="mt-3 text-xs text-blue-100">{metrics.expenseCount === null ? metrics.loadingExpenses ? 'Consultando registros…' : 'Información no disponible' : `${metrics.expenseCount} ${metrics.expenseCount === 1 ? 'gasto registrado' : 'gastos registrados'}`}</p>
+      <p className="mt-2 text-sm text-white">Los pequeños gastos también cuentan.</p>
+      <p className="money-value mt-7 text-[2.5rem] leading-none font-semibold tracking-tight"><Metric value={metrics.total === null ? null : formatMoney(metrics.total)} loading={metrics.loadingExpenses} /></p>
+      <p className="mt-3 text-xs text-white">Gastos acumulados</p>
+      <p className="mt-3 text-xs text-white">{metrics.expenseCount === null ? metrics.loadingExpenses ? 'Consultando registros…' : 'Información no disponible' : `${metrics.expenseCount} ${metrics.expenseCount === 1 ? 'gasto registrado' : 'gastos registrados'}`}</p>
       <div className="mt-auto pt-7">
         <Link to="/gastos" className="card-button justify-center gap-2 bg-white text-brand-deep-blue shadow-sm hover:bg-blue-50">
           <Icon name="plus" className="size-4" /> Registrar Gasto
@@ -94,17 +94,17 @@ function FinancesCard({ metrics }: CardProps) {
       <div className="my-7 grid gap-5" role="img" aria-label={chartLabel}>
         {categories.map(({ label, value, color }) => (
           <div key={label}>
-            <div className="mb-2.5 flex items-center justify-between gap-2 text-[11px] sm:text-xs">
+            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs">
               <span className="text-slate-500 dark:text-slate-400">{label}</span>
-              <span className="font-semibold tabular-nums">{metrics.loadingExpenses ? '…' : value === null ? '—' : formatMoney(value)}</span>
+              <span className="money-value font-semibold">{metrics.loadingExpenses ? '…' : value === null ? '—' : formatMoney(value)}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-brand-canvas"><div className={`h-full rounded-full ${color}`} style={{ width: `${total !== null && total > 0 && value !== null ? Math.max(0, Math.min(100, Number(value) / total * 100)) : 0}%` }} /></div>
           </div>
         ))}
       </div>
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-brand-border pt-5 text-sm">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-brand-border pt-5 text-sm">
         <span className="text-slate-500 dark:text-slate-400">Total registrado</span>
-        <span className="font-semibold tabular-nums">{metrics.loadingExpenses ? '…' : metrics.total === null ? '—' : formatMoney(metrics.total)}</span>
+        <span className="money-value font-semibold">{metrics.loadingExpenses ? '…' : metrics.total === null ? '—' : formatMoney(metrics.total)}</span>
       </div>
     </article>
   )
