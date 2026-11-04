@@ -55,7 +55,7 @@ function ExpensesCard({ metrics }: CardProps) {
           <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-white/20 px-2.5 py-2 text-[11px] font-medium hover:bg-white/10">
             Accesos rápidos <Icon name="chevron-down" className="size-3 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-xl border border-brand-border bg-white p-1.5 text-brand-navy shadow-lg">
+          <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-xl border border-brand-border bg-white dark:bg-slate-900 p-1.5 text-brand-navy dark:text-slate-100 shadow-lg">
             <Link to="/gastos" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="plus" className="size-4" /> Registrar gasto</Link>
             <Link to="/gastos" className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="receipt" className="size-4" /> Consultar gastos</Link>
           </div>
@@ -78,24 +78,24 @@ function ExpensesCard({ metrics }: CardProps) {
 function FinancesCard({ metrics }: CardProps) {
   const total = metrics.total === null ? null : Number(metrics.total)
   const categories = [
-    { label: 'Gastos Operativos (OPEX)', value: metrics.operationalTotal, color: 'bg-brand-navy' },
+    { label: 'Gastos Operativos (OPEX)', value: metrics.operationalTotal, color: 'bg-brand-navy dark:bg-slate-400' },
     { label: 'Obras (CapEx)', value: metrics.projectTotal, color: 'bg-brand-blue' },
   ]
   const chartLabel = metrics.total === null ? 'Resumen financiero todavía no disponible.' : `Distribución de gastos: operación ${formatMoney(metrics.operationalTotal ?? '0')}, obras ${formatMoney(metrics.projectTotal ?? '0')}.`
 
   return (
-    <article aria-labelledby="finances-title" className="feature-card border border-brand-border bg-white">
+    <article aria-labelledby="finances-title" className="feature-card border border-brand-border bg-white dark:bg-slate-900">
       <div className="flex items-center justify-between">
-        <span className="card-icon bg-brand-canvas text-brand-navy"><Icon name="chart" className="size-6" /></span>
-        <span className="text-[10px] font-medium tracking-wider text-slate-500 uppercase">Resumen</span>
+        <span className="card-icon bg-brand-canvas text-brand-navy dark:text-slate-100"><Icon name="chart" className="size-6" /></span>
+        <span className="text-[10px] font-medium tracking-wider text-slate-500 dark:text-slate-400 uppercase">Resumen</span>
       </div>
       <h3 id="finances-title" className="mt-5 text-xl font-semibold tracking-tight">Finanzas Rápidas</h3>
-      <p className="mt-2 text-sm text-slate-500">Una mirada clara a tus gastos.</p>
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Una mirada clara a tus gastos.</p>
       <div className="my-7 grid gap-5" role="img" aria-label={chartLabel}>
         {categories.map(({ label, value, color }) => (
           <div key={label}>
             <div className="mb-2.5 flex items-center justify-between gap-2 text-[11px] sm:text-xs">
-              <span className="text-slate-500">{label}</span>
+              <span className="text-slate-500 dark:text-slate-400">{label}</span>
               <span className="font-semibold tabular-nums">{metrics.loadingExpenses ? '…' : value === null ? '—' : formatMoney(value)}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-brand-canvas"><div className={`h-full rounded-full ${color}`} style={{ width: `${total !== null && total > 0 && value !== null ? Math.max(0, Math.min(100, Number(value) / total * 100)) : 0}%` }} /></div>
@@ -103,7 +103,7 @@ function FinancesCard({ metrics }: CardProps) {
         ))}
       </div>
       <div className="mt-auto flex items-center justify-between gap-2 border-t border-brand-border pt-5 text-sm">
-        <span className="text-slate-500">Total registrado</span>
+        <span className="text-slate-500 dark:text-slate-400">Total registrado</span>
         <span className="font-semibold tabular-nums">{metrics.loadingExpenses ? '…' : metrics.total === null ? '—' : formatMoney(metrics.total)}</span>
       </div>
     </article>
@@ -117,7 +117,7 @@ export function FeatureCards() {
     <section aria-labelledby="overview-title" aria-busy={metrics.isFetching} className="page-container pt-4">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h2 id="overview-title" className="text-lg font-semibold tracking-tight">Tu operación, en un vistazo</h2>
-        <span className="flex items-center gap-2 rounded-full border border-brand-border bg-white px-3 py-1.5 text-[11px] text-slate-500"><span className={`size-1.5 rounded-full ${metrics.error ? 'bg-amber-500' : 'bg-brand-blue'}`} />{status}</span>
+        <span className="flex items-center gap-2 rounded-full border border-brand-border bg-white dark:bg-slate-900 px-3 py-1.5 text-[11px] text-slate-500 dark:text-slate-400"><span className={`size-1.5 rounded-full ${metrics.error ? 'bg-amber-500' : 'bg-brand-blue'}`} />{status}</span>
       </div>
       {metrics.error && <div className="mb-5"><QueryError message={`No pudimos cargar todo el resumen. ${metrics.error.message}`} onRetry={metrics.refetch} retrying={metrics.isFetching} /></div>}
       <div className="grid gap-5 lg:grid-cols-3 lg:gap-6">
@@ -125,7 +125,7 @@ export function FeatureCards() {
         <ExpensesCard metrics={metrics} />
         <FinancesCard metrics={metrics} />
       </div>
-      <p className="mt-5 flex items-start gap-2 text-xs leading-5 text-slate-500"><Icon name="check" className="mt-0.5 size-4 shrink-0 text-brand-blue" />Obras, gastos y finanzas. Todo en un mismo lugar.</p>
+      <p className="mt-5 flex items-start gap-2 text-xs leading-5 text-slate-500 dark:text-slate-400"><Icon name="check" className="mt-0.5 size-4 shrink-0 text-brand-blue dark:text-blue-400" />Obras, gastos y finanzas. Todo en un mismo lugar.</p>
     </section>
   )
 }

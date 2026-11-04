@@ -48,9 +48,9 @@ export function ProjectForm() {
 
   return (
     <section className="form-panel self-start" aria-labelledby="create-project-title">
-      <span className="card-icon bg-brand-tint text-brand-blue"><Icon name="blueprint" className="size-6" /></span>
+      <span className="card-icon bg-brand-tint text-brand-blue dark:text-blue-400"><Icon name="blueprint" className="size-6" /></span>
       <h2 id="create-project-title" className="mt-5 text-xl font-semibold tracking-tight">Nueva obra</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-500">Registra el proyecto y su presupuesto inicial.</p>
+      <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">Registra el proyecto y su presupuesto inicial.</p>
       <form ref={formRef} onSubmit={submit} onChange={clearFeedback} noValidate aria-labelledby="create-project-title" className="mt-6">
         <fieldset disabled={mutation.isPending} className="grid min-w-0 gap-5">
           <legend className="sr-only">Datos del nuevo proyecto</legend>

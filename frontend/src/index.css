@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --color-brand-navy: #0f172a;
@@ -17,10 +19,17 @@
     text-rendering: optimizeLegibility;
   }
 
+  html.dark {
+    --color-brand-canvas: #020617;
+    --color-brand-tint: #172554;
+    --color-brand-border: #334155;
+  }
+
   body {
     margin: 0;
     min-width: 320px;
     background: var(--color-brand-canvas);
+    @apply text-brand-navy dark:text-slate-100;
   }
 
   :where(a, button, summary):focus-visible {
@@ -53,6 +62,9 @@
 
   .dashboard-hero {
     background: radial-gradient(ellipse at 85% 30%, #dbeafe99, transparent 60%), linear-gradient(135deg, #f8fafc 30%, #eff6ff66);
+    @variant dark {
+      background: radial-gradient(ellipse at 85% 30%, #1e40af30, transparent 60%), linear-gradient(135deg, #020617 30%, #0f172a);
+    }
   }
 
   .feature-card {
@@ -73,15 +85,19 @@
   }
 
   .form-panel {
-    @apply rounded-2xl border border-brand-border bg-white p-5 shadow-sm shadow-brand-navy/3 sm:p-7;
+    @apply rounded-2xl border border-brand-border bg-white p-5 shadow-sm shadow-brand-navy/3 sm:p-7 dark:bg-slate-900;
   }
 
   .form-input {
-    @apply min-h-12 w-full min-w-0 rounded-xl border border-brand-border bg-white px-3.5 py-3 text-sm text-brand-navy outline-none transition-shadow placeholder:text-slate-400 focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/10 disabled:bg-brand-canvas disabled:text-slate-500 aria-invalid:border-red-500 aria-invalid:focus:ring-red-500/10;
+    @apply min-h-12 w-full min-w-0 rounded-xl border border-brand-border bg-white px-3.5 py-3 text-sm text-brand-navy outline-none transition-shadow placeholder:text-slate-400 focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/10 disabled:bg-brand-canvas disabled:text-slate-500 aria-invalid:border-red-500 aria-invalid:focus:ring-red-500/10 dark:bg-slate-900 dark:text-slate-100 dark:disabled:text-slate-400;
   }
 
   .button-primary {
     @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-blue px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-deep-blue disabled:cursor-wait disabled:opacity-60;
+  }
+
+  .button-secondary {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-brand-navy px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:hover:bg-slate-700;
   }
 
   .project-progress {

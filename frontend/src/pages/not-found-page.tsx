@@ -6,7 +6,7 @@ export function NotFoundPage() {
       <h1 id="not-found-title" className="text-3xl font-semibold tracking-tight">
         Página no encontrada
       </h1>
-      <p className="mt-4 text-slate-600">La dirección solicitada no está disponible.</p>
+      <p className="mt-4 text-slate-600 dark:text-slate-300">La dirección solicitada no está disponible.</p>
       <Link to="/" className="mt-6 inline-block font-medium text-blue-700 underline">
         Volver al inicio
       </Link>

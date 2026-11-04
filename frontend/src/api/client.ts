@@ -40,9 +40,10 @@ function responseError(status: number, payload: unknown): ApiError {
 }
 
 type RequestOptions = {
-  method?: 'GET' | 'POST'
+  method?: 'GET' | 'POST' | 'PATCH'
   body?: unknown
   signal?: AbortSignal
+  queryParams?: Record<string, string | undefined>
 }
 
 export async function request<T>(path: string, decode: (value: unknown) => T, options: RequestOptions = {}): Promise<T> {
@@ -57,7 +58,12 @@ export async function request<T>(path: string, decode: (value: unknown) => T, op
   }, 15000)
 
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(options.queryParams ?? {})) {
+      if (value) params.set(key, value)
+    }
+    const query = params.size ? `?${params.toString()}` : ''
+    const response = await fetch(`${API_BASE_URL}${path}${query}`, {
       method: options.method ?? 'GET',
       headers: {
         Accept: 'application/json',

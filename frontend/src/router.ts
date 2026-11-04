@@ -2,7 +2,7 @@ import { createRootRoute, createRoute, createRouter } from '@tanstack/react-rout
 import { RootLayout } from '@/components/root-layout'
 import { HomePage } from '@/pages/home-page'
 import { NotFoundPage } from '@/pages/not-found-page'
-import { SettingsPage } from '@/pages/workspace-pages'
+import { SettingsPage } from '@/pages/configuracion'
 import { ProjectsPage } from '@/pages/proyectos'
 import { ExpensesPage } from '@/pages/gastos'
 import { ProjectDetailPage } from '@/pages/proyecto-detalle'

@@ -26,6 +26,19 @@ export interface CreateProjectRequest {
   description?: string | null
 }
 
+export interface UpdateProjectRequest {
+  name?: string | null
+  client?: string | null
+  estimated_budget?: DecimalInput | null
+  status?: ProjectStatus | null
+  description?: string | null
+}
+
+export interface ExpenseFilters {
+  start_date?: string
+  end_date?: string
+}
+
 export interface RegisterExpenseRequest {
   amount: DecimalInput
   date: string

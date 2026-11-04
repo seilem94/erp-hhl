@@ -70,7 +70,7 @@ export function ExpenseForm({ projects, projectsLoading, projectsUnavailable, on
 
   return (
     <section className="form-panel" aria-labelledby="register-expense-title">
-      <div className="flex items-center gap-4"><span className="card-icon bg-brand-tint text-brand-blue"><Icon name="receipt" className="size-6" /></span><div><h2 id="register-expense-title" className="text-xl font-semibold tracking-tight">Registro Rápido de Gastos</h2><p className="mt-1 text-sm text-slate-500">Completa los datos de tu compra.</p></div></div>
+      <div className="flex items-center gap-4"><span className="card-icon bg-brand-tint text-brand-blue dark:text-blue-400"><Icon name="receipt" className="size-6" /></span><div><h2 id="register-expense-title" className="text-xl font-semibold tracking-tight">Registro Rápido de Gastos</h2><p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Completa los datos de tu compra.</p></div></div>
       <form ref={formRef} onSubmit={submit} onChange={clearFeedback} noValidate aria-labelledby="register-expense-title" className="mt-7">
         <fieldset disabled={mutation.isPending} className="grid min-w-0 gap-5 sm:grid-cols-2">
           <legend className="sr-only">Datos del gasto</legend>

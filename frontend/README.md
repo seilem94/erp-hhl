@@ -50,9 +50,10 @@ Ejecutar lint y build al modificar código. Los comandos efectivos se definen en
 | `src/hooks/queries.ts` | Consultas compartidas, selección de una obra, mutaciones e invalidación de caché |
 | `src/hooks/dashboard.ts` | Composición de consultas y métricas del Dashboard |
 | `src/utils/decimal.ts` | Suma decimal exacta antes del formato visual |
-| `src/components/projects/` | Formulario de alta de proyectos |
+| `src/components/projects/` | Formularios de alta y edición parcial de proyectos |
 | `src/components/expenses/` | Registro rápido y consulta de gastos |
 | `src/utils/` | Formato de importes/fechas y utilidades de formularios |
+| `src/utils/theme.ts` | Aplicación y persistencia local del tema |
 | `src/components/navbar.tsx` | Navegación y menús |
 | `src/components/root-layout.tsx` | Composición de cabecera, contenido y pie |
 | `src/components/dashboard/` | Hero y tarjetas |
@@ -83,7 +84,7 @@ Los valores canónicos de color están en el bloque `@theme` de `src/index.css`.
 | Recurso en `public/` | Uso |
 | :--- | :--- |
 | `logo.png` | Logo activo en la Navbar |
-| `logo-white.png` | Variante disponible para fondos oscuros |
+| `logo-white.png` | Logo activo en la Navbar con tema oscuro |
 | `favicon.svg` | Favicon activo en `index.html` |
 | `favicon.ico` | Alternativa disponible, sin activar |
 | `hero-blueprint.svg` | Ilustración decorativa del Hero |
@@ -93,7 +94,7 @@ Referenciar estos recursos desde la raíz pública, por ejemplo `/logo.png`, sin
 
 Inter se importa desde `@fontsource/inter` en `src/main.tsx`, con pesos 400, 500 y 600 del subconjunto latino. El build incorpora sus archivos a `dist/assets/`. La estrategia de fuentes se justifica en el [ADR de migración](../docs/adr/0001-migracion-react-vite.md).
 
-Las tarjetas usan tres columnas desde `lg` y una en pantallas menores. Conservar navegación por teclado, nombres accesibles, foco visible y cierre de menús con Escape.
+Las tarjetas usan tres columnas desde `lg` y una en pantallas menores. Conservar navegación por teclado, nombres accesibles, foco visible y cierre de menús con Escape. El modificador `dark:` responde a la clase `dark` del elemento `html`; los tokens de superficies y bordes se adaptan a ese tema sin cambiar los colores de las tarjetas de marca.
 
 ## Publicación estática
 
@@ -107,7 +108,15 @@ El resumen obtiene el listado de obras, los gastos operativos y los gastos de ca
 
 Los importes decimales se suman de forma exacta antes de darles formato. Si una consulta necesaria falla, el total dependiente queda sin valor y se ofrece reintento; no se presenta una suma parcial como total definitivo.
 
-La API actual no proporciona un GET individual de proyecto: el detalle selecciona la obra del listado compartido en caché y consulta sus gastos por identificador. El detalle muestra todos esos gastos; comparte caché con el Dashboard y el historial para reflejar las mutaciones existentes. El número de consultas de gastos del resumen crece con el número de obras hasta disponer de un endpoint agregado.
+La API actual no proporciona un GET individual de proyecto: la consulta del detalle resuelve la obra mediante el listado compartido en caché y consulta sus gastos por identificador. El detalle muestra todos esos gastos; comparte caché de gastos con el Dashboard y el historial para reflejar las mutaciones existentes. El número de consultas de gastos del resumen crece con el número de obras hasta disponer de un endpoint agregado.
+
+## Edición, filtros y preferencias
+
+El formulario de edición se abre en el detalle, precarga los datos y envía por PATCH únicamente los campos modificados. Un presupuesto vacío conserva el valor existente. Tras confirmar la respuesta, la mutación actualiza los datos e invalida tanto la colección como la clave específica de la obra. Los errores conservan la edición; las escrituras no se reintentan ni se encolan automáticamente.
+
+El historial de gastos conserva las fechas en estado local y las envía al servicio como `start_date` y `end_date`, límites inclusivos y opcionales. Un rango invertido bloquea la consulta y muestra el error. Cada combinación de cuenta y fechas tiene su propia clave de caché; el botón de limpieza vuelve a la consulta sin fechas. El historial mantiene su límite visual de diez registros, sin afectar los totales completos del Dashboard ni los gastos del detalle.
+
+Configuración permite elegir tema claro u oscuro. La selección se guarda en `localStorage` y se aplica antes del montaje de React al recargar. Si el navegador impide guardarla, el tema se aplica a la sesión y se informa de la limitación. Esta preferencia pertenece al navegador, sin sincronización con una cuenta de usuario.
 
 ## Mantenimiento de dependencias
 
