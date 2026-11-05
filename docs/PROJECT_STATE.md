@@ -1,17 +1,17 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-04. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
+Actualizado: 2026-11-05. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
 
 ## Situación actual
 
-- Rama de trabajo: `refactor/frontend-vite`.
-- Fase activa: Fase 3, integración funcional de la interfaz. Secuencia en el [plan de frontend](06_fase3_frontend.md).
+- Rama de trabajo: `feature/fase4-evolucion`.
+- Fase activa: Fase 4, abierta con la [planificación de evolución y resiliencia](07_fase4_evolucion_y_resiliencia.md). La apertura es documental y no acredita implementación de sus módulos.
 - Backend: dominio, persistencia, migraciones y API implementados; autenticación no implementada. Infraestructura final y datos semilla aplazados.
 - Frontend: integración con la API implementada mediante cliente HTTP tipado basado en OpenAPI, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado real, filtro local por estado, creación y edición parcial de nombre, cliente, presupuesto y estado desde el detalle. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha. Los formularios conservan datos ante errores, bloquean envíos simultáneos y confirman las operaciones exitosas.
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
 - Configuración permite elegir tema claro u oscuro, persistirlo en el navegador y consultar la versión del ERP. El tema se aplica en todas las vistas. No existe todavía una sesión autenticada ni sincronización de preferencias con una cuenta.
-- Frontend auditado y pulido en UX/UI, manejo de errores y caché, cerrando la estabilidad de la Fase 3 para los flujos implementados. Las mejoras que requieren ampliar el contrato del servicio se reservan en [propuestas de UX/UI](UX_UI_SUGGESTIONS.md).
+- Frontend auditado y pulido en UX/UI, manejo de errores y caché, cerrando la estabilidad de la Fase 3 para los flujos implementados. Las mejoras que requieren ampliar el contrato del servicio se planifican en la [Fase 4](07_fase4_evolucion_y_resiliencia.md), con antecedentes en las [propuestas de UX/UI](UX_UI_SUGGESTIONS.md).
 - PWA instalable, caché de aplicación y sincronización offline: pendientes.
 
 ## Entregas y evidencia histórica
@@ -76,6 +76,16 @@ Se consultó el OpenAPI servido por la API local sin inspeccionar ni modificar c
 - Esta auditoría usó exclusivamente respuestas de API simuladas para probar el frontend: no ejecutó, consultó ni modificó el backend, ni creó datos de negocio. Las propuestas que requieren cambios del servicio se documentaron sin implementarlas.
 
 ## Historial documental
+
+### Apertura de la Fase 4 — 2026-11-05
+
+Se creó el [plan de Fase 4](07_fase4_evolucion_y_resiliencia.md), integrando las notas acordadas del cliente y las propuestas pendientes de UX/UI. Se registraron los ADR de [idempotencia offline](adr/0002-idempotencia-offline.md) y [motor financiero por IVA](adr/0003-motor-financiero-iva.md), y se actualizaron los accesos del [índice](README.md) y del [itinerario LLM](LLM_CONTEXT.md).
+
+La entrega se limita al diseño documental. Los módulos de esta fase siguen pendientes de implementación; no se modificaron frontend, backend, contratos ejecutables ni dependencias. La aceptación de las decisiones arquitectónicas no implica haber entregado autenticación, sincronización, gestión de archivos, nuevas reglas financieras, RRHH o inventario.
+
+Validación de esta entrega: revisión de coherencia y referencias al código; comprobación de 23 archivos Markdown y 139 enlaces locales, incluidas 24 anclas; identificadores ADR aceptados únicos del 0000 al 0003; alcance de seis documentos bajo `docs/` y `git diff --check` sin errores. No se ejecutaron suites de aplicación por tratarse de una entrega exclusivamente documental.
+
+### Consolidación SSOT anterior
 
 Consolidación SSOT registrada en `d096ef4`, sin cambios de aplicación en aquella revisión. El [índice documental](README.md#auditoría-de-consolidación) registra los documentos depurados y las propuestas aún no creadas.
 

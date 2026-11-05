@@ -13,7 +13,9 @@ Cada documento mantiene exclusivamente el tema asignado. Las referencias de nave
 | Preparación Python, conexión, migraciones y pruebas | [README del backend](../backend/README.md) |
 | Operación, estructura y recursos de la interfaz | [README del frontend](../frontend/README.md) |
 | Restricciones de diseño de las capas | [Reglas de arquitectura](02_reglas_arquitectura.md) |
-| Preguntas y acuerdos de uso con el socio | [Guía de reunión](05_revision_mvp_socio.md) |
+| Preguntas y acuerdos de uso de la revisión del MVP con el socio | [Guía de reunión](05_revision_mvp_socio.md) |
+| Secuencia, criterios y reglas de evolución de Fase 4 no cubiertas por un ADR | [Plan de Fase 4](07_fase4_evolucion_y_resiliencia.md) |
+| Antecedentes de mejoras de UX/UI que requieren ampliar el contrato | [Propuestas de UX/UI](UX_UI_SUGGESTIONS.md) |
 | Justificación y compensaciones de decisiones | Cada ADR del registro siguiente |
 
 El código y sus manifiestos son la autoridad de contratos, versiones, scripts y configuración. No mantener catálogos manuales que compitan con ellos.
@@ -23,6 +25,7 @@ El código y sus manifiestos son la autoridad de contratos, versiones, scripts y
 - [Fase 1: dominio y casos de uso](03_fase1_mvp.md).
 - [Fase 2: persistencia y API](04_fase2_infraestructura.md).
 - [Fase 3: integración de la interfaz](06_fase3_frontend.md).
+- [Fase 4: Evolución del Dominio, Resiliencia y Reglas de Negocio](07_fase4_evolucion_y_resiliencia.md).
 
 Los planes definen secuencias y criterios; no repiten estados de avance. Para comenzar una sesión, seguir el [itinerario LLM](LLM_CONTEXT.md).
 
@@ -32,6 +35,8 @@ Los planes definen secuencias y criterios; no repiten estados de avance. Para co
 | :--- | :--- |
 | 0000 | [Separación del núcleo mediante Clean Architecture](adr/0000-stack-y-clean-architecture.md) |
 | 0001 | [Migración de Next.js a React + Vite](adr/0001-migracion-react-vite.md) |
+| 0002 | [Idempotencia con UUIDs del cliente para operaciones offline](adr/0002-idempotencia-offline.md) |
+| 0003 | [Separación de flujos de caja y política salarial por condición de IVA](adr/0003-motor-financiero-iva.md) |
 
 Usar la [plantilla ADR](adr/0000-plantilla-adr.md) para decisiones futuras; la plantilla no es un registro aceptado. La fecha, el estado y las consecuencias de cada decisión se mantienen solo en su archivo.
 
@@ -58,8 +63,8 @@ La información retirada sigue disponible en el historial de Git. No se modifica
 
 ## Propuestas documentales — No creadas
 
-1. `adr/0002-autenticacion-spa.md`: decidir sesión, expiración, almacenamiento y permisos antes de conectar la identidad del usuario.
-2. `adr/0003-sincronizacion-offline.md`: decidir idempotencia, cola, conflictos y política de caché antes de permitir escrituras sin conexión.
+1. ADR de autenticación SPA, sin número reservado: decidir sesión, expiración, almacenamiento y permisos dentro del [Módulo 2 de Fase 4](07_fase4_evolucion_y_resiliencia.md#módulo-2-identidad-y-seguridad).
+2. ADR de sincronización offline, sin número reservado: completar cola, conflictos y política de caché sobre el [ADR de idempotencia](adr/0002-idempotencia-offline.md), según el [Módulo 1 de Fase 4](07_fase4_evolucion_y_resiliencia.md#módulo-1-arquitectura-y-resiliencia).
 3. `operacion/despliegue-y-recuperacion.md`: procedimiento probado de publicación, backups y restauración cuando se retome la operación de producción.
 
 Estos documentos aportarían responsabilidades todavía no cubiertas. No deben duplicar el contrato OpenAPI, las recetas locales de los componentes ni el estado de entrega.

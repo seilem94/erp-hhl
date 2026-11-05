@@ -9,3 +9,9 @@ Este documento es un itinerario de lectura, no una copia del estado, de las regl
 5. Antes de proponer cambios arquitectónicos, revisar el [registro ADR](README.md#registro-de-decisiones).
 
 Inspeccionar el árbol de trabajo y el código de la tarea antes de editar. Un objetivo de planificación no es evidencia de implementación; un resultado histórico no equivale a una ejecución actual.
+
+## Planes de trabajo
+
+- [Fase 4: Evolución del Dominio, Resiliencia y Reglas de Negocio](07_fase4_evolucion_y_resiliencia.md).
+
+Los planes anteriores se localizan en el [índice documental](README.md#planes-de-trabajo). Consultar las fuentes enlazadas sin replicar aquí su contenido.
