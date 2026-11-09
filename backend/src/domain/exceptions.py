@@ -85,3 +85,44 @@ class InvalidExpenseAmountError(BusinessRuleViolationError):
     def __init__(self, amount: Decimal) -> None:
         self.amount = amount
         super().__init__(f"Expense amount must be greater than zero, got '{amount}'.")
+
+
+class InvalidSummaryDateRangeError(BusinessRuleViolationError):
+    """The inclusive summary interval is inverted."""
+
+    def __init__(self, start_date: date, end_date: date) -> None:
+        self.start_date = start_date
+        self.end_date = end_date
+        super().__init__("Summary start_date must not be after end_date.")
+
+
+class InvalidOperationIdError(BusinessRuleViolationError):
+    """The stable operation identifier is not a UUIDv4."""
+
+
+class InvalidCanonicalContentError(BusinessRuleViolationError):
+    """Canonical requests contain unsupported or non-finite content."""
+
+
+class IdempotencyConflictError(DomainException):
+    """A known operation key identifies another command or content."""
+
+
+class OperationUnresolvedError(DomainException):
+    """Resolution is uncertain; recovery must retain the same operation key."""
+
+
+class OperationNotFoundError(EntityNotFoundError):
+    """No operation is visible; this does not prove it is not in transit."""
+
+
+class OperationReconciliationRequiredError(DomainException):
+    """A known confirmation has no recoverable payload; never execute it again."""
+
+
+class IdentityProviderUnavailableError(DomainException):
+    """No verified identity provider is configured outside local development."""
+
+
+class AuthorizationDeniedError(DomainException):
+    """The current actor cannot perform the requested action."""

@@ -1,12 +1,13 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-05. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
+Actualizado: 2026-11-09. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
 
 ## Situación actual
 
 - Rama de trabajo: `feature/fase4-evolucion`.
 - Fase activa: Fase 4, abierta con la [planificación de evolución y resiliencia](07_fase4_evolucion_y_resiliencia.md). La apertura es documental y no acredita implementación de sus módulos.
 - Backend: dominio, persistencia, migraciones y API implementados; autenticación no implementada. Infraestructura final y datos semilla aplazados.
+- Fase 4, Paso 1: contratos y núcleo de resúmenes financieros e idempotencia implementados, con filtro fiscal opcional y moneda tipada, snapshots inmutables, confirmaciones con payload opcional y canonicalización extensible a metadatos sin binarios. Identidad Dummy estable e inyectable disponible exclusivamente en desarrollo local; no constituye autenticación real. Las consultas SQL, tabla de operaciones, migración y endpoints nuevos continúan pendientes.
 - Frontend: integración con la API implementada mediante cliente HTTP tipado basado en OpenAPI, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado real, filtro local por estado, creación y edición parcial de nombre, cliente, presupuesto y estado desde el detalle. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha. Los formularios conservan datos ante errores, bloquean envíos simultáneos y confirman las operaciones exitosas.
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
@@ -36,6 +37,35 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Captura y carga de comprobantes.
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Orquestación de producción y seed, en pausa hasta preparar el despliegue final.
+
+## Validación del Paso 1 de contratos y núcleo
+
+Entrega de 2026-11-09 sobre `feature/fase4-evolucion`, posterior a la aprobación
+de la [propuesta de ingeniería versión 0.2](https://chatgpt.com/space/page_5c78f7dfe3f881919ec1929c3884e5c2).
+
+- `make check-backend` aprobó Ruff, formato y mypy estricto en los 55 archivos de
+  `src/`. La suite completa de Pytest aprobó 112 pruebas en Python 3.12, con dos
+  avisos de deprecación de dependencias externas (AnyIO y Starlette).
+- Los casos nuevos verificaron la conservación de los tres valores del filtro
+  fiscal, los límites temporales del contrato, snapshots independientes de cambios
+  posteriores, confirmaciones purgadas que exigen reconciliación y separación de
+  identidad de operación y recurso.
+- La canonicalización comprobó equivalencia de orden y escala decimal, precisión
+  independiente del contexto Decimal, normalización temporal, huellas diferentes
+  por comando, objetivo y metadatos, y rechazo de streams sin leerlos.
+- La inyección HTTP local conservó el mismo actor entre peticiones e ignoró un
+  encabezado que intentaba seleccionarlo. Se verificó ausencia de Dummy en
+  producción, testing y configuración por defecto, además de denegación de actores
+  ajenos y aislamiento de dependencias entre núcleo e infraestructura.
+- El inicio de TestClient quedó bloqueado dentro del aislamiento de red del
+  sandbox. Tras interrumpir esas ejecuciones, la suite completa terminó fuera de
+  ese aislamiento. Las pruebas HTTP usaron fakes y las de repositorios existentes,
+  SQLite; no se atribuye concurrencia ni persistencia idempotente en PostgreSQL a
+  esta entrega.
+- No se modificó el frontend ni se ejecutaron sus comprobaciones. No se aplicaron
+  migraciones ni se habilitaron endpoints nuevos. La clasificación de IVA de
+  obras históricas y el esquema SQLAlchemy anulable se resolverán al implementar
+  sus adaptadores y migraciones; el núcleo no inventa clasificaciones históricas.
 
 ## Validación de la integración API
 

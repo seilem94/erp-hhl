@@ -6,6 +6,36 @@ All enums are pure Python StrEnum — no framework dependencies.
 from enum import StrEnum
 
 
+class Currency(StrEnum):
+    """Supported monetary units; use enum members throughout the core."""
+
+    CLP = "CLP"
+
+
+class ResourceType(StrEnum):
+    PROJECT = "project"
+    EXPENSE = "expense"
+
+
+class CommandType(StrEnum):
+    CREATE_PROJECT = "create_project"
+    REGISTER_EXPENSE = "register_expense"
+    UPDATE_PROJECT = "update_project"
+
+    @property
+    def resource_type(self) -> ResourceType:
+        if self is CommandType.REGISTER_EXPENSE:
+            return ResourceType.EXPENSE
+        return ResourceType.PROJECT
+
+
+class OperationState(StrEnum):
+    """A confirmed operation may retain metadata after its payload is purged."""
+
+    RESERVED = "reserved"
+    CONFIRMED = "confirmed"
+
+
 class ProjectStatus(StrEnum):
     """Lifecycle states of an electrical project/obra."""
 

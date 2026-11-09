@@ -11,7 +11,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from src.domain.enums import ProjectStatus
+from src.domain.enums import Currency, ProjectStatus
 
 
 @dataclass
@@ -42,3 +42,4 @@ class Project:
     description: str | None = None
     end_date: date | None = None
     budget: Decimal | None = None
+    currency: Currency = Currency.CLP

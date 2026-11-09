@@ -12,7 +12,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from src.domain.enums import ExpenseCategory
+from src.domain.enums import Currency, ExpenseCategory
 
 
 @dataclass
@@ -50,6 +50,7 @@ class Expense:
     updated_at: datetime
     project_id: UUID | None = None
     receipt_url: str | None = None
+    currency: Currency = Currency.CLP
 
     @property
     def is_project_expense(self) -> bool:

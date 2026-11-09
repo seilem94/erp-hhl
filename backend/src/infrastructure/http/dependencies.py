@@ -7,6 +7,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from src.core.config import settings
 from src.domain.repositories.expense_repository import ExpenseRepository
 from src.domain.repositories.project_repository import ProjectRepository
 from src.infrastructure.database.repositories.sqlalchemy_expense_repository import (
@@ -16,14 +17,34 @@ from src.infrastructure.database.repositories.sqlalchemy_project_repository impo
     SQLAlchemyProjectRepository,
 )
 from src.infrastructure.database.session import get_db
+from src.infrastructure.identity.providers import (
+    build_authorization,
+    build_identity_provider,
+)
 from src.use_cases.create_project import CreateProjectUseCase
 from src.use_cases.get_operational_expenses import GetOperationalExpensesUseCase
 from src.use_cases.get_project_expenses import GetProjectExpensesUseCase
 from src.use_cases.list_projects import ListProjectsUseCase
+from src.use_cases.ports.authorization import AuthorizationPort
+from src.use_cases.ports.identity import ActorIdentity, IdentityProvider
 from src.use_cases.register_daily_expense import RegisterDailyExpenseUseCase
 from src.use_cases.update_project import UpdateProjectUseCase
 
 SessionDep = Annotated[Session, Depends(get_db)]
+
+
+def get_identity_provider() -> IdentityProvider:
+    return build_identity_provider(settings.ENV)
+
+
+def get_actor_identity(
+    provider: Annotated[IdentityProvider, Depends(get_identity_provider)],
+) -> ActorIdentity:
+    return provider.get_actor()
+
+
+def get_authorization() -> AuthorizationPort:
+    return build_authorization(settings.ENV)
 
 
 def get_project_repo(

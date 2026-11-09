@@ -44,6 +44,17 @@ Editar `DATABASE_URL` con la conexión PostgreSQL del entorno. Usar el esquema `
 
 La configuración se carga desde variables de proceso o el archivo local mediante [Settings](src/core/config.py). Ejecutar desde esta carpeta para que la ruta relativa de `.env` sea correcta. No versionar credenciales ni publicar el archivo local.
 
+`ENV=development`, incluido en `.env.example`, selecciona automáticamente la
+[identidad Dummy de desarrollo](src/infrastructure/identity/providers.py) para las
+dependencias nuevas. Su actor es estable entre peticiones y simula el acceso
+financiero de un socio local; no constituye una sesión autenticada. No se acepta
+un actor elegido mediante encabezados o cuerpo de la petición.
+
+El valor predeterminado de `ENV` es `production`. Tanto `production` como `testing`
+mantienen deshabilitado el Dummy y requieren un proveedor real o una sustitución
+explícita en las pruebas. La selección está centralizada en las
+[dependencias HTTP](src/infrastructure/http/dependencies.py).
+
 Para migraciones, PostgreSQL debe estar iniciado y la base creada. Este procedimiento usa una instancia ya provisionada; no configura un servicio del sistema ni contenedores.
 
 ## Migraciones con Alembic

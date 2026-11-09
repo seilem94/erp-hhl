@@ -6,8 +6,16 @@ y las expone con tipado estricto a través de la instancia ``settings``.
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from pydantic import PostgresDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Environment(StrEnum):
+    DEVELOPMENT = "development"
+    TESTING = "testing"
+    PRODUCTION = "production"
 
 
 class Settings(BaseSettings):
@@ -28,6 +36,7 @@ class Settings(BaseSettings):
     # Base de datos                                                         #
     # ------------------------------------------------------------------ #
     DATABASE_URL: PostgresDsn
+    ENV: Environment = Environment.PRODUCTION
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
