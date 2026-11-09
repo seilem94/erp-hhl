@@ -8,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.domain.exceptions import DomainException
 from src.infrastructure.http.error_handlers import domain_exception_handler
 from src.infrastructure.http.routers.expenses import router as expenses_router
+from src.infrastructure.http.routers.financial_summaries import (
+    router as summaries_router,
+)
 from src.infrastructure.http.routers.projects import router as projects_router
 
 tags_metadata = [
@@ -56,6 +59,7 @@ app.add_exception_handler(DomainException, domain_exception_handler)  # type: ig
 
 app.include_router(projects_router)
 app.include_router(expenses_router)
+app.include_router(summaries_router)
 
 
 @app.get(

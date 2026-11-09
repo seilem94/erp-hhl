@@ -7,7 +7,8 @@ Actualizado: 2026-11-09. Fuente canónica de entregas, pendientes y evidencia; n
 - Rama de trabajo: `feature/fase4-evolucion`.
 - Fase activa: Fase 4, en ejecución según la [planificación de evolución y resiliencia](07_fase4_evolucion_y_resiliencia.md).
 - Backend base de las Fases 1 y 2: dominio, persistencia, migraciones y API implementados; autenticación no implementada. Infraestructura final y datos semilla aplazados.
-- Fase 4, Módulo 1, Paso 1: núcleo puro y contratos implementados para resúmenes financieros e idempotencia. Incluye proyecciones, DTO, contratos de repositorio, puertos de identidad y autorización, excepciones, filtro fiscal opcional y moneda tipada, snapshots inmutables, confirmaciones con payload opcional y canonicalización extensible a metadatos sin binarios. El dominio y los contratos no dependen de Pydantic, SQLAlchemy ni FastAPI. Identidad Dummy estable e inyectable disponible exclusivamente en desarrollo local; no constituye autenticación real. Las consultas SQL, tabla de operaciones, migración, endpoints nuevos y pruebas de persistencia y concurrencia en PostgreSQL continúan pendientes.
+- Fase 4, Módulo 1, Paso 1: núcleo puro y contratos implementados para resúmenes financieros e idempotencia. Incluye proyecciones, DTO, contratos de repositorio, puertos de identidad y autorización, excepciones, filtro fiscal opcional y moneda tipada, snapshots inmutables, confirmaciones con payload opcional y canonicalización extensible a metadatos sin binarios. El dominio y los contratos no dependen de Pydantic, SQLAlchemy ni FastAPI. Identidad Dummy estable e inyectable disponible exclusivamente en desarrollo local; no constituye autenticación real. El registro transaccional de operaciones y la concurrencia idempotente siguen pendientes del Paso 3.
+- Fase 4, Módulo 1, Paso 2: casos de uso, repositorio SQLAlchemy y endpoints HTTP de resumen general y por obra implementados y probados contra PostgreSQL real. Cada resumen agrega gastos y cantidades en una sola sentencia SQL, con autorización global o por obra, filtros inclusivos de fecha, separación fiscal explícita e importes decimales exactos. Migración aditiva de clasificación fiscal nullable disponible, sin asignar valores a obras históricas; la clasificación obligatoria de escritura sigue pendiente de su evolución funcional. El frontend conserva sus consultas anteriores.
 - Frontend: integración con la API implementada mediante cliente HTTP tipado basado en OpenAPI, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado real, filtro local por estado, creación y edición parcial de nombre, cliente, presupuesto y estado desde el detalle. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha. Los formularios conservan datos ante errores, bloquean envíos simultáneos y confirman las operaciones exitosas.
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
@@ -37,6 +38,37 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Captura y carga de comprobantes.
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Orquestación de producción y seed, en pausa hasta preparar el despliegue final.
+
+## Validación del Paso 2 de resúmenes
+
+Entrega de 2026-11-09 sobre `feature/fase4-evolucion`.
+
+- La suite completa de Pytest aprobó 141 pruebas en Python 3.12, incluidas 29
+  nuevas con TestClient y PostgreSQL 17 real, sin omisiones. Persisten dos avisos
+  de deprecación de dependencias externas (AnyIO y Starlette).
+- Cada prueba PostgreSQL aplicó Alembic en un esquema generado y aislado. Se
+  verificaron upgrade y downgrade de la clasificación fiscal, preservación de
+  datos históricos como NULL y ausencia de un valor por defecto. Solo se usó una
+  base temporal de pruebas, sin migrar bases de negocio.
+- Se comprobaron exactitud de fracciones decimales, totales superiores al límite
+  de una fila NUMERIC(12,2), fechas inclusivas y rangos abiertos, datos vacíos,
+  gastos históricos de obras canceladas y reconciliación con el detalle real.
+- Las solicitudes verificadas ejecutaron una sentencia de agregación por
+  resumen. Añadir 30 obras no incrementó ese número; el repositorio devolvió
+  proyecciones puras sin poblar el mapa de entidades ORM de la sesión.
+- Las pruebas separaron `has_iva=true`, `false` y ausencia de filtro en SQL;
+  OPEX y obras sin clasificar no entraron en un subconjunto fiscal. Los
+  contadores de obras siguieron ese subconjunto sin depender del período de
+  gastos.
+- Se verificaron denegación del resumen global sin permiso global, aislamiento
+  por obra, respuestas indistinguibles para obras inexistentes, excluidas o
+  ajenas, activación del Dummy solo en desarrollo y rechazo de filtros inválidos
+  antes de consultar la base. Los errores de persistencia devolvieron 503 sin
+  totales parciales; un gasto confirmado apareció en la siguiente lectura.
+- `make check-backend` aprobó Ruff, formato y mypy estricto en 60 archivos de
+  `src/`; mypy también aprobó con objetivo Python 3.12. No se añadieron
+  dependencias ni se modificó el frontend. La persistencia idempotente y sus
+  pruebas de concurrencia pertenecen al Paso 3.
 
 ## Validación del Paso 1 de contratos y núcleo
 

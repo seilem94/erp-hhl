@@ -67,6 +67,12 @@ python -m alembic current
 python -m alembic history
 ```
 
+La revisión `a417b6283c90` añade `projects.has_iva` como clasificación transitoria
+nullable, sin valor por defecto ni backfill. Aplicar las migraciones antes de usar
+esta versión del backend. El flujo vigente de altas conserva la compatibilidad y
+puede dejar obras sin clasificar; la selección fiscal obligatoria y la
+regularización histórica siguen el [ADR 0003](../docs/adr/0003-motor-financiero-iva.md).
+
 Después de modificar deliberadamente el esquema ORM, generar y revisar una migración:
 
 ```bash
@@ -93,4 +99,32 @@ python -m pytest tests/use_cases/ -q
 python -m pytest tests/infrastructure/ -q
 ```
 
-La suite actual usa fakes para los casos de uso y las pruebas HTTP, y SQLite en memoria para los repositorios. Las pruebas HTTP importan la configuración de conexión, pero sustituyen sus repositorios. Pasar esta suite no demuestra por sí solo conectividad ni migraciones correctas en PostgreSQL; esas operaciones se verifican separadamente con Alembic.
+Las pruebas de casos de uso y las HTTP anteriores usan fakes; las pruebas de
+repositorios anteriores usan SQLite en memoria. Las pruebas HTTP importan la
+configuración de conexión, aunque sustituyan sus repositorios.
+
+### Integración de resúmenes con PostgreSQL
+
+Las [pruebas de resúmenes](tests/infrastructure/test_financial_summaries_postgres.py)
+ejecutan los endpoints con TestClient y repositorios SQLAlchemy reales. Requieren
+`TEST_DATABASE_URL` como variable de proceso con una conexión PostgreSQL de
+pruebas y permiso para crear esquemas. Cada caso genera un esquema aislado, aplica
+las migraciones y lo elimina al terminar; no modifica tablas preexistentes.
+
+```bash
+TEST_DATABASE_URL='postgresql+psycopg://usuario:clave@localhost:5432/hhl_test' python -m pytest tests/infrastructure/test_financial_summaries_postgres.py -q
+```
+
+En PowerShell, definir la variable antes de ejecutar Pytest:
+
+```powershell
+$env:TEST_DATABASE_URL = "postgresql+psycopg://usuario:clave@localhost:5432/hhl_test"
+python -m pytest tests/infrastructure/test_financial_summaries_postgres.py -q
+```
+
+Mantener también `DATABASE_URL` disponible para importar la configuración de la
+aplicación. Con `TEST_DATABASE_URL` definida, `python -m pytest tests/ -q` incluye
+esta integración en la suite completa. Si falta, esos casos se omiten
+explícitamente; si está definida pero no permite conectarse o no es PostgreSQL,
+fallan sin reemplazar la base por SQLite. Las pruebas anteriores por sí solas no
+acreditan exactitud de agregados ni migraciones en PostgreSQL.

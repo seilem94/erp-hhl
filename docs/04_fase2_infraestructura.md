@@ -22,6 +22,7 @@ Responsabilidad: recorrido de implementación y mapa de infraestructura. El esta
 | Revisiones del esquema | [alembic/versions](../backend/alembic/versions/) |
 | Contrato de proyectos | [Router](../backend/src/infrastructure/http/routers/projects.py) y [esquemas](../backend/src/infrastructure/http/schemas/project.py) |
 | Contrato de gastos | [Router](../backend/src/infrastructure/http/routers/expenses.py) y [esquemas](../backend/src/infrastructure/http/schemas/expense.py) |
+| Lecturas financieras | [Repositorio de agregación](../backend/src/infrastructure/database/repositories/sqlalchemy_financial_summary_repository.py), [router](../backend/src/infrastructure/http/routers/financial_summaries.py) y [esquemas](../backend/src/infrastructure/http/schemas/financial_summary.py) |
 | Composición y OpenAPI | [main.py](../backend/src/main.py) |
 
 No copiar aquí el catálogo de endpoints ni sus ejemplos: el contrato ejecutable y OpenAPI son la referencia. La instalación, el manejo de migraciones y las pruebas pertenecen al [README del backend](../backend/README.md).

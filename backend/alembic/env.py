@@ -10,6 +10,7 @@ from __future__ import annotations
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+from sqlalchemy.engine import Connection
 
 from alembic import context
 
@@ -56,6 +57,14 @@ def run_migrations_online() -> None:
 
     Creates an Engine and associates a connection with the context.
     """
+    # Integration tests supply an isolated schema connection, never a business DB.
+    supplied: object = config.attributes.get("connection")
+    if supplied is not None:
+        if not isinstance(supplied, Connection):
+            raise TypeError("Alembic connection must be a SQLAlchemy Connection.")
+        _run_on_connection(supplied)
+        return
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
@@ -63,13 +72,14 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-        )
+        _run_on_connection(connection)
 
-        with context.begin_transaction():
-            context.run_migrations()
+
+def _run_on_connection(connection: Connection) -> None:
+    context.configure(connection=connection, target_metadata=target_metadata)
+
+    with context.begin_transaction():
+        context.run_migrations()
 
 
 if context.is_offline_mode():

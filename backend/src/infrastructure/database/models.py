@@ -44,6 +44,9 @@ class ProjectORM(Base):
     # NUMERIC(12, 2) gives 10 integer digits + 2 decimal places, enough for
     # local-currency budgets up to 9 999 999 999.99.
     budget: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    # Transitional storage only: historical classification must not default to False.
+    # The final mandatory business classification is introduced with its write flow.
+    has_iva: Mapped[bool | None] = mapped_column(nullable=True)
 
 
 class ExpenseORM(Base):

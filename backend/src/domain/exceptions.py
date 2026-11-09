@@ -126,3 +126,14 @@ class IdentityProviderUnavailableError(DomainException):
 
 class AuthorizationDeniedError(DomainException):
     """The current actor cannot perform the requested action."""
+
+
+class ProjectSummaryUnavailableError(EntityNotFoundError):
+    """Do not distinguish missing, excluded and unauthorized project summaries."""
+
+    def __init__(self) -> None:
+        super().__init__("Project summary is unavailable.")
+
+
+class FinancialSummaryUnavailableError(DomainException):
+    """Persistence failed; never replace missing aggregates with partial totals."""

@@ -9,9 +9,15 @@ from sqlalchemy.orm import Session
 
 from src.core.config import settings
 from src.domain.repositories.expense_repository import ExpenseRepository
+from src.domain.repositories.financial_summary_repository import (
+    FinancialSummaryRepository,
+)
 from src.domain.repositories.project_repository import ProjectRepository
 from src.infrastructure.database.repositories.sqlalchemy_expense_repository import (
     SQLAlchemyExpenseRepository,
+)
+from src.infrastructure.database.repositories.sqlalchemy_financial_summary_repository import (  # noqa: E501
+    SQLAlchemyFinancialSummaryRepository,
 )
 from src.infrastructure.database.repositories.sqlalchemy_project_repository import (
     SQLAlchemyProjectRepository,
@@ -22,8 +28,12 @@ from src.infrastructure.identity.providers import (
     build_identity_provider,
 )
 from src.use_cases.create_project import CreateProjectUseCase
+from src.use_cases.get_financial_summary import GetFinancialSummaryUseCase
 from src.use_cases.get_operational_expenses import GetOperationalExpensesUseCase
 from src.use_cases.get_project_expenses import GetProjectExpensesUseCase
+from src.use_cases.get_project_financial_summary import (
+    GetProjectFinancialSummaryUseCase,
+)
 from src.use_cases.list_projects import ListProjectsUseCase
 from src.use_cases.ports.authorization import AuthorizationPort
 from src.use_cases.ports.identity import ActorIdentity, IdentityProvider
@@ -45,6 +55,29 @@ def get_actor_identity(
 
 def get_authorization() -> AuthorizationPort:
     return build_authorization(settings.ENV)
+
+
+def get_financial_summary_repo(session: SessionDep) -> FinancialSummaryRepository:
+    return SQLAlchemyFinancialSummaryRepository(session)
+
+
+SummaryRepoDep = Annotated[
+    FinancialSummaryRepository, Depends(get_financial_summary_repo)
+]
+AuthorizationDep = Annotated[AuthorizationPort, Depends(get_authorization)]
+ActorDep = Annotated[ActorIdentity, Depends(get_actor_identity)]
+
+
+def get_financial_summary_uc(
+    summary_repo: SummaryRepoDep, authorization: AuthorizationDep, actor: ActorDep
+) -> GetFinancialSummaryUseCase:
+    return GetFinancialSummaryUseCase(summary_repo, authorization, actor)
+
+
+def get_project_financial_summary_uc(
+    summary_repo: SummaryRepoDep, authorization: AuthorizationDep, actor: ActorDep
+) -> GetProjectFinancialSummaryUseCase:
+    return GetProjectFinancialSummaryUseCase(summary_repo, authorization, actor)
 
 
 def get_project_repo(
