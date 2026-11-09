@@ -7,8 +7,9 @@ Actualizado: 2026-11-09. Fuente canónica de entregas, pendientes y evidencia; n
 - Rama de trabajo: `feature/fase4-evolucion`.
 - Fase activa: Fase 4, en ejecución según la [planificación de evolución y resiliencia](07_fase4_evolucion_y_resiliencia.md).
 - Backend base de las Fases 1 y 2: dominio, persistencia, migraciones y API implementados; autenticación no implementada. Infraestructura final y datos semilla aplazados.
-- Fase 4, Módulo 1, Paso 1: núcleo puro y contratos implementados para resúmenes financieros e idempotencia. Incluye proyecciones, DTO, contratos de repositorio, puertos de identidad y autorización, excepciones, filtro fiscal opcional y moneda tipada, snapshots inmutables, confirmaciones con payload opcional y canonicalización extensible a metadatos sin binarios. El dominio y los contratos no dependen de Pydantic, SQLAlchemy ni FastAPI. Identidad Dummy estable e inyectable disponible exclusivamente en desarrollo local; no constituye autenticación real. El registro transaccional de operaciones y la concurrencia idempotente siguen pendientes del Paso 3.
+- Fase 4, Módulo 1, Paso 1: núcleo puro y contratos implementados para resúmenes financieros e idempotencia. Incluye proyecciones, DTO, contratos de repositorio, puertos de identidad y autorización, excepciones, filtro fiscal opcional y moneda tipada, snapshots inmutables, confirmaciones con payload opcional y canonicalización extensible a metadatos sin binarios. El dominio y los contratos no dependen de Pydantic, SQLAlchemy ni FastAPI. Identidad Dummy estable e inyectable disponible exclusivamente en desarrollo local; no constituye autenticación real.
 - Fase 4, Módulo 1, Paso 2: casos de uso, repositorio SQLAlchemy y endpoints HTTP de resumen general y por obra implementados y probados contra PostgreSQL real. Cada resumen agrega gastos y cantidades en una sola sentencia SQL, con autorización global o por obra, filtros inclusivos de fecha, separación fiscal explícita e importes decimales exactos. Migración aditiva de clasificación fiscal nullable disponible, sin asignar valores a obras históricas; la clasificación obligatoria de escritura sigue pendiente de su evolución funcional. El frontend conserva sus consultas anteriores.
+- Fase 4, Módulo 1, Paso 3: registro transaccional, modelo ORM de operaciones, repositorio SQLAlchemy de idempotencia y migración implementados y probados en concurrencia con PostgreSQL real. La clave compuesta por actor y operación arbitra la reserva; los snapshots versionados usan JSONB nullable para futura purga. Reserva y confirmación comparten la transacción de negocio, sin commit ni rollback en el repositorio. La integración con las altas y el PATCH permanece pendiente del Paso 4; las escrituras HTTP vigentes aún no ofrecen la garantía idempotente.
 - Frontend: integración con la API implementada mediante cliente HTTP tipado basado en OpenAPI, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado real, filtro local por estado, creación y edición parcial de nombre, cliente, presupuesto y estado desde el detalle. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha. Los formularios conservan datos ante errores, bloquean envíos simultáneos y confirman las operaciones exitosas.
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
@@ -38,6 +39,39 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Captura y carga de comprobantes.
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Orquestación de producción y seed, en pausa hasta preparar el despliegue final.
+
+## Validación del Paso 3 de registro transaccional
+
+Entrega de 2026-11-09 sobre `feature/fase4-evolucion`.
+
+- La suite completa aprobó 167 pruebas en Python 3.12, incluidas 26 nuevas del
+  registro y las 29 de resúmenes contra PostgreSQL 17 real, sin omisiones.
+  Persisten dos avisos de deprecación de dependencias externas (AnyIO y Starlette).
+- Dos sesiones iniciadas simultáneamente compitieron por la misma clave: una
+  preparó un único cambio de negocio y su confirmación; la otra recibió
+  `OperationUnresolvedError` por timeout mientras el ganador conservaba la
+  transacción abierta. El reintento posterior recuperó la confirmación original.
+- Las pruebas verificaron commit y rollback conjuntos de negocio y registro,
+  invisibilidad de datos no confirmados para otra sesión, liberación de la clave
+  tras rollback y ausencia de llamadas a commit o rollback en el repositorio.
+- La reserva quedó vinculada al identificador de transacción de PostgreSQL. Se
+  rechazaron confirmaciones después de un commit prematuro y modificaciones de
+  resultados ya confirmados. Los errores de contención exigieron rollback del
+  llamador; el timeout local no quedó aplicado después de ese rollback.
+- Se verificaron snapshots de obra y gasto con UUID, enums, fechas, timestamps y
+  decimales exactos, también bajo un contexto Decimal de baja precisión. La purga
+  a SQL NULL conservó identidad, huella, versiones y referencias, sin habilitar
+  una nueva reserva. Resultados corruptos o con versiones no soportadas exigieron
+  reconciliación; borrar el recurso no eliminó su confirmación.
+- Se comprobaron aislamiento por actor, conflictos por contenido, comando,
+  versión u objetivo y restricciones persistentes de coherencia. Recuperar o
+  repetir una clave conocida no forzó el flush de objetos de negocio pendientes.
+- La migración se ensayó en upgrade y downgrade dentro de esquemas aislados,
+  verificando PK compuesta y JSONB nullable. Los resúmenes y operaciones comparten
+  ahora la infraestructura de pruebas PostgreSQL; no se migraron bases de negocio.
+- `make check-backend` aprobó Ruff, formato y mypy estricto en 63 archivos de
+  `src/`; mypy también aprobó con objetivo Python 3.12. No se añadieron
+  dependencias ni se modificaron frontend, comandos o routers HTTP de escritura.
 
 ## Validación del Paso 2 de resúmenes
 

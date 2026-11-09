@@ -10,7 +10,20 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from sqlalchemy import Date, DateTime, ForeignKey, Numeric, String, Text
+from pydantic import JsonValue
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -81,3 +94,74 @@ class ExpenseORM(Base):
         nullable=True,
     )
     receipt_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class OperationORM(Base):
+    """Persistent operation identity; resource deletion cannot cascade into it."""
+
+    __tablename__ = "operations"
+    __table_args__ = (
+        CheckConstraint(
+            "state IN ('reserved', 'confirmed')", name="ck_operations_state"
+        ),
+        CheckConstraint(
+            "(command_type = 'register_expense' AND resource_type = 'expense') OR "
+            "(command_type IN ('create_project', 'update_project') "
+            "AND resource_type = 'project')",
+            name="ck_operations_command_resource",
+        ),
+        CheckConstraint(
+            "fingerprint_version > 0 AND command_version > 0",
+            name="ck_operations_versions",
+        ),
+        CheckConstraint(
+            "length(request_fingerprint) = 64",
+            name="ck_operations_fingerprint_length",
+        ),
+        CheckConstraint(
+            "reserved_in_transaction > 0", name="ck_operations_owner_transaction"
+        ),
+        CheckConstraint(
+            "command_type <> 'update_project' OR target_resource_id IS NOT NULL",
+            name="ck_operations_update_target",
+        ),
+        CheckConstraint(
+            "(state = 'reserved' AND result_resource_id IS NULL "
+            "AND result_schema_version IS NULL AND result_payload IS NULL "
+            "AND completed_at IS NULL) OR "
+            "(state = 'confirmed' AND result_resource_id IS NOT NULL "
+            "AND result_schema_version IS NOT NULL AND result_schema_version > 0 "
+            "AND completed_at IS NOT NULL)",
+            name="ck_operations_confirmation_shape",
+        ),
+        CheckConstraint(
+            "state <> 'confirmed' OR target_resource_id IS NULL "
+            "OR target_resource_id = result_resource_id",
+            name="ck_operations_target_result",
+        ),
+    )
+
+    actor_id: Mapped[UUID] = mapped_column(primary_key=True)
+    operation_id: Mapped[UUID] = mapped_column(primary_key=True)
+    command_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    resource_type: Mapped[str] = mapped_column(String(24), nullable=False)
+    target_resource_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    fingerprint_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    command_version: Mapped[int] = mapped_column(Integer, nullable=False)
+    request_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
+    state: Mapped[str] = mapped_column(String(16), nullable=False)
+    # Infrastructure ownership only, assigned from txid_current() at reservation.
+    reserved_in_transaction: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    result_resource_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    result_schema_version: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Native JSONB in PostgreSQL. SQLite supports only the pre-existing unit suite.
+    result_payload: Mapped[dict[str, JsonValue] | None] = mapped_column(
+        JSONB(none_as_null=True).with_variant(JSON(none_as_null=True), "sqlite"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )

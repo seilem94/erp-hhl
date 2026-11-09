@@ -73,6 +73,11 @@ esta versión del backend. El flujo vigente de altas conserva la compatibilidad 
 puede dejar obras sin clasificar; la selección fiscal obligatoria y la
 regularización histórica siguen el [ADR 0003](../docs/adr/0003-motor-financiero-iva.md).
 
+La revisión `b528c7394d01` crea el registro de operaciones. Sus confirmaciones e
+identidades de deduplicación se perderían al ejecutar su downgrade: ensayar esa
+reversión únicamente en una base desechable. La futura limpieza de cuerpos puede
+anular `result_payload` sin eliminar la clave, la huella ni sus referencias.
+
 Después de modificar deliberadamente el esquema ORM, generar y revisar una migración:
 
 ```bash
@@ -103,23 +108,25 @@ Las pruebas de casos de uso y las HTTP anteriores usan fakes; las pruebas de
 repositorios anteriores usan SQLite en memoria. Las pruebas HTTP importan la
 configuración de conexión, aunque sustituyan sus repositorios.
 
-### Integración de resúmenes con PostgreSQL
+### Integración con PostgreSQL
 
 Las [pruebas de resúmenes](tests/infrastructure/test_financial_summaries_postgres.py)
-ejecutan los endpoints con TestClient y repositorios SQLAlchemy reales. Requieren
+y de [operaciones](tests/infrastructure/test_operations_postgres.py) usan
+repositorios SQLAlchemy reales. Las primeras incluyen TestClient; las segundas
+comprueban transacciones independientes y contención concurrente. Requieren
 `TEST_DATABASE_URL` como variable de proceso con una conexión PostgreSQL de
 pruebas y permiso para crear esquemas. Cada caso genera un esquema aislado, aplica
 las migraciones y lo elimina al terminar; no modifica tablas preexistentes.
 
 ```bash
-TEST_DATABASE_URL='postgresql+psycopg://usuario:clave@localhost:5432/hhl_test' python -m pytest tests/infrastructure/test_financial_summaries_postgres.py -q
+TEST_DATABASE_URL='postgresql+psycopg://usuario:clave@localhost:5432/hhl_test' python -m pytest tests/infrastructure/ -q
 ```
 
 En PowerShell, definir la variable antes de ejecutar Pytest:
 
 ```powershell
 $env:TEST_DATABASE_URL = "postgresql+psycopg://usuario:clave@localhost:5432/hhl_test"
-python -m pytest tests/infrastructure/test_financial_summaries_postgres.py -q
+python -m pytest tests/infrastructure/ -q
 ```
 
 Mantener también `DATABASE_URL` disponible para importar la configuración de la
@@ -128,3 +135,25 @@ esta integración en la suite completa. Si falta, esos casos se omiten
 explícitamente; si está definida pero no permite conectarse o no es PostgreSQL,
 fallan sin reemplazar la base por SQLite. Las pruebas anteriores por sí solas no
 acreditan exactitud de agregados ni migraciones en PostgreSQL.
+
+### Uso del registro transaccional
+
+El [repositorio de operaciones](src/infrastructure/database/repositories/sqlalchemy_operation_repository.py)
+debe compartir la sesión de negocio: reservar antes de ejecutar efectos,
+confirmar con un snapshot completo y dejar commit y rollback a la dependencia de
+la petición. La propiedad se verifica con el identificador de transacción de
+PostgreSQL; una reserva no puede confirmarse desde otra transacción, aunque se
+reutilice la misma sesión después de un commit prematuro.
+
+La espera de reserva se limita mediante `lock_timeout_ms`, cuyo valor
+predeterminado en el adaptador es 2000 ms. Si se agota, se devuelve
+`OperationUnresolvedError` y la transacción queda abortada: propagar el error para
+que la dependencia haga rollback antes de recuperar o repetir la misma clave.
+El repositorio no confirma ni revierte por su cuenta. El ajuste local de timeout
+se restaura al completar una reserva o recuperación; ante error, se revierte con
+la transacción.
+
+Un registro confirmado con payload NULL conserva su identidad. La recuperación
+de su resultado exige reconciliación y nunca habilita otro efecto de negocio;
+una versión de snapshot no reconocida sigue el mismo criterio. La integración de
+este adaptador con las altas y el PATCH se realiza en el Paso 4.

@@ -8,21 +8,18 @@ to SQLite or fakes.
 
 from __future__ import annotations
 
-import os
 from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
-from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event, inspect, select
+from sqlalchemy import event, inspect, select
 from sqlalchemy.engine import Connection, Engine, ExecutionContext
 from sqlalchemy.orm import Session
-from sqlalchemy.schema import CreateSchema, DropSchema, DropTable
+from sqlalchemy.schema import DropTable
 
 from alembic import command
 from src.core.config import Environment, settings
@@ -42,39 +39,10 @@ from src.infrastructure.http.dependencies import get_actor_identity, get_authori
 from src.infrastructure.identity.providers import DenyAllAuthorization
 from src.main import app
 from src.use_cases.ports.identity import ActorIdentity
+from tests.infrastructure.postgres import migration_config
 
 NOW = datetime(2026, 11, 9, tzinfo=UTC)
 GENERAL = "/api/v1/dashboard/summary"
-
-
-def migration_config(connection: Connection) -> Config:
-    config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
-    config.attributes["connection"] = connection
-    return config
-
-
-@pytest.fixture
-def pg_engine() -> Generator[Engine, None, None]:
-    url = os.environ.get("TEST_DATABASE_URL")
-    if not url:
-        pytest.skip("TEST_DATABASE_URL is required for real PostgreSQL integration")
-    admin = create_engine(url)
-    if admin.dialect.name != "postgresql":
-        admin.dispose()
-        pytest.fail("TEST_DATABASE_URL must select PostgreSQL")
-    schema = "hhl_summary_" + uuid4().hex
-    with admin.begin() as connection:
-        connection.execute(CreateSchema(schema))
-    engine = create_engine(url, connect_args={"options": f"-csearch_path={schema}"})
-    try:
-        with engine.begin() as connection:
-            command.upgrade(migration_config(connection), "head")
-        yield engine
-    finally:
-        engine.dispose()
-        with admin.begin() as connection:
-            connection.execute(DropSchema(schema, cascade=True))
-        admin.dispose()
 
 
 @dataclass(frozen=True)

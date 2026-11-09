@@ -30,7 +30,11 @@ class OperationRepository(ABC):
 
     @abstractmethod
     def confirm(self, operation: OperationRecord) -> None:
-        """Flush the owned reservation's result within the business transaction."""
+        """Flush a complete result in the transaction that acquired the reservation.
+
+        A fresh confirmation requires a payload. A missing historical payload may
+        be read for reconciliation, but must never become a new confirmation.
+        """
 
     @abstractmethod
     def get_by_key(self, key: OperationKey) -> OperationRecord | None:
