@@ -115,11 +115,13 @@ configuración de conexión, aunque sustituyan sus repositorios.
 ### Integración con PostgreSQL
 
 Las [pruebas de resúmenes](tests/infrastructure/test_financial_summaries_postgres.py),
-de [operaciones](tests/infrastructure/test_operations_postgres.py) y de
-[comandos HTTP](tests/infrastructure/test_commands_postgres.py) usan repositorios
-SQLAlchemy reales. Cubren TestClient, transacciones independientes y contención
-concurrente. Las de comandos sustituyen la fábrica de sesiones, conservando la
-dependencia transaccional real para forzar y observar fallos de commit. Requieren
+de [operaciones](tests/infrastructure/test_operations_postgres.py), de
+[comandos HTTP](tests/infrastructure/test_commands_postgres.py) y de
+[recuperación](tests/infrastructure/test_operation_recovery_postgres.py) usan
+repositorios SQLAlchemy reales. Cubren TestClient, transacciones independientes,
+contención concurrente y aislamiento por actor. Comandos y recuperación comparten
+la fábrica de pruebas de sesiones, conservando la dependencia transaccional real
+para forzar y observar fallos de commit. Requieren
 `TEST_DATABASE_URL` como variable de proceso con una conexión PostgreSQL de
 pruebas y permiso para crear esquemas. Cada caso genera un esquema aislado, aplica
 las migraciones y lo elimina al terminar; no modifica tablas preexistentes.
@@ -151,7 +153,7 @@ la petición. La propiedad se verifica con el identificador de transacción de
 PostgreSQL; una reserva no puede confirmarse desde otra transacción, aunque se
 reutilice la misma sesión después de un commit prematuro.
 
-La espera de reserva se limita mediante `lock_timeout_ms`, cuyo valor
+La espera de reserva y lectura se limita mediante `lock_timeout_ms`, cuyo valor
 predeterminado en el adaptador es 2000 ms. Si se agota, se devuelve
 `OperationUnresolvedError` y la transacción queda abortada: propagar el error para
 que la dependencia haga rollback antes de recuperar o repetir la misma clave.
@@ -184,3 +186,17 @@ redondearlos; la canonicalización normaliza su escala, fechas y opcionales del
 contrato. Los [metadatos de adjuntos](src/use_cases/services/canonicalization.py)
 permiten extenderla a archivos verificados sin entregar binarios ni streams al
 servicio. La carga de archivos corresponde a su módulo posterior.
+
+### Consulta de recuperación
+
+El contrato de consulta está en el [router de operaciones](src/infrastructure/http/routers/operations.py)
+y los [esquemas públicos](src/infrastructure/http/schemas/operation.py), también
+disponibles en OpenAPI. Usa la identidad del servidor; para la comprobación local
+sirve el Dummy configurado arriba. La compatibilidad de las escrituras sin
+identidad no se aplica a esta lectura.
+
+El [caso de uso](src/use_cases/get_operation_result.py) consulta primero las
+referencias para autorización y después el snapshot. El resultado usa los mismos
+esquemas públicos de las escrituras y las respuestas indican `Cache-Control:
+no-store`. La interpretación de una operación todavía no visible se mantiene en
+el [ADR de recuperación](../docs/adr/0002-idempotencia-offline.md#recuperación-y-conservación).

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
+
 from psycopg import Error as PsycopgError
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, defer
 
 from src.domain.entities.operation import OperationKey, OperationRecord
 from src.domain.enums import OperationState
@@ -24,7 +27,7 @@ from src.infrastructure.database.operation_payload import encode_result
 class SQLAlchemyOperationRepository(OperationRepository):
     def __init__(self, session: Session, *, lock_timeout_ms: int = 2_000) -> None:
         if lock_timeout_ms < 1:
-            raise ValueError("Reservation lock timeout must be positive.")
+            raise ValueError("Operation lock timeout must be positive.")
         self._session = session
         self._lock_timeout_ms = lock_timeout_ms
 
@@ -52,27 +55,8 @@ class SQLAlchemyOperationRepository(OperationRepository):
             .returning(OperationORM.operation_id)
         )
         # Do not flush business objects before the operation has been acquired.
-        with self._session.no_autoflush:
-            try:
-                previous = self._session.scalar(
-                    select(func.current_setting("lock_timeout"))
-                )
-                if not isinstance(previous, str):
-                    raise TypeError("Unexpected PostgreSQL lock timeout setting.")
-                self._session.execute(
-                    select(
-                        func.set_config(
-                            "lock_timeout", f"{self._lock_timeout_ms}ms", True
-                        )
-                    )
-                )
-                acquired = self._session.execute(statement).scalar_one_or_none()
-                self._session.execute(
-                    select(func.set_config("lock_timeout", previous, True))
-                )
-            except DBAPIError as exc:
-                self._raise_if_transient(exc)
-                raise
+        with self._session.no_autoflush, self._bounded_lock_wait():
+            acquired = self._session.execute(statement).scalar_one_or_none()
         # On a PostgreSQL timeout the transaction is aborted. Never try to restore
         # settings or recover it here: the dependency must roll back before retry.
         if acquired is not None:
@@ -140,18 +124,54 @@ class SQLAlchemyOperationRepository(OperationRepository):
             )
         self._session.flush()
 
-    def get_by_key(self, key: OperationKey) -> OperationRecord | None:
+    def get_by_key(
+        self, key: OperationKey, *, include_payload: bool = True
+    ) -> OperationRecord | None:
         try:
-            with self._session.no_autoflush:
+            with self._session.no_autoflush, self._bounded_lock_wait():
                 orm = self._session.get(
                     OperationORM,
                     (key.actor_id, key.operation_id),
                     populate_existing=True,
+                    options=(
+                        []
+                        if include_payload
+                        else [defer(OperationORM.result_payload, raiseload=True)]
+                    ),
                 )
         except DBAPIError as exc:
+            # A failed lookup cannot prove absence. Keep the same operation key;
+            # the request dependency must roll back before another attempt.
+            raise OperationUnresolvedError(
+                "Operation lookup is unavailable; retain the same operation key."
+            ) from exc
+        return (
+            None
+            if orm is None
+            else operation_to_domain(orm, include_payload=include_payload)
+        )
+
+    @contextmanager
+    def _bounded_lock_wait(self) -> Iterator[None]:
+        try:
+            previous = self._session.scalar(
+                select(func.current_setting("lock_timeout"))
+            )
+            if not isinstance(previous, str):
+                raise TypeError("Unexpected PostgreSQL lock timeout setting.")
+            self._session.execute(
+                select(
+                    func.set_config("lock_timeout", f"{self._lock_timeout_ms}ms", True)
+                )
+            )
+            yield
+            self._session.execute(
+                select(func.set_config("lock_timeout", previous, True))
+            )
+        except DBAPIError as exc:
+            # Do not run restoration SQL in an aborted PostgreSQL transaction.
             self._raise_if_transient(exc)
             raise
-        return None if orm is None else operation_to_domain(orm)
 
     @staticmethod
     def _assert_same_request(

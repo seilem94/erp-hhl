@@ -10,7 +10,8 @@ Actualizado: 2026-11-10. Fuente canónica de entregas, pendientes y evidencia; n
 - Fase 4, Módulo 1, Paso 1: núcleo puro y contratos implementados para resúmenes financieros e idempotencia. Incluye proyecciones, DTO, contratos de repositorio, puertos de identidad y autorización, excepciones, filtro fiscal opcional y moneda tipada, snapshots inmutables, confirmaciones con payload opcional y canonicalización extensible a metadatos sin binarios. El dominio y los contratos no dependen de Pydantic, SQLAlchemy ni FastAPI. Identidad Dummy estable e inyectable disponible exclusivamente en desarrollo local; no constituye autenticación real.
 - Fase 4, Módulo 1, Paso 2: casos de uso, repositorio SQLAlchemy y endpoints HTTP de resumen general y por obra implementados y probados contra PostgreSQL real. Cada resumen agrega gastos y cantidades en una sola sentencia SQL, con autorización global o por obra, filtros inclusivos de fecha, separación fiscal explícita e importes decimales exactos. Migración aditiva de clasificación fiscal nullable disponible, sin asignar valores a obras históricas; la clasificación obligatoria de escritura sigue pendiente de su evolución funcional. El frontend conserva sus consultas anteriores.
 - Fase 4, Módulo 1, Paso 3: registro transaccional, modelo ORM de operaciones, repositorio SQLAlchemy de idempotencia y migración implementados y probados en concurrencia con PostgreSQL real. La clave compuesta por actor y operación arbitra la reserva; los snapshots versionados usan JSONB nullable para futura purga. Reserva y confirmación comparten la transacción de negocio, sin commit ni rollback en el repositorio.
-- Fase 4, Módulo 1, Paso 4: integración de comandos, canonicalización SHA-256 y compatibilidad de rutas de escritura implementadas y probadas. Las altas de obras y gastos y el PATCH de obras reservan, ejecutan negocio, capturan el snapshot y confirman cuando reciben clave e identidad válidas; permiten preasignar el UUID del recurso y recuperan el resultado original al repetir. Sin clave o identidad conservan el flujo antiguo sin deduplicación. El commit de la dependencia termina antes de enviar éxito HTTP, verificado también bajo fallo forzado. La consulta autorizada de recuperación permanece pendiente del Paso 5.
+- Fase 4, Módulo 1, Paso 4: integración de comandos, canonicalización SHA-256 y compatibilidad de rutas de escritura implementadas y probadas. Las altas de obras y gastos y el PATCH de obras reservan, ejecutan negocio, capturan el snapshot y confirman cuando reciben clave e identidad válidas; permiten preasignar el UUID del recurso y recuperan el resultado original al repetir. Sin clave o identidad conservan el flujo antiguo sin deduplicación. El commit de la dependencia termina antes de enviar éxito HTTP, verificado también bajo fallo forzado.
+- Fase 4, Módulo 1, Paso 5: consulta autorizada de recuperación implementada y probada en PostgreSQL real. El caso de uso y el endpoint de operaciones aíslan por actor, revalidan permisos antes de leer el payload y devuelven el snapshot original o los errores de operación desconocida, resolución incierta y reconciliación requerida. **EL CÓDIGO BACKEND DEL MÓDULO 1 ESTÁ COMPLETO** para el alcance aprobado de esta iteración: resúmenes financieros e idempotencia de obras y gastos con recuperación. La integración del frontend, la sesión real y la futura cola offline conservan sus alcances posteriores.
 - Frontend: integración con la API implementada mediante cliente HTTP tipado basado en OpenAPI, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado real, filtro local por estado, creación y edición parcial de nombre, cliente, presupuesto y estado desde el detalle. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha. Los formularios conservan datos ante errores, bloquean envíos simultáneos y confirman las operaciones exitosas.
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
@@ -40,6 +41,38 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Captura y carga de comprobantes.
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Orquestación de producción y seed, en pausa hasta preparar el despliegue final.
+
+## Validación del Paso 5 de recuperación
+
+Entrega de 2026-11-10 sobre `feature/fase4-evolucion`.
+
+- La suite completa aprobó 270 pruebas en Python 3.12, incluidas 26 nuevas de
+  recuperación HTTP contra PostgreSQL 17, sin omisiones. Persisten los dos avisos
+  de deprecación de AnyIO y Starlette.
+- La consulta devolvió 200 con los metadatos públicos y el snapshot original de
+  alta de obra, registro de gasto y edición de obra. Conservó decimales y
+  timestamps tras cambios posteriores o eliminación del recurso, sin consultar
+  su estado actual ni ejecutar comandos.
+- Operaciones desconocidas, ajenas y con permisos revocados devolvieron el mismo
+  404 `operation_unknown`. Un UUID compartido por dos actores recuperó únicamente
+  el resultado de cada identidad del servidor; un actor enviado en encabezados o
+  parámetros no permitió cambiar ese espacio de consulta.
+- La autorización precedió a la lectura del JSONB, comprobando el SQL emitido.
+  La revocación siguió devolviendo 404 incluso con payload purgado, corrupto o de
+  versión no soportada. Para un actor autorizado, esos tres casos devolvieron
+  409 `operation_reconciliation_required` sin alterar el registro.
+- Una reserva visible sin confirmar y un bloqueo real de tabla produjeron
+  503 `operation_unresolved`; tras liberar el bloqueo se recuperó el resultado.
+  Una escritura pausada antes de su commit no resultó visible para la consulta:
+  devolvió 404 y, después del commit, 200 con el mismo resultado original.
+- Se verificaron identidad obligatoria fuera de desarrollo, rechazo de UUID no
+  válidos sin consultar la base, OpenAPI y respuestas sin almacenamiento en
+  caché. Las pruebas de comandos y recuperación comparten la dependencia de
+  sesión real; las suites anteriores conservaron sus resultados.
+- `make check-backend` aprobó Ruff, formato y mypy estricto en 68 archivos de
+  `src/`; mypy también aprobó con objetivo Python 3.12. No se añadieron
+  dependencias ni migraciones y no se modificó el frontend. La validación usó
+  esquemas aislados de una base temporal, sin migrar bases de negocio.
 
 ## Validación del Paso 4 de integración de comandos
 

@@ -36,6 +36,7 @@ from src.infrastructure.identity.providers import (
 from src.use_cases.create_project import CreateProjectUseCase
 from src.use_cases.dto.operation import OperationContextDTO
 from src.use_cases.get_financial_summary import GetFinancialSummaryUseCase
+from src.use_cases.get_operation_result import GetOperationResultUseCase
 from src.use_cases.get_operational_expenses import GetOperationalExpensesUseCase
 from src.use_cases.get_project_expenses import GetProjectExpensesUseCase
 from src.use_cases.get_project_financial_summary import (
@@ -112,8 +113,17 @@ def get_operation_repo(session: SessionDep) -> OperationRepository:
     return SQLAlchemyOperationRepository(session)
 
 
+OperationRepoDep = Annotated[OperationRepository, Depends(get_operation_repo)]
+
+
+def get_operation_result_uc(
+    operation_repo: OperationRepoDep, authorization: AuthorizationDep
+) -> GetOperationResultUseCase:
+    return GetOperationResultUseCase(operation_repo, authorization)
+
+
 def get_idempotency_coordinator(
-    operation_repo: Annotated[OperationRepository, Depends(get_operation_repo)],
+    operation_repo: OperationRepoDep,
     authorization: AuthorizationDep,
 ) -> IdempotencyCoordinator:
     return IdempotencyCoordinator(

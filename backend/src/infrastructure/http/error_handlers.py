@@ -17,6 +17,7 @@ from src.domain.exceptions import (
     InvalidMonetaryPrecisionError,
     InvalidOperationIdError,
     InvalidSummaryDateRangeError,
+    OperationNotFoundError,
     OperationReconciliationRequiredError,
     OperationUnresolvedError,
     ProjectCancelledError,
@@ -37,14 +38,19 @@ def domain_exception_handler(request: Request, exc: DomainException) -> JSONResp
         operation_code = "operation_reconciliation_required"
     elif isinstance(exc, OperationUnresolvedError):
         operation_code = "operation_unresolved"
+    elif isinstance(exc, OperationNotFoundError):
+        operation_code = "operation_unknown"
     if operation_code is not None:
+        if isinstance(exc, OperationUnresolvedError):
+            operation_status = status.HTTP_503_SERVICE_UNAVAILABLE
+        elif isinstance(exc, OperationNotFoundError):
+            operation_status = status.HTTP_404_NOT_FOUND
+        else:
+            operation_status = status.HTTP_409_CONFLICT
         return JSONResponse(
-            status_code=(
-                status.HTTP_503_SERVICE_UNAVAILABLE
-                if isinstance(exc, OperationUnresolvedError)
-                else status.HTTP_409_CONFLICT
-            ),
+            status_code=operation_status,
             content={"detail": {"code": operation_code, "message": str(exc)}},
+            headers={"Cache-Control": "no-store"},
         )
     if isinstance(exc, (ProjectNotFoundError, ProjectSummaryUnavailableError)):
         status_code = status.HTTP_404_NOT_FOUND
@@ -73,4 +79,9 @@ def domain_exception_handler(request: Request, exc: DomainException) -> JSONResp
     return JSONResponse(
         status_code=status_code,
         content={"detail": str(exc)},
+        headers=(
+            {"Cache-Control": "no-store"}
+            if isinstance(exc, IdentityProviderUnavailableError)
+            else None
+        ),
     )

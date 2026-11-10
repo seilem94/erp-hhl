@@ -25,6 +25,7 @@ Responsabilidad: recorrido de implementación y mapa de infraestructura. El esta
 | Lecturas financieras | [Repositorio de agregación](../backend/src/infrastructure/database/repositories/sqlalchemy_financial_summary_repository.py), [router](../backend/src/infrastructure/http/routers/financial_summaries.py) y [esquemas](../backend/src/infrastructure/http/schemas/financial_summary.py) |
 | Registro transaccional | [Repositorio de operaciones](../backend/src/infrastructure/database/repositories/sqlalchemy_operation_repository.py), [mappers](../backend/src/infrastructure/database/operation_mappers.py) y [snapshots persistidos](../backend/src/infrastructure/database/operation_payload.py) |
 | Integración de comandos | [Coordinador](../backend/src/use_cases/services/idempotency.py), [canonicalización](../backend/src/use_cases/services/canonicalization.py) y [errores HTTP](../backend/src/infrastructure/http/schemas/operation.py) |
+| Recuperación autorizada | [Caso de uso](../backend/src/use_cases/get_operation_result.py), [router](../backend/src/infrastructure/http/routers/operations.py) y [esquemas](../backend/src/infrastructure/http/schemas/operation.py) |
 | Composición y OpenAPI | [main.py](../backend/src/main.py) |
 
 No copiar aquí el catálogo de endpoints ni sus ejemplos: el contrato ejecutable y OpenAPI son la referencia. La instalación, el manejo de migraciones y las pruebas pertenecen al [README del backend](../backend/README.md).

@@ -12,14 +12,16 @@ from src.infrastructure.database.models import OperationORM
 from src.infrastructure.database.operation_payload import decode_result
 
 
-def operation_to_domain(orm: OperationORM) -> OperationRecord:
+def operation_to_domain(
+    orm: OperationORM, *, include_payload: bool = True
+) -> OperationRecord:
     try:
         command = CommandType(orm.command_type)
         resource_type = ResourceType(orm.resource_type)
         if resource_type is not command.resource_type:
             raise ValueError("Stored resource and command disagree.")
         payload: OperationResult | None = None
-        if orm.result_payload is not None:
+        if include_payload and orm.result_payload is not None:
             if orm.result_schema_version is None:
                 raise ValueError("Missing result schema version.")
             payload = decode_result(

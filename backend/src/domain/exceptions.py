@@ -123,6 +123,12 @@ class OperationUnresolvedError(DomainException):
 class OperationNotFoundError(EntityNotFoundError):
     """No operation is visible; this does not prove it is not in transit."""
 
+    def __init__(self) -> None:
+        super().__init__(
+            "Operation is unknown to the current actor; it may still be in transit. "
+            "Retain the same operation key."
+        )
+
 
 class OperationReconciliationRequiredError(DomainException):
     """A known confirmation has no recoverable payload; never execute it again."""

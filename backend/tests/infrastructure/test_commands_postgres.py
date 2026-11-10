@@ -6,7 +6,6 @@ the commit-failure tests must not replace get_db or bypass its dependency scope.
 
 from __future__ import annotations
 
-from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, date, datetime, timedelta
 from threading import Event
@@ -118,20 +117,8 @@ def counts(engine: Engine) -> tuple[int, int, int]:
 
 
 @pytest.fixture
-def client(
-    pg_engine: Engine, monkeypatch: pytest.MonkeyPatch
-) -> Generator[TestClient, None, None]:
-    monkeypatch.setattr(
-        database, "SessionLocal", sessionmaker(pg_engine, autoflush=False)
-    )
-    monkeypatch.setattr(settings, "ENV", Environment.DEVELOPMENT)
-    previous = app.dependency_overrides.copy()
-    try:
-        with TestClient(app, raise_server_exceptions=False) as test_client:
-            yield test_client
-    finally:
-        app.dependency_overrides.clear()
-        app.dependency_overrides.update(previous)
+def client(pg_client: TestClient) -> TestClient:
+    return pg_client
 
 
 @pytest.mark.parametrize("kind", KINDS)

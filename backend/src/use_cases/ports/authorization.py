@@ -34,5 +34,9 @@ class AuthorizationPort(Protocol):
     def authorize_operation_result(
         self, actor: ActorIdentity, operation: OperationRecord
     ) -> None:
-        """Recheck current permissions and ownership before revealing a result."""
+        """Recheck current permissions using identity and stable references.
+
+        The snapshot may be absent in a metadata-only read or after purging.
+        Authorization must not require decoding its contents.
+        """
         ...

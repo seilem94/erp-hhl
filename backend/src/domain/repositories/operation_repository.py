@@ -37,9 +37,14 @@ class OperationRepository(ABC):
         """
 
     @abstractmethod
-    def get_by_key(self, key: OperationKey) -> OperationRecord | None:
+    def get_by_key(
+        self, key: OperationKey, *, include_payload: bool = True
+    ) -> OperationRecord | None:
         """Read a confirmation/tombstone visible to this transaction.
 
         None does not establish absence of a concurrent uncommitted request.
-        Authorization must precede disclosure of any result.
+        With include_payload=False, return metadata for authorization without
+        reading or decoding the snapshot. Its absent payload does not establish
+        a purge: only a complete read may be recovered. The default preserves
+        the existing command/replay contract.
         """

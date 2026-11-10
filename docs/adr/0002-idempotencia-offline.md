@@ -32,6 +32,8 @@ La garantía es un único efecto confirmado para una misma operación dentro de 
 
 Ofrecer una consulta autorizada del estado o resultado por UUID. Distinguir confirmación, procesamiento en curso y operación no conocida; no conocerla puede deberse a una solicitud todavía en tránsito y no autoriza a crear otra clave para el mismo envío.
 
+Mientras reserva y confirmación permanezcan sin commit, PostgreSQL no las hace visibles a otra transacción. La consulta no puede inferir procesamiento a partir de esa ausencia. Una reserva visible o un bloqueo efectivo de lectura sí permiten informar resolución incierta; los fallos de persistencia tampoco acreditan ausencia. Mantener este límite al interpretar una respuesta desconocida.
+
 Conservar la identidad de deduplicación y su huella sin reutilización, incluso si se elimina el recurso mediante una marca histórica. El cuerpo completo de la respuesta puede tener una retención acotada, que deberá fijarse antes de implementar la cola. Si ese cuerpo vence, conservar una referencia suficiente para reconciliar o exigir intervención; la expiración nunca habilita ejecutar de nuevo una clave conocida. Evitar guardar credenciales o binarios en el registro de idempotencia.
 
 Los errores de validación, falta de permisos y conflictos se distinguen de una confirmación exitosa. La interfaz no cambia de UUID para ocultar una incertidumbre: primero recupera o reconcilia el resultado. Los cambios concurrentes del mismo recurso requieren además una versión o condición esperada; la idempotencia no resuelve por sí sola conflictos entre intenciones distintas.

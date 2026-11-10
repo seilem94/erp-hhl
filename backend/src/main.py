@@ -11,6 +11,7 @@ from src.infrastructure.http.routers.expenses import router as expenses_router
 from src.infrastructure.http.routers.financial_summaries import (
     router as summaries_router,
 )
+from src.infrastructure.http.routers.operations import router as operations_router
 from src.infrastructure.http.routers.projects import router as projects_router
 
 tags_metadata = [
@@ -27,6 +28,10 @@ tags_metadata = [
             "Control de gastos en terreno para obras (CapEx) y "
             "gastos operativos generales (OPEX)."
         ),
+    },
+    {
+        "name": "Operaciones",
+        "description": "Recuperación autorizada de confirmaciones idempotentes.",
     },
     {
         "name": "Sistema",
@@ -61,6 +66,7 @@ app.add_exception_handler(DomainException, domain_exception_handler)  # type: ig
 app.include_router(projects_router)
 app.include_router(expenses_router)
 app.include_router(summaries_router)
+app.include_router(operations_router)
 
 
 @app.get(
