@@ -38,7 +38,9 @@ Los errores de validación, falta de permisos y conflictos se distinguen de una 
 
 ### Adopción y límites
 
-La introducción de claves requiere evolucionar deliberadamente esquemas HTTP, DTO de casos de uso y persistencia. Mantener los identificadores de datos existentes y definir una transición compatible; los consumidores sin clave no obtienen una garantía offline implícita. Exigir el contrato nuevo antes de habilitar reenvíos automáticos.
+La introducción de claves requiere evolucionar deliberadamente esquemas HTTP, DTO de casos de uso y persistencia. Mantener los identificadores de datos existentes y definir una transición compatible. Conforme al ajuste de adopción acordado el 2026-11-10 para integrar los comandos, las rutas de escritura existentes conservan su flujo anterior cuando falta la clave o el proveedor del servidor no resuelve una identidad válida. Ese flujo genera el UUID del recurso en el servidor y no reserva operaciones ni ofrece deduplicación, incluso si se recibió una clave sin actor. Una clave mal formada se rechaza; una denegación de permisos o un fallo durante el camino idempotente no permiten degradar al anterior. Esta compatibilidad de escrituras no relaja la identidad requerida por las lecturas autorizadas.
+
+Exigir clave, identidad y permisos verificados antes de habilitar reenvíos automáticos o sincronización para usuarios. Los clientes deben distinguir el camino que ofrece la garantía antes de repetir una escritura.
 
 Esta decisión no selecciona almacenamiento de sesión, política completa de cola, resolución funcional de conflictos ni estrategia de caché PWA. Su secuencia y los criterios de verificación pertenecen al [Módulo 1 de Fase 4](../07_fase4_evolucion_y_resiliencia.md#módulo-1-arquitectura-y-resiliencia).
 

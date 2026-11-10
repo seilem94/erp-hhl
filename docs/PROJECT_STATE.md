@@ -1,6 +1,6 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-09. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
+Actualizado: 2026-11-10. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
 
 ## Situación actual
 
@@ -9,7 +9,8 @@ Actualizado: 2026-11-09. Fuente canónica de entregas, pendientes y evidencia; n
 - Backend base de las Fases 1 y 2: dominio, persistencia, migraciones y API implementados; autenticación no implementada. Infraestructura final y datos semilla aplazados.
 - Fase 4, Módulo 1, Paso 1: núcleo puro y contratos implementados para resúmenes financieros e idempotencia. Incluye proyecciones, DTO, contratos de repositorio, puertos de identidad y autorización, excepciones, filtro fiscal opcional y moneda tipada, snapshots inmutables, confirmaciones con payload opcional y canonicalización extensible a metadatos sin binarios. El dominio y los contratos no dependen de Pydantic, SQLAlchemy ni FastAPI. Identidad Dummy estable e inyectable disponible exclusivamente en desarrollo local; no constituye autenticación real.
 - Fase 4, Módulo 1, Paso 2: casos de uso, repositorio SQLAlchemy y endpoints HTTP de resumen general y por obra implementados y probados contra PostgreSQL real. Cada resumen agrega gastos y cantidades en una sola sentencia SQL, con autorización global o por obra, filtros inclusivos de fecha, separación fiscal explícita e importes decimales exactos. Migración aditiva de clasificación fiscal nullable disponible, sin asignar valores a obras históricas; la clasificación obligatoria de escritura sigue pendiente de su evolución funcional. El frontend conserva sus consultas anteriores.
-- Fase 4, Módulo 1, Paso 3: registro transaccional, modelo ORM de operaciones, repositorio SQLAlchemy de idempotencia y migración implementados y probados en concurrencia con PostgreSQL real. La clave compuesta por actor y operación arbitra la reserva; los snapshots versionados usan JSONB nullable para futura purga. Reserva y confirmación comparten la transacción de negocio, sin commit ni rollback en el repositorio. La integración con las altas y el PATCH permanece pendiente del Paso 4; las escrituras HTTP vigentes aún no ofrecen la garantía idempotente.
+- Fase 4, Módulo 1, Paso 3: registro transaccional, modelo ORM de operaciones, repositorio SQLAlchemy de idempotencia y migración implementados y probados en concurrencia con PostgreSQL real. La clave compuesta por actor y operación arbitra la reserva; los snapshots versionados usan JSONB nullable para futura purga. Reserva y confirmación comparten la transacción de negocio, sin commit ni rollback en el repositorio.
+- Fase 4, Módulo 1, Paso 4: integración de comandos, canonicalización SHA-256 y compatibilidad de rutas de escritura implementadas y probadas. Las altas de obras y gastos y el PATCH de obras reservan, ejecutan negocio, capturan el snapshot y confirman cuando reciben clave e identidad válidas; permiten preasignar el UUID del recurso y recuperan el resultado original al repetir. Sin clave o identidad conservan el flujo antiguo sin deduplicación. El commit de la dependencia termina antes de enviar éxito HTTP, verificado también bajo fallo forzado. La consulta autorizada de recuperación permanece pendiente del Paso 5.
 - Frontend: integración con la API implementada mediante cliente HTTP tipado basado en OpenAPI, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado real, filtro local por estado, creación y edición parcial de nombre, cliente, presupuesto y estado desde el detalle. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha. Los formularios conservan datos ante errores, bloquean envíos simultáneos y confirman las operaciones exitosas.
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
@@ -39,6 +40,48 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Captura y carga de comprobantes.
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Orquestación de producción y seed, en pausa hasta preparar el despliegue final.
+
+## Validación del Paso 4 de integración de comandos
+
+Entrega de 2026-11-10 sobre `feature/fase4-evolucion`.
+
+- La suite completa aprobó 244 pruebas en Python 3.12, sin omisiones. Incluye
+  65 casos nuevos de comandos HTTP contra PostgreSQL 17 y 12 de precisión
+  monetaria, además de las suites previas. Persisten los dos avisos de
+  deprecación de AnyIO y Starlette.
+- Se verificaron las tres rutas con clave y sin ella, identidad ausente,
+  UUIDv4 inválidos, identificadores preasignados, alias con y sin barra final y
+  equivalencia de opcionales y escala decimal. OpenAPI conserva opcionales los
+  nuevos campos y encabezados; el indicador de reintento es accesible por CORS.
+- Los reintentos devolvieron los snapshots originales y sus timestamps tras
+  ediciones, cancelación de la obra e incluso eliminación del recurso. Otro
+  contenido, comando u objetivo produjo conflicto; ocupar un identificador con
+  otra operación no sobrescribió el recurso. Payload purgado, corrupto o con
+  versión desconocida nunca permitió ejecutar nuevamente una clave conocida.
+- Dos solicitudes HTTP concurrentes compartieron la misma clave: una ejecutó
+  el negocio y la otra recibió un 503 recuperable por contención. El reintento
+  posterior recuperó el único resultado confirmado. Se verificó aislamiento
+  por actor resuelto en servidor e ignorancia de un actor enviado por el cliente.
+- Las denegaciones actuales de comando o resultado no entraron al flujo
+  anterior. El puerto recibió también la obra de imputación de un gasto. Los
+  fallos de permisos y de validación de negocio revirtieron la reserva junto con
+  cualquier efecto pendiente; corregir una solicitud sin confirmar permitió
+  ejecutarla con la misma clave.
+- Se interceptó el commit de la dependencia real en las tres rutas y ambos
+  modos: cada fallo produjo rollback y solo envió `http.response.start` con
+  estado 500, sin emitir 200 ni 201. Fallar al construir la respuesta también
+  revirtió negocio y confirmación. Simular pérdida del acuse después de un
+  commit real produjo error HTTP y permitió recuperar por reintento sin duplicar.
+- Se rechazaron importes que necesitaran redondeo o excedieran la precisión
+  persistida en el contrato idempotente, sin alterar la precisión de agregados ni
+  depender del contexto Decimal. Se conservó la interfaz de metadatos de
+  adjuntos y el rechazo de binarios y streams sin leerlos.
+- `make check-backend` aprobó Ruff, formato y mypy estricto en 66 archivos de
+  `src/`; mypy también aprobó con objetivo Python 3.12. No se instalaron nuevas
+  dependencias, no se añadieron migraciones ni se modificó el frontend. Las
+  pruebas aplicaron las migraciones existentes solo en esquemas aislados de una
+  base temporal; la consulta de recuperación y la autenticación real siguen
+  pendientes.
 
 ## Validación del Paso 3 de registro transaccional
 

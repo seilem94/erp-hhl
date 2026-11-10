@@ -53,6 +53,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Idempotency-Replayed"],
 )
 
 app.add_exception_handler(DomainException, domain_exception_handler)  # type: ignore[arg-type]

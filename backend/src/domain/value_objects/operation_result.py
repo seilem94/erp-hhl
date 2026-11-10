@@ -12,6 +12,8 @@ from src.domain.entities.expense import Expense
 from src.domain.entities.project import Project
 from src.domain.enums import Currency, ExpenseCategory, ProjectStatus
 
+OPERATION_RESULT_SCHEMA_VERSION = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class ProjectSnapshot:

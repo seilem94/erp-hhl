@@ -6,9 +6,10 @@ from datetime import date
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Query, status
+from fastapi import APIRouter, Depends, Path, Query, Response, status
 
 from src.infrastructure.http.dependencies import (
+    OperationContextDep,
     get_operational_expenses_uc,
     get_project_expenses_uc,
     get_register_expense_uc,
@@ -18,6 +19,11 @@ from src.infrastructure.http.schemas.expense import (
     ExpenseResponse,
     RegisterExpenseRequest,
 )
+from src.infrastructure.http.schemas.operation import (
+    IDEMPOTENCY_RESPONSE_HEADERS,
+    OperationErrorResponse,
+)
+from src.use_cases.dto.operation import RegisterExpenseCommandDTO
 from src.use_cases.get_operational_expenses import (
     GetOperationalExpensesDTO,
     GetOperationalExpensesUseCase,
@@ -54,6 +60,7 @@ router = APIRouter(prefix="/api/v1/expenses", tags=["Gastos"])
     responses={
         status.HTTP_201_CREATED: {
             "description": "Gasto registrado y persistido exitosamente.",
+            "headers": IDEMPOTENCY_RESPONSE_HEADERS,
         },
         status.HTTP_400_BAD_REQUEST: {
             "model": ErrorResponse,
@@ -63,6 +70,9 @@ router = APIRouter(prefix="/api/v1/expenses", tags=["Gastos"])
             "model": ErrorResponse,
             "description": "La obra o proyecto especificado en 'project_id' no existe.",
         },
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": OperationErrorResponse},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": OperationErrorResponse},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "model": ErrorResponse,
             "description": (
@@ -74,6 +84,8 @@ router = APIRouter(prefix="/api/v1/expenses", tags=["Gastos"])
 )
 def register_expense(
     request: RegisterExpenseRequest,
+    response: Response,
+    context: OperationContextDep,
     use_case: Annotated[RegisterDailyExpenseUseCase, Depends(get_register_expense_uc)],
 ) -> ExpenseResponse:
     """Registra un gasto diario, ya sea directo a una obra o de operación general."""
@@ -84,9 +96,15 @@ def register_expense(
         description=request.description,
         project_id=request.project_id,
         receipt_url=request.receipt_url,
+        id=request.id if context is not None else None,
     )
-    expense = use_case.execute(dto)
-    return ExpenseResponse.model_validate(expense)
+    if context is None:
+        return ExpenseResponse.model_validate(use_case.execute(dto))
+    outcome = use_case.execute_idempotent(
+        RegisterExpenseCommandDTO(context=context, data=dto)
+    )
+    response.headers["Idempotency-Replayed"] = "true" if outcome.replayed else "false"
+    return ExpenseResponse.model_validate(outcome.result)
 
 
 @router.get(

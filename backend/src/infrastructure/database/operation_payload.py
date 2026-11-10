@@ -5,12 +5,13 @@ from pydantic import JsonValue, TypeAdapter, ValidationError
 from src.domain.enums import ResourceType
 from src.domain.exceptions import OperationReconciliationRequiredError
 from src.domain.value_objects.operation_result import (
+    OPERATION_RESULT_SCHEMA_VERSION,
     ExpenseSnapshot,
     OperationResult,
     ProjectSnapshot,
 )
 
-SNAPSHOT_SCHEMA_VERSION = 1
+SNAPSHOT_SCHEMA_VERSION = OPERATION_RESULT_SCHEMA_VERSION
 # Preserve historical adapters when introducing an incompatible result version.
 _project_adapter = TypeAdapter(ProjectSnapshot)
 _expense_adapter = TypeAdapter(ExpenseSnapshot)

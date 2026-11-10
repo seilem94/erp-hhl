@@ -20,7 +20,12 @@ from uuid import UUID
 
 from src.domain.entities.operation import RequestFingerprint
 from src.domain.enums import CommandType
-from src.domain.exceptions import InvalidCanonicalContentError
+from src.domain.exceptions import (
+    InvalidCanonicalContentError,
+    OperationReconciliationRequiredError,
+)
+
+FINGERPRINT_VERSION = 1
 
 CanonicalValue: TypeAlias = (
     None
@@ -71,7 +76,9 @@ class CanonicalRequest:
 
 
 class RequestCanonicalizer(Protocol):
-    def fingerprint(self, request: CanonicalRequest) -> RequestFingerprint:
+    def fingerprint(
+        self, request: CanonicalRequest, *, version: int = FINGERPRINT_VERSION
+    ) -> RequestFingerprint:
         """Hash structured command values and attachment metadata, never files."""
         ...
 
@@ -79,9 +86,15 @@ class RequestCanonicalizer(Protocol):
 class SHA256RequestCanonicalizer:
     """Version 1; retain this implementation when introducing future versions."""
 
-    def fingerprint(self, request: CanonicalRequest) -> RequestFingerprint:
+    def fingerprint(
+        self, request: CanonicalRequest, *, version: int = FINGERPRINT_VERSION
+    ) -> RequestFingerprint:
+        if version != FINGERPRINT_VERSION:
+            raise OperationReconciliationRequiredError(
+                "Unsupported request fingerprint version; retain the operation key."
+            )
         document: Mapping[str, CanonicalValue] = {
-            "fingerprint_version": 1,
+            "fingerprint_version": version,
             "command_type": request.command_type,
             "command_version": request.command_version,
             "target_resource_id": request.target_resource_id,
@@ -105,7 +118,8 @@ class SHA256RequestCanonicalizer:
             allow_nan=False,
         )
         return RequestFingerprint(
-            version=1, digest=hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+            version=version,
+            digest=hashlib.sha256(serialized.encode("utf-8")).hexdigest(),
         )
 
     def _normalize(self, value: CanonicalValue) -> JsonValue:

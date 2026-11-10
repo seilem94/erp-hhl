@@ -50,6 +50,8 @@ class DevelopmentAuthorization:
         actor: ActorIdentity,
         command_type: CommandType,
         target_resource_id: UUID | None,
+        *,
+        project_id: UUID | None = None,
     ) -> None:
         self._check_actor(actor)
 
@@ -72,6 +74,8 @@ class DenyAllAuthorization:
         actor: ActorIdentity,
         command_type: CommandType,
         target_resource_id: UUID | None,
+        *,
+        project_id: UUID | None = None,
     ) -> None:
         raise AuthorizationDeniedError("No authorization provider configured.")
 

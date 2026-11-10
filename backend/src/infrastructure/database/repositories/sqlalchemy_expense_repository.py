@@ -11,10 +11,13 @@ from __future__ import annotations
 from datetime import date
 from uuid import UUID
 
+from psycopg.errors import UniqueViolation
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.domain.entities.expense import Expense
+from src.domain.exceptions import ResourceIdentityConflictError
 from src.domain.repositories.expense_repository import ExpenseRepository
 from src.infrastructure.database.mappers import (
     domain_to_expense_orm,
@@ -50,7 +53,17 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
         """
         orm = domain_to_expense_orm(expense)
         self._session.add(orm)
-        self._session.flush()
+        try:
+            self._session.flush()
+        except IntegrityError as exc:
+            if (
+                isinstance(exc.orig, UniqueViolation)
+                and exc.orig.diag.constraint_name == "expenses_pkey"
+            ):
+                raise ResourceIdentityConflictError(
+                    "The requested expense identifier is already in use."
+                ) from exc
+            raise
         return expense_to_domain(orm)
 
     def delete(self, expense_id: UUID) -> bool:

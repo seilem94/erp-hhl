@@ -1,13 +1,18 @@
-"""Command envelopes leave legacy use cases unchanged until their integration."""
+"""Typed command envelopes, separate from transport and resource identity."""
+
+from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from src.domain.entities.operation import OperationKey
-from src.use_cases.create_project import CreateProjectDTO
 from src.use_cases.ports.identity import ActorIdentity
-from src.use_cases.register_daily_expense import RegisterDailyExpenseDTO
-from src.use_cases.update_project import UpdateProjectDTO
+
+if TYPE_CHECKING:
+    from src.use_cases.create_project import CreateProjectDTO
+    from src.use_cases.register_daily_expense import RegisterDailyExpenseDTO
+    from src.use_cases.update_project import UpdateProjectDTO
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,14 +39,20 @@ class GetOperationResultDTO:
 class CreateProjectCommandDTO:
     context: OperationContextDTO
     data: CreateProjectDTO
-    resource_id: UUID | None = None
+
+    @property
+    def resource_id(self) -> UUID | None:
+        return self.data.id
 
 
 @dataclass(frozen=True, kw_only=True)
 class RegisterExpenseCommandDTO:
     context: OperationContextDTO
     data: RegisterDailyExpenseDTO
-    resource_id: UUID | None = None
+
+    @property
+    def resource_id(self) -> UUID | None:
+        return self.data.id
 
 
 @dataclass(frozen=True, kw_only=True)

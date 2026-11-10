@@ -5,21 +5,27 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Query, status
+from fastapi import APIRouter, Depends, Path, Query, Response, status
 
 from src.domain.enums import ProjectStatus
 from src.infrastructure.http.dependencies import (
+    OperationContextDep,
     get_create_project_uc,
     get_list_projects_uc,
     get_update_project_uc,
 )
 from src.infrastructure.http.schemas.error import ErrorResponse
+from src.infrastructure.http.schemas.operation import (
+    IDEMPOTENCY_RESPONSE_HEADERS,
+    OperationErrorResponse,
+)
 from src.infrastructure.http.schemas.project import (
     CreateProjectRequest,
     ProjectResponse,
     UpdateProjectRequest,
 )
 from src.use_cases.create_project import CreateProjectDTO, CreateProjectUseCase
+from src.use_cases.dto.operation import CreateProjectCommandDTO, UpdateProjectCommandDTO
 from src.use_cases.list_projects import ListProjectsUseCase
 from src.use_cases.update_project import UpdateProjectDTO, UpdateProjectUseCase
 
@@ -44,11 +50,15 @@ router = APIRouter(prefix="/api/v1/projects", tags=["Proyectos"])
     responses={
         status.HTTP_201_CREATED: {
             "description": "Proyecto creado y persistido exitosamente.",
+            "headers": IDEMPOTENCY_RESPONSE_HEADERS,
         },
         status.HTTP_400_BAD_REQUEST: {
             "model": ErrorResponse,
             "description": "Solicitud inválida o violación de regla de negocio.",
         },
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": OperationErrorResponse},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": OperationErrorResponse},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": (
                 "Error en la validación de tipos o campos requeridos en el JSON."
@@ -58,6 +68,8 @@ router = APIRouter(prefix="/api/v1/projects", tags=["Proyectos"])
 )
 def create_project(
     request: CreateProjectRequest,
+    response: Response,
+    context: OperationContextDep,
     use_case: Annotated[CreateProjectUseCase, Depends(get_create_project_uc)],
 ) -> ProjectResponse:
     """Crea una nueva obra eléctrica en estado inicial de planificación."""
@@ -66,9 +78,15 @@ def create_project(
         client=request.client,
         estimated_budget=request.estimated_budget,
         description=request.description,
+        id=request.id if context is not None else None,
     )
-    project = use_case.execute(dto)
-    return ProjectResponse.model_validate(project)
+    if context is None:
+        return ProjectResponse.model_validate(use_case.execute(dto))
+    outcome = use_case.execute_idempotent(
+        CreateProjectCommandDTO(context=context, data=dto)
+    )
+    response.headers["Idempotency-Replayed"] = "true" if outcome.replayed else "false"
+    return ProjectResponse.model_validate(outcome.result)
 
 
 @router.patch(
@@ -82,11 +100,15 @@ def create_project(
     responses={
         status.HTTP_200_OK: {
             "description": "Proyecto actualizado exitosamente.",
+            "headers": IDEMPOTENCY_RESPONSE_HEADERS,
         },
         status.HTTP_404_NOT_FOUND: {
             "model": ErrorResponse,
             "description": "La obra o proyecto especificado no fue encontrado.",
         },
+        status.HTTP_403_FORBIDDEN: {"model": ErrorResponse},
+        status.HTTP_409_CONFLICT: {"model": OperationErrorResponse},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": OperationErrorResponse},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {
             "description": (
                 "Identificador UUID o datos en el JSON con formato incorrecto."
@@ -100,6 +122,8 @@ def update_project(
         Path(description="Identificador único universal (UUIDv4) de la obra"),
     ],
     request: UpdateProjectRequest,
+    response: Response,
+    context: OperationContextDep,
     use_case: Annotated[UpdateProjectUseCase, Depends(get_update_project_uc)],
 ) -> ProjectResponse:
     """Actualiza parcialmente los campos especificados de un proyecto existente."""
@@ -111,8 +135,13 @@ def update_project(
         status=request.status,
         description=request.description,
     )
-    updated = use_case.execute(dto)
-    return ProjectResponse.model_validate(updated)
+    if context is None:
+        return ProjectResponse.model_validate(use_case.execute(dto))
+    outcome = use_case.execute_idempotent(
+        UpdateProjectCommandDTO(context=context, data=dto)
+    )
+    response.headers["Idempotency-Replayed"] = "true" if outcome.replayed else "false"
+    return ProjectResponse.model_validate(outcome.result)
 
 
 @router.get(

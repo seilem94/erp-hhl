@@ -23,10 +23,14 @@ source venv/bin/activate
 Instalar el proyecto y las herramientas necesarias para el flujo actual:
 
 ```bash
-python -m pip install -e ".[dev]" fastapi uvicorn ruff mypy
+python -m pip install -e ".[dev]" "fastapi>=0.121.0" uvicorn ruff mypy
 ```
 
 El manifiesto todavía no declara FastAPI, Uvicorn, Ruff ni mypy: la instalación explícita cubre las pruebas HTTP, el arranque de desarrollo y las comprobaciones estáticas. Este documento no modifica las declaraciones de dependencias.
+
+FastAPI debe soportar `Depends(..., scope="function")` (desde 0.121.0): las
+[dependencias HTTP](src/infrastructure/http/dependencies.py) usan ese cierre para
+finalizar la sesión antes de enviar la respuesta.
 
 ## Configuración local
 
@@ -110,10 +114,12 @@ configuración de conexión, aunque sustituyan sus repositorios.
 
 ### Integración con PostgreSQL
 
-Las [pruebas de resúmenes](tests/infrastructure/test_financial_summaries_postgres.py)
-y de [operaciones](tests/infrastructure/test_operations_postgres.py) usan
-repositorios SQLAlchemy reales. Las primeras incluyen TestClient; las segundas
-comprueban transacciones independientes y contención concurrente. Requieren
+Las [pruebas de resúmenes](tests/infrastructure/test_financial_summaries_postgres.py),
+de [operaciones](tests/infrastructure/test_operations_postgres.py) y de
+[comandos HTTP](tests/infrastructure/test_commands_postgres.py) usan repositorios
+SQLAlchemy reales. Cubren TestClient, transacciones independientes y contención
+concurrente. Las de comandos sustituyen la fábrica de sesiones, conservando la
+dependencia transaccional real para forzar y observar fallos de commit. Requieren
 `TEST_DATABASE_URL` como variable de proceso con una conexión PostgreSQL de
 pruebas y permiso para crear esquemas. Cada caso genera un esquema aislado, aplica
 las migraciones y lo elimina al terminar; no modifica tablas preexistentes.
@@ -155,5 +161,26 @@ la transacción.
 
 Un registro confirmado con payload NULL conserva su identidad. La recuperación
 de su resultado exige reconciliación y nunca habilita otro efecto de negocio;
-una versión de snapshot no reconocida sigue el mismo criterio. La integración de
-este adaptador con las altas y el PATCH se realiza en el Paso 4.
+una versión de snapshot no reconocida sigue el mismo criterio.
+
+### Integración de comandos
+
+El [coordinador](src/use_cases/services/idempotency.py) compone los comandos de
+alta y edición con ese registro. Para usar el recorrido local, aplicar las
+migraciones y configurar el entorno de desarrollo descrito arriba. Sus cabeceras,
+campos opcionales y errores se consultan en OpenAPI y en los contratos de
+[proyectos](src/infrastructure/http/routers/projects.py) y
+[gastos](src/infrastructure/http/routers/expenses.py).
+
+La [política de adopción](../docs/adr/0002-idempotencia-offline.md#adopción-y-límites)
+define la compatibilidad cuando falta clave o identidad. La cabecera de respuesta
+`Idempotency-Replayed` solo aparece en el recorrido idempotente: `false` al
+ejecutarlo por primera vez y `true` al recuperar el snapshot. Su ausencia no
+acredita deduplicación. Un reintento conserva clave, cuerpo e identidad; un error
+de incertidumbre requiere recuperar o repetir esa misma operación.
+
+Los comandos con clave validan los importes contra la precisión persistida sin
+redondearlos; la canonicalización normaliza su escala, fechas y opcionales del
+contrato. Los [metadatos de adjuntos](src/use_cases/services/canonicalization.py)
+permiten extenderla a archivos verificados sin entregar binarios ni streams al
+servicio. La carga de archivos corresponde a su módulo posterior.

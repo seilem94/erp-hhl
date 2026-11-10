@@ -6,13 +6,22 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import UUID4, BaseModel, ConfigDict, Field
 
 from src.domain.enums import ProjectStatus
 
 
 class CreateProjectRequest(BaseModel):
     """Cuerpo de la petición para crear o cotizar una nueva obra eléctrica."""
+
+    id: UUID4 | None = Field(
+        default=None,
+        description=(
+            "UUIDv4 opcional preasignado a la obra, distinto de Idempotency-Key. "
+            "Solo se utiliza con clave e identidad válidas; el flujo antiguo "
+            "genera su identificador en el servidor."
+        ),
+    )
 
     name: str = Field(
         ...,

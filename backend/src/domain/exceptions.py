@@ -104,8 +104,16 @@ class InvalidCanonicalContentError(BusinessRuleViolationError):
     """Canonical requests contain unsupported or non-finite content."""
 
 
+class InvalidMonetaryPrecisionError(BusinessRuleViolationError):
+    """An idempotent command's amount would be rounded or overflow persistence."""
+
+
 class IdempotencyConflictError(DomainException):
     """A known operation key identifies another command or content."""
+
+
+class ResourceIdentityConflictError(DomainException):
+    """A preassigned resource identity already belongs to another creation."""
 
 
 class OperationUnresolvedError(DomainException):

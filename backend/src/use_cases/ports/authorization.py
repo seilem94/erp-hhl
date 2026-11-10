@@ -21,8 +21,14 @@ class AuthorizationPort(Protocol):
         actor: ActorIdentity,
         command_type: CommandType,
         target_resource_id: UUID | None,
+        *,
+        project_id: UUID | None = None,
     ) -> None:
-        """Check current permission before executing a command."""
+        """Check command permission, including a new expense's parent project.
+
+        target_resource_id identifies the command resource, not its parent.
+        project_id is None for OPEX and for project commands.
+        """
         ...
 
     def authorize_operation_result(

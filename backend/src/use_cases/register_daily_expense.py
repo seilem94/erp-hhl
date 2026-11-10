@@ -19,15 +19,21 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from src.domain.entities.expense import Expense
-from src.domain.enums import ExpenseCategory, ProjectStatus
+from src.domain.enums import CommandType, Currency, ExpenseCategory, ProjectStatus
 from src.domain.exceptions import (
     InvalidExpenseAmountError,
     InvalidExpenseDateError,
+    OperationUnresolvedError,
     ProjectCancelledError,
     ProjectNotFoundError,
 )
 from src.domain.repositories.expense_repository import ExpenseRepository
 from src.domain.repositories.project_repository import ProjectRepository
+from src.domain.value_objects.operation_result import ExpenseSnapshot
+from src.use_cases.dto.operation import RegisterExpenseCommandDTO
+from src.use_cases.services.canonicalization import CanonicalRequest
+from src.use_cases.services.idempotency import IdempotencyCoordinator, IdempotentResult
+from src.use_cases.services.monetary_precision import validate_command_amount
 
 
 @dataclass(frozen=True)
@@ -50,6 +56,7 @@ class RegisterDailyExpenseDTO:
         receipt_url: Optional path or URL of the scanned receipt image.
             Setting this implies ``has_receipt = True``; the use case
             enforces this invariant during execution.
+        id: Optional preassigned resource UUID, separate from the operation key.
     """
 
     amount: Decimal
@@ -59,6 +66,7 @@ class RegisterDailyExpenseDTO:
     project_id: UUID | None = None
     has_receipt: bool = False
     receipt_url: str | None = None
+    id: UUID | None = None
 
 
 class RegisterDailyExpenseUseCase:
@@ -72,7 +80,7 @@ class RegisterDailyExpenseUseCase:
        b. The project must not be in ``CANCELLED`` status.
     4. Receipt coherence: ``has_receipt`` is normalised to ``True`` whenever
        ``receipt_url`` is present, regardless of the value in the DTO.
-    5. A new ``Expense`` entity is built with a generated UUID and UTC
+    5. A new ``Expense`` entity is built with a supplied or generated UUID and UTC
        timestamps, then persisted via the repository.
 
     Args:
@@ -88,10 +96,41 @@ class RegisterDailyExpenseUseCase:
         expense_repo: ExpenseRepository,
         project_repo: ProjectRepository,
         date_provider: Callable[[], date] = date.today,
+        *,
+        coordinator: IdempotencyCoordinator | None = None,
     ) -> None:
         self._expense_repo = expense_repo
         self._project_repo = project_repo
         self._date_provider = date_provider
+        self._coordinator = coordinator
+
+    def execute_idempotent(
+        self, command: RegisterExpenseCommandDTO
+    ) -> IdempotentResult[ExpenseSnapshot]:
+        if self._coordinator is None:
+            raise OperationUnresolvedError("No idempotency coordinator configured.")
+        dto = command.data
+        validate_command_amount(dto.amount)
+        return self._coordinator.execute(
+            context=command.context,
+            request=CanonicalRequest(
+                command_type=CommandType.REGISTER_EXPENSE,
+                target_resource_id=dto.id,
+                content={
+                    "amount": dto.amount,
+                    "date": dto.date,
+                    "category": dto.category,
+                    "description": dto.description,
+                    "project_id": dto.project_id,
+                    "has_receipt": dto.has_receipt or dto.receipt_url is not None,
+                    "receipt_url": dto.receipt_url,
+                    "currency": Currency.CLP,
+                },
+            ),
+            project_id=dto.project_id,
+            execute_business=lambda: ExpenseSnapshot.from_expense(self.execute(dto)),
+            result_type=ExpenseSnapshot,
+        )
 
     def execute(self, dto: RegisterDailyExpenseDTO) -> Expense:
         """Validate, build, persist and return a new ``Expense`` entity.
@@ -100,8 +139,8 @@ class RegisterDailyExpenseUseCase:
             dto: Immutable input data from the interface layer.
 
         Returns:
-            The persisted ``Expense`` entity with server-generated fields
-            (``id``, ``created_at``, ``updated_at``).
+            The persisted entity with its supplied or generated resource UUID
+            and server-generated UTC timestamps.
 
         Raises:
             InvalidExpenseAmountError: If ``dto.amount`` is zero or negative.
@@ -133,7 +172,7 @@ class RegisterDailyExpenseUseCase:
         # ── 5. Build entity and persist ───────────────────────────────────────
         now = datetime.now(UTC)
         expense = Expense(
-            id=uuid4(),
+            id=dto.id if dto.id is not None else uuid4(),
             amount=dto.amount,
             date=dto.date,
             category=dto.category,

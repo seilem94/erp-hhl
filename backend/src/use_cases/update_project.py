@@ -18,9 +18,14 @@ from decimal import Decimal
 from uuid import UUID
 
 from src.domain.entities.project import Project
-from src.domain.enums import ProjectStatus
-from src.domain.exceptions import ProjectNotFoundError
+from src.domain.enums import CommandType, ProjectStatus
+from src.domain.exceptions import OperationUnresolvedError, ProjectNotFoundError
 from src.domain.repositories.project_repository import ProjectRepository
+from src.domain.value_objects.operation_result import ProjectSnapshot
+from src.use_cases.dto.operation import UpdateProjectCommandDTO
+from src.use_cases.services.canonicalization import CanonicalRequest
+from src.use_cases.services.idempotency import IdempotencyCoordinator, IdempotentResult
+from src.use_cases.services.monetary_precision import validate_command_amount
 
 
 @dataclass(frozen=True)
@@ -47,8 +52,40 @@ class UpdateProjectDTO:
 class UpdateProjectUseCase:
     """Apply partial updates to an existing project entity."""
 
-    def __init__(self, project_repo: ProjectRepository) -> None:
+    def __init__(
+        self,
+        project_repo: ProjectRepository,
+        *,
+        coordinator: IdempotencyCoordinator | None = None,
+    ) -> None:
         self._project_repo = project_repo
+        self._coordinator = coordinator
+
+    def execute_idempotent(
+        self, command: UpdateProjectCommandDTO
+    ) -> IdempotentResult[ProjectSnapshot]:
+        if self._coordinator is None:
+            raise OperationUnresolvedError("No idempotency coordinator configured.")
+        dto = command.data
+        validate_command_amount(dto.estimated_budget)
+        return self._coordinator.execute(
+            context=command.context,
+            request=CanonicalRequest(
+                command_type=CommandType.UPDATE_PROJECT,
+                target_resource_id=dto.project_id,
+                # None means no change in the existing PATCH contract. A future
+                # nullable clear operation needs a new command version.
+                content={
+                    "name": dto.name,
+                    "client": dto.client,
+                    "estimated_budget": dto.estimated_budget,
+                    "status": dto.status,
+                    "description": dto.description,
+                },
+            ),
+            execute_business=lambda: ProjectSnapshot.from_project(self.execute(dto)),
+            result_type=ProjectSnapshot,
+        )
 
     def execute(self, dto: UpdateProjectDTO) -> Project:
         """Fetch, mutate and persist changes to an existing Project.

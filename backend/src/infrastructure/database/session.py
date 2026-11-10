@@ -43,13 +43,16 @@ def get_db() -> Generator[Session, None, None]:
     Uso típico con FastAPI::
 
         @router.get("/items")
-        def list_items(db: Session = Depends(get_db)) -> list[Item]:
+        def list_items(db: Session = Depends(get_db, scope="function")) -> list[Item]:
             return db.query(Item).all()
 
-    Uso manual::
+    Uso manual (ejecuta también el finalizador transaccional)::
 
-        with contextlib.closing(next(get_db())) as db:
+        with contextlib.contextmanager(get_db)() as db:
             ...
+
+    La inyección HTTP usa scope="function" para confirmar o fallar antes de
+    enviar http.response.start. No usar el scope por defecto para escrituras.
     """
     db: Session = SessionLocal()
     try:

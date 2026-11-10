@@ -132,6 +132,8 @@ class SummaryAuthorization:
         actor: ActorIdentity,
         command_type: CommandType,
         target_resource_id: UUID | None,
+        *,
+        project_id: UUID | None = None,
     ) -> None:
         raise AuthorizationDeniedError("Not provided by this test policy.")
 

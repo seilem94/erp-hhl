@@ -10,11 +10,14 @@ from __future__ import annotations
 
 from uuid import UUID
 
+from psycopg.errors import UniqueViolation
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from src.domain.entities.project import Project
 from src.domain.enums import ProjectStatus
+from src.domain.exceptions import ResourceIdentityConflictError
 from src.domain.repositories.project_repository import ProjectRepository
 from src.infrastructure.database.mappers import (
     domain_to_project_orm,
@@ -50,7 +53,17 @@ class SQLAlchemyProjectRepository(ProjectRepository):
         """
         orm = domain_to_project_orm(project)
         self._session.add(orm)
-        self._session.flush()  # populate DB-generated defaults without commit
+        try:
+            self._session.flush()
+        except IntegrityError as exc:
+            if (
+                isinstance(exc.orig, UniqueViolation)
+                and exc.orig.diag.constraint_name == "projects_pkey"
+            ):
+                raise ResourceIdentityConflictError(
+                    "The requested project identifier is already in use."
+                ) from exc
+            raise
         return project_to_domain(orm)
 
     def update(self, project: Project) -> Project:

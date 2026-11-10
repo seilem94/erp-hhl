@@ -147,8 +147,7 @@ def test_command_envelope_keeps_operation_and_resource_identity_separate() -> No
         context=OperationContextDTO(
             actor=ActorIdentity(actor_id=uuid4()), operation_id=operation_id
         ),
-        data=CreateProjectDTO(name="Obra", client="Cliente"),
-        resource_id=resource_id,
+        data=CreateProjectDTO(name="Obra", client="Cliente", id=resource_id),
     )
     assert envelope.context.key.operation_id == operation_id
     assert envelope.resource_id == resource_id
