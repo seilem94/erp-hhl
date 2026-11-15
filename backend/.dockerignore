@@ -1,0 +1,21 @@
+# Entornos locales y caches de Python.
+**/venv/
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
+# Configuracion privada y artefactos de desarrollo.
+**/.env*
+tests/
+.coverage*
+htmlcov/
+build/
+dist/
+**/*.egg-info/
+.git/
+.idea/
+.vscode/
+*.log
