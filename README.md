@@ -40,9 +40,10 @@ npm --prefix frontend run dev
 
 ## Documentación
 
+- [Despliegue con Docker Compose, Cloudflare Tunnel y operación del servidor](docs/08_infraestructura_y_despliegue.md).
 - [Índice y fuentes canónicas](docs/README.md).
 - [Estado de entrega y validaciones](docs/PROJECT_STATE.md).
 - [Protocolo para agentes](docs/AGENT.md).
 - [Decisiones de arquitectura](docs/README.md#registro-de-decisiones).
 
-La instalación, las migraciones y las pruebas se documentan exclusivamente en los README de cada componente enlazados arriba.
+La instalación local, las migraciones y las pruebas se documentan en los README de cada componente; la operación del stack de contenedores pertenece a la guía de infraestructura enlazada arriba.

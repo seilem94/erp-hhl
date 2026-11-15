@@ -1,12 +1,13 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-10. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
+Actualizado: 2026-11-15. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
 
 ## Situación actual
 
-- Rama de trabajo: `feature/fase4-evolucion`.
+- Rama de trabajo: `infra/docker-cloudflare`.
 - Fase activa: Fase 4, en ejecución según la [planificación de evolución y resiliencia](07_fase4_evolucion_y_resiliencia.md).
-- Backend base de las Fases 1 y 2: dominio, persistencia, migraciones y API implementados; autenticación no implementada. Infraestructura final y datos semilla aplazados.
+- Backend base de las Fases 1 y 2: dominio, persistencia, migraciones y API implementados; autenticación y datos semilla pendientes.
+- Infraestructura Docker, proxy Nginx y orquestación Compose con Cloudflare Tunnel implementados en el repositorio, con [guía canónica de despliegue, hardening y backups](08_infraestructura_y_despliegue.md). La aplicación de estas medidas y la validación del despliegue en el servidor real continúan pendientes; la autenticación real pertenece al Módulo 2.
 - Fase 4, Módulo 1, Paso 1: núcleo puro y contratos implementados para resúmenes financieros e idempotencia. Incluye proyecciones, DTO, contratos de repositorio, puertos de identidad y autorización, excepciones, filtro fiscal opcional y moneda tipada, snapshots inmutables, confirmaciones con payload opcional y canonicalización extensible a metadatos sin binarios. El dominio y los contratos no dependen de Pydantic, SQLAlchemy ni FastAPI. Identidad Dummy estable e inyectable disponible exclusivamente en desarrollo local; no constituye autenticación real.
 - Fase 4, Módulo 1, Paso 2: casos de uso, repositorio SQLAlchemy y endpoints HTTP de resumen general y por obra implementados y probados contra PostgreSQL real. Cada resumen agrega gastos y cantidades en una sola sentencia SQL, con autorización global o por obra, filtros inclusivos de fecha, separación fiscal explícita e importes decimales exactos. Migración aditiva de clasificación fiscal nullable disponible, sin asignar valores a obras históricas; la clasificación obligatoria de escritura sigue pendiente de su evolución funcional. El frontend conserva sus consultas anteriores.
 - Fase 4, Módulo 1, Paso 3: registro transaccional, modelo ORM de operaciones, repositorio SQLAlchemy de idempotencia y migración implementados y probados en concurrencia con PostgreSQL real. La clave compuesta por actor y operación arbitra la reserva; los snapshots versionados usan JSONB nullable para futura purga. Reserva y confirmación comparten la transacción de negocio, sin commit ni rollback en el repositorio.
@@ -40,7 +41,19 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Autenticación y preferencias sincronizadas con una cuenta.
 - Captura y carga de comprobantes.
 - Capacidades PWA y resolución de operaciones sin conexión.
-- Orquestación de producción y seed, en pausa hasta preparar el despliegue final.
+- Despliegue y hardening efectivos en el servidor, verificación de aislamiento desde la LAN y ensayo real de backup/restauración.
+- Datos semilla para el despliegue final.
+
+## Validación de infraestructura Docker y cierre documental
+
+Entrega de 2026-11-15 sobre `infra/docker-cloudflare`.
+
+- Los Pasos 1 y 2 quedaron registrados en `6d1f828` y `9887ed7`: Dockerfiles de producción y contextos filtrados, proxy Nginx con fallback SPA, Compose con volumen persistente, migraciones antes de Uvicorn, healthchecks, redes aisladas y conector Cloudflare opcional. El backend ejecuta como usuario no-root y solo el frontend publica un puerto, enlazado a loopback.
+- En esos pasos se ejecutaron lint y build del frontend, incluido un build con API del mismo origen, y `npm ci --dry-run --offline`. Se revisaron manifiestos, compatibilidad de engines del lockfile con Node 20.19 y coherencia estática de Dockerfiles/Nginx; esas comprobaciones no equivalen a construir ni arrancar imágenes.
+- En el cierre documental se validó nuevamente el modelo con `docker compose config`, usando variables ficticias: servicios, perfiles, red interna, salida exclusiva del conector, puerto de loopback, volumen, URL de PostgreSQL, dependencias saludables y secuencia de migración. Se comprobaron valores predeterminados, sustituciones y rechazo de credenciales obligatorias vacías, además de 187 enlaces locales y 32 anclas en 24 archivos Markdown, los 16 bloques Bash del manual mediante `bash -n` y `git diff --check`.
+- Se implementó la guía operativa con instrucciones de SSH por llaves, UFW, fail2ban, segmentación de LAN, Cloudflare Access/Tunnel y backup/restauración completa de PostgreSQL, conservando el registro histórico de `operations`. Los índices y accesos enlazan esa fuente única; el endurecimiento del anfitrión no se aplicó desde esta sesión.
+- El cliente Docker está disponible pero el daemon no responde. No se construyeron ni arrancaron contenedores, no se ejecutó `nginx -t`, no se aplicaron migraciones sobre una base real ni se ensayaron dumps/restauraciones o un túnel conectado. Tampoco se reejecutaron las suites de aplicación en este cierre exclusivamente documental. Estas verificaciones operativas siguen pendientes en el servidor de destino.
+- La autenticación de aplicación sigue pendiente del Módulo 2. `ENV=production` deshabilita el Dummy y no incorpora una sesión real ni convierte los flujos antiguos en rutas autenticadas; la configuración de Access descrita en la guía tampoco se aplicó en esta entrega.
 
 ## Validación del Paso 5 de recuperación
 

@@ -7,6 +7,7 @@ Este documento es un itinerario de lectura, no una copia del estado, de las regl
 3. Elegir el plan de fase desde el [índice documental](README.md#planes-de-trabajo).
 4. Consultar el [README del componente frontend](../frontend/README.md) o [backend](../backend/README.md) para sus instrucciones operativas.
 5. Antes de proponer cambios arquitectónicos, revisar el [registro ADR](README.md#registro-de-decisiones).
+6. Para operación, despliegue, hardening y recuperación, consultar la [guía de infraestructura](08_infraestructura_y_despliegue.md).
 
 Inspeccionar el árbol de trabajo y el código de la tarea antes de editar. Un objetivo de planificación no es evidencia de implementación; un resultado histórico no equivale a una ejecución actual.
 

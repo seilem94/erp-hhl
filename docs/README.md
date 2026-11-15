@@ -12,6 +12,7 @@ Cada documento mantiene exclusivamente el tema asignado. Las referencias de nave
 | Entregas, pendientes y evidencia de validación | [PROJECT_STATE](PROJECT_STATE.md) |
 | Preparación Python, conexión, migraciones y pruebas | [README del backend](../backend/README.md) |
 | Operación, estructura y recursos de la interfaz | [README del frontend](../frontend/README.md) |
+| Operación con contenedores, despliegue, hardening del anfitrión y recuperación | [Infraestructura y despliegue](08_infraestructura_y_despliegue.md) |
 | Restricciones de diseño de las capas | [Reglas de arquitectura](02_reglas_arquitectura.md) |
 | Preguntas y acuerdos de uso de la revisión del MVP con el socio | [Guía de reunión](05_revision_mvp_socio.md) |
 | Secuencia, criterios y reglas de evolución de Fase 4 no cubiertas por un ADR | [Plan de Fase 4](07_fase4_evolucion_y_resiliencia.md) |
@@ -26,6 +27,7 @@ El código y sus manifiestos son la autoridad de contratos, versiones, scripts y
 - [Fase 2: persistencia y API](04_fase2_infraestructura.md).
 - [Fase 3: integración de la interfaz](06_fase3_frontend.md).
 - [Fase 4: Evolución del Dominio, Resiliencia y Reglas de Negocio](07_fase4_evolucion_y_resiliencia.md).
+- Guía operativa: [Infraestructura, despliegue y recuperación](08_infraestructura_y_despliegue.md).
 
 Los planes definen secuencias y criterios; no repiten estados de avance. Para comenzar una sesión, seguir el [itinerario LLM](LLM_CONTEXT.md).
 
@@ -65,6 +67,5 @@ La información retirada sigue disponible en el historial de Git. No se modifica
 
 1. ADR de autenticación SPA, sin número reservado: decidir sesión, expiración, almacenamiento y permisos dentro del [Módulo 2 de Fase 4](07_fase4_evolucion_y_resiliencia.md#módulo-2-identidad-y-seguridad).
 2. ADR de sincronización offline, sin número reservado: completar cola, conflictos y política de caché sobre el [ADR de idempotencia](adr/0002-idempotencia-offline.md), según el [Módulo 1 de Fase 4](07_fase4_evolucion_y_resiliencia.md#módulo-1-arquitectura-y-resiliencia).
-3. `operacion/despliegue-y-recuperacion.md`: procedimiento probado de publicación, backups y restauración cuando se retome la operación de producción.
 
 Estos documentos aportarían responsabilidades todavía no cubiertas. No deben duplicar el contrato OpenAPI, las recetas locales de los componentes ni el estado de entrega.
