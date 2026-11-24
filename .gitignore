@@ -48,11 +48,8 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # --- Variables de Entorno y Secretos ---
-.env
-.env*.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
+!.env.example
 *.env
 
 # --- Base de datos y almacenamiento local ---

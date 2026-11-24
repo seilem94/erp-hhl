@@ -1,0 +1,94 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?Define POSTGRES_USER en .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:?Define POSTGRES_DB en .env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - erp_internal_net
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER:?Define POSTGRES_USER en .env}:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}@db:5432/${POSTGRES_DB:?Define POSTGRES_DB en .env}"
+      ENV: ${ENV:-production}
+    # -e impide arrancar Uvicorn si falla una migracion; exec recibe las senales.
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        python -m alembic upgrade head
+        exec python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - erp_internal_net
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - erp_internal_net
+      - frontend_local_net
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    depends_on:
+      frontend:
+        condition: service_healthy
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      # El token es obligatorio al activar el perfil; cloudflared lo valida.
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    # Tunel gestionado en Cloudflare: configurar su origen como http://frontend:80.
+    networks:
+      - erp_internal_net
+      - tunnel_egress_net
+
+volumes:
+  postgres_data:
+
+networks:
+  erp_internal_net:
+    driver: bridge
+    internal: true
+  # Solo el conector necesita salida a Internet para alcanzar Cloudflare.
+  tunnel_egress_net:
+    driver: bridge
+  frontend_local_net:
+    driver: bridge
