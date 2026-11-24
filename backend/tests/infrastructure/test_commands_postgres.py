@@ -23,7 +23,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from src.core.config import Environment, settings
 from src.domain.entities.operation import OperationRecord
 from src.domain.entities.project import Project
-from src.domain.enums import CommandType, ProjectStatus
+from src.domain.enums import CommandType, Currency, ProjectStatus
 from src.domain.exceptions import AuthorizationDeniedError
 from src.domain.repositories.operation_repository import OperationRepository
 from src.infrastructure.database import session as database
@@ -48,6 +48,10 @@ from src.infrastructure.identity.providers import (
 )
 from src.main import app
 from src.use_cases.ports.identity import ActorIdentity
+from src.use_cases.services.canonicalization import (
+    CanonicalRequest,
+    SHA256RequestCanonicalizer,
+)
 
 Kind = Literal["project", "expense", "update"]
 KINDS = ("project", "expense", "update")
@@ -312,6 +316,67 @@ def test_creation_replay_returns_snapshot_after_update_and_resource_deletion(
     assert after_delete.status_code == 201
     assert after_delete.json() == original.json()
     assert counts(pg_engine) == (0, 0, 1)
+
+
+def test_project_optional_details_preserve_legacy_fingerprint_when_unset(
+    client: TestClient, pg_engine: Engine
+) -> None:
+    body = {"name": "Obra", "client": "Cliente"}
+    key = uuid4()
+    headers = {"Idempotency-Key": str(key)}
+    original = client.post("/api/v1/projects", json=body, headers=headers)
+    assert original.status_code == 201
+    legacy_fingerprint = SHA256RequestCanonicalizer().fingerprint(
+        CanonicalRequest(
+            command_type=CommandType.CREATE_PROJECT,
+            content={
+                **body,
+                "estimated_budget": None,
+                "description": None,
+                "currency": Currency.CLP,
+            },
+        )
+    )
+    with Session(pg_engine) as session:
+        record = session.get(OperationORM, (DEVELOPMENT_ACTOR_ID, key))
+        assert record is not None
+        assert record.request_fingerprint == legacy_fingerprint.digest
+
+    replay = client.post(
+        "/api/v1/projects",
+        json={**body, "status": None, "start_date": None, "end_date": None},
+        headers=headers,
+    )
+    assert replay.status_code == 201
+    assert replay.headers["Idempotency-Replayed"] == "true"
+    assert replay.json() == original.json()
+
+
+def test_project_optional_details_persist_and_participate_in_idempotency(
+    client: TestClient, pg_engine: Engine
+) -> None:
+    details = {
+        "status": ProjectStatus.IN_PROGRESS.value,
+        "start_date": "2026-11-03",
+        "end_date": "2026-12-15",
+    }
+    body = {"name": "Obra", "client": "Cliente", **details}
+    headers = {"Idempotency-Key": str(uuid4())}
+    original = client.post("/api/v1/projects", json=body, headers=headers)
+    assert original.status_code == 201
+    replay = client.post("/api/v1/projects", json=body, headers=headers)
+    assert replay.status_code == 201
+    assert replay.headers["Idempotency-Replayed"] == "true"
+    assert replay.json() == original.json()
+    listed = client.get("/api/v1/projects").json()[0]
+    for field, value in details.items():
+        assert listed[field] == original.json()[field] == value
+        conflict = client.post(
+            "/api/v1/projects", json={**body, field: None}, headers=headers
+        )
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"]["code"] == "idempotency_conflict"
+    assert counts(pg_engine) == (1, 0, 1)
 
 
 def test_patch_replay_does_not_reapply_an_old_status_or_timestamp(

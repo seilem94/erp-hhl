@@ -24,6 +24,9 @@ export interface CreateProjectRequest {
   client: string
   estimated_budget?: DecimalInput | null
   description?: string | null
+  status?: ProjectStatus | null
+  start_date?: string | null
+  end_date?: string | null
 }
 
 export interface UpdateProjectRequest {

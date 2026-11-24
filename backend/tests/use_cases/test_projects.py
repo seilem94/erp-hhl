@@ -47,8 +47,8 @@ def test_crear_proyecto_retorna_entidad_persistida() -> None:
     assert repo.get_by_id(result.id) is not None
 
 
-def test_crear_proyecto_estado_inicial_es_planning() -> None:
-    """El status inicial de todo proyecto creado debe ser PLANNING."""
+def test_crear_proyecto_estado_inicial_por_defecto_es_planning() -> None:
+    """Si no se especifica un estado, la nueva obra queda en PLANNING."""
     use_case, _ = _make_create_use_case()
     dto = CreateProjectDTO(name="Instalación Tablero General", client="Empresa ABC SpA")
 

@@ -14,6 +14,7 @@ Actualizado: 2026-11-24. Fuente canónica de entregas, pendientes y evidencia; n
 - Fase 4, Módulo 1, Paso 4: integración de comandos, canonicalización SHA-256 y compatibilidad de rutas de escritura implementadas y probadas. Las altas de obras y gastos y el PATCH de obras reservan, ejecutan negocio, capturan el snapshot y confirman cuando reciben clave e identidad válidas; permiten preasignar el UUID del recurso y recuperan el resultado original al repetir. Sin clave o identidad conservan el flujo antiguo sin deduplicación. El commit de la dependencia termina antes de enviar éxito HTTP, verificado también bajo fallo forzado.
 - Fase 4, Módulo 1, Paso 5: consulta autorizada de recuperación implementada y probada en PostgreSQL real. El caso de uso y el endpoint de operaciones aíslan por actor, revalidan permisos antes de leer el payload y devuelven el snapshot original o los errores de operación desconocida, resolución incierta y reconciliación requerida. **EL CÓDIGO BACKEND DEL MÓDULO 1 ESTÁ COMPLETO** para el alcance aprobado de esta iteración: resúmenes financieros e idempotencia de obras y gastos con recuperación. La integración del frontend, la sesión real y la futura cola offline conservan sus alcances posteriores.
 - Frontend: integración con la API implementada mediante cliente HTTP tipado basado en OpenAPI, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado real, filtro local por estado, creación y edición parcial de nombre, cliente, presupuesto y estado desde el detalle. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha. Los formularios conservan datos ante errores, bloquean envíos simultáneos y confirman las operaciones exitosas.
+- En **Nueva obra**, la descripción, el estado inicial y las fechas de inicio y entrega se pueden ingresar en una sección opcional. El listado muestra la descripción y la fecha de entrega cuando se registran.
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
 - Configuración permite elegir tema claro u oscuro, persistirlo en el navegador y consultar la versión del ERP. El tema se aplica en todas las vistas. No existe todavía una sesión autenticada ni sincronización de preferencias con una cuenta.
@@ -43,6 +44,11 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Hardening de SSH, UFW y fail2ban en el servidor, comprobación del aislamiento desde la LAN, configuración de Cloudflare Access y ensayo de backup/restauración.
 - Datos semilla para el despliegue final.
+
+## Validación del alta de obras con detalles
+
+- El 2026-11-24 pasaron 273 pruebas con PostgreSQL 18 en UTC, incluidas las altas mínimas y con detalles, la persistencia y la compatibilidad de las claves de idempotencia. Ruff y mypy aprobaron.
+- ESLint y la compilación de producción aprobaron. En Chromium a 320 px con una API simulada se verificaron ambos tipos de alta, la visualización de los detalles registrados, la conservación de los datos tras un error y la limpieza y el cierre del formulario tras guardar.
 
 ## Validación de infraestructura Docker y cierre documental
 

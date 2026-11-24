@@ -44,8 +44,8 @@ router = APIRouter(prefix="/api/v1/projects", tags=["Proyectos"])
     status_code=status.HTTP_201_CREATED,
     summary="Crear un nuevo proyecto u obra",
     description=(
-        "Registra un nuevo proyecto o cotización eléctrica con estado inicial de "
-        "PLANIFICACIÓN (planning) y fecha de inicio automática fijada al día de hoy."
+        "Registra un nuevo proyecto o cotización eléctrica. Por defecto, usa "
+        "el estado de planificación y la fecha actual en UTC como inicio."
     ),
     responses={
         status.HTTP_201_CREATED: {
@@ -72,13 +72,16 @@ def create_project(
     context: OperationContextDep,
     use_case: Annotated[CreateProjectUseCase, Depends(get_create_project_uc)],
 ) -> ProjectResponse:
-    """Crea una nueva obra eléctrica en estado inicial de planificación."""
+    """Crea una nueva obra eléctrica con los datos proporcionados."""
     dto = CreateProjectDTO(
         name=request.name,
         client=request.client,
         estimated_budget=request.estimated_budget,
         description=request.description,
         id=request.id if context is not None else None,
+        status=request.status,
+        start_date=request.start_date,
+        end_date=request.end_date,
     )
     if context is None:
         return ProjectResponse.model_validate(use_case.execute(dto))
