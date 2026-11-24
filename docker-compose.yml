@@ -62,6 +62,7 @@ services:
       start_period: 10s
     networks:
       - erp_internal_net
+      - frontend_local_net
 
   cloudflared:
     image: cloudflare/cloudflared:latest
@@ -88,4 +89,6 @@ networks:
     internal: true
   # Solo el conector necesita salida a Internet para alcanzar Cloudflare.
   tunnel_egress_net:
+    driver: bridge
+  frontend_local_net:
     driver: bridge
