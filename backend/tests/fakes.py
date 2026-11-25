@@ -34,6 +34,10 @@ class InMemoryExpenseRepository(ExpenseRepository):
         self._store[expense.id] = expense
         return expense
 
+    def update(self, expense: Expense) -> Expense:
+        self._store[expense.id] = expense
+        return expense
+
     def delete(self, expense_id: UUID) -> bool:
         if expense_id not in self._store:
             return False
@@ -42,7 +46,9 @@ class InMemoryExpenseRepository(ExpenseRepository):
 
     # ── Read operations ───────────────────────────────────────────────────────
 
-    def get_by_id(self, expense_id: UUID) -> Expense | None:
+    def get_by_id(
+        self, expense_id: UUID, *, for_update: bool = False
+    ) -> Expense | None:
         return self._store.get(expense_id)
 
     def get_by_project(
@@ -98,7 +104,9 @@ class InMemoryProjectRepository(ProjectRepository):
 
     # ── Read operations ───────────────────────────────────────────────────────
 
-    def get_by_id(self, project_id: UUID) -> Project | None:
+    def get_by_id(
+        self, project_id: UUID, *, for_update: bool = False
+    ) -> Project | None:
         return self._store.get(project_id)
 
     def list_all(self) -> list[Project]:

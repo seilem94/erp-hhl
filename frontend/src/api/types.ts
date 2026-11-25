@@ -51,6 +51,10 @@ export interface RegisterExpenseRequest {
   receipt_url?: string | null
 }
 
+export interface UpdateExpenseRequest extends Partial<RegisterExpenseRequest> {
+  has_receipt?: boolean
+}
+
 export interface ExpenseResponse {
   id: string
   amount: string
@@ -62,6 +66,36 @@ export interface ExpenseResponse {
   updated_at: string
   project_id?: string | null
   receipt_url?: string | null
+}
+
+export const auditActions = ['CREATE', 'UPDATE', 'DELETE'] as const
+export type AuditAction = typeof auditActions[number]
+
+export const auditEntities = ['PROYECTO', 'GASTO'] as const
+export type AuditEntity = typeof auditEntities[number]
+
+export interface AuditFilters {
+  proyecto_id?: string
+  entidad?: AuditEntity
+  accion?: AuditAction
+}
+
+export interface AuditLog {
+  id: string
+  created_at: string
+  actor_email: string
+  accion: AuditAction
+  entidad: AuditEntity
+  entidad_id: string
+  proyecto_id: string | null
+  proyecto_nombre: string | null
+  resumen: string
+  detalles: Record<string, Record<string, string | boolean | null> | null> | null
+}
+
+export interface AuditLogPage {
+  items: AuditLog[]
+  has_more: boolean
 }
 
 export interface ErrorResponse {

@@ -29,11 +29,18 @@ class ExpenseRepository(ABC):
         """
 
     @abstractmethod
-    def get_by_id(self, expense_id: UUID) -> Expense | None:
+    def update(self, expense: Expense) -> Expense:
+        """Persist the updated fields of an existing expense."""
+
+    @abstractmethod
+    def get_by_id(
+        self, expense_id: UUID, *, for_update: bool = False
+    ) -> Expense | None:
         """Fetch a single expense by its unique identifier.
 
         Args:
             expense_id: UUIDv4 of the expense.
+            for_update: Lock the row for the caller's write transaction.
 
         Returns:
             The Expense entity, or None if not found.

@@ -17,13 +17,17 @@ from sqlalchemy.orm import Session
 
 from src.domain.entities.project import Project
 from src.domain.enums import ProjectStatus
-from src.domain.exceptions import ResourceIdentityConflictError
+from src.domain.exceptions import ProjectNotFoundError, ResourceIdentityConflictError
 from src.domain.repositories.project_repository import ProjectRepository
 from src.infrastructure.database.mappers import (
     domain_to_project_orm,
     project_to_domain,
 )
 from src.infrastructure.database.models import ProjectORM
+from src.infrastructure.database.repositories.sqlalchemy_audit_repository import (
+    SQLAlchemyAuditRepository,
+)
+from src.use_cases.services.audit_service import AuditService
 
 
 class SQLAlchemyProjectRepository(ProjectRepository):
@@ -35,8 +39,9 @@ class SQLAlchemyProjectRepository(ProjectRepository):
                  the transaction; this class never commits on its own.
     """
 
-    def __init__(self, session: Session) -> None:
+    def __init__(self, session: Session, *, audit: AuditService | None = None) -> None:
         self._session = session
+        self._audit = audit or AuditService(SQLAlchemyAuditRepository(session))
 
     # ------------------------------------------------------------------
     # Write operations
@@ -64,7 +69,10 @@ class SQLAlchemyProjectRepository(ProjectRepository):
                     "The requested project identifier is already in use."
                 ) from exc
             raise
-        return project_to_domain(orm)
+        self._session.refresh(orm, ["budget"])
+        saved = project_to_domain(orm)
+        self._audit.record_project(None, saved)
+        return saved
 
     def update(self, project: Project) -> Project:
         """Overwrite an existing project row with the provided entity state.
@@ -78,10 +86,16 @@ class SQLAlchemyProjectRepository(ProjectRepository):
         Returns:
             The updated entity as reflected by the DB after flush.
         """
-        orm = domain_to_project_orm(project)
-        merged = self._session.merge(orm)
+        current = self._session.get(ProjectORM, project.id, with_for_update=True)
+        if current is None:
+            raise ProjectNotFoundError(project.id)
+        before = project_to_domain(current)
+        merged = self._session.merge(domain_to_project_orm(project))
         self._session.flush()
-        return project_to_domain(merged)
+        self._session.refresh(merged, ["budget"])
+        saved = project_to_domain(merged)
+        self._audit.record_project(before, saved)
+        return saved
 
     def delete(self, project_id: UUID) -> bool:
         """Delete a project by its UUID.
@@ -92,9 +106,10 @@ class SQLAlchemyProjectRepository(ProjectRepository):
         Returns:
             ``True`` if a row was found and deleted; ``False`` otherwise.
         """
-        orm = self._session.get(ProjectORM, project_id)
+        orm = self._session.get(ProjectORM, project_id, with_for_update=True)
         if orm is None:
             return False
+        self._audit.record_project(project_to_domain(orm), None)
         self._session.delete(orm)
         self._session.flush()
         return True
@@ -103,16 +118,24 @@ class SQLAlchemyProjectRepository(ProjectRepository):
     # Read operations
     # ------------------------------------------------------------------
 
-    def get_by_id(self, project_id: UUID) -> Project | None:
+    def get_by_id(
+        self, project_id: UUID, *, for_update: bool = False
+    ) -> Project | None:
         """Fetch a single project by primary key.
 
         Args:
             project_id: UUIDv4 of the project.
+            for_update: Lock the row for the caller's write transaction.
 
         Returns:
             The :class:`Project` domain entity, or ``None`` if not found.
         """
-        orm = self._session.get(ProjectORM, project_id)
+        orm = self._session.get(
+            ProjectORM,
+            project_id,
+            with_for_update=for_update,
+            populate_existing=for_update,
+        )
         if orm is None:
             return None
         return project_to_domain(orm)

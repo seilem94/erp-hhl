@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from src.domain.exceptions import (
     AuthorizationDeniedError,
     DomainException,
+    EntityNotFoundError,
     FinancialSummaryUnavailableError,
     IdempotencyConflictError,
     IdentityProviderUnavailableError,
@@ -21,8 +22,6 @@ from src.domain.exceptions import (
     OperationReconciliationRequiredError,
     OperationUnresolvedError,
     ProjectCancelledError,
-    ProjectNotFoundError,
-    ProjectSummaryUnavailableError,
     ResourceIdentityConflictError,
 )
 
@@ -52,7 +51,7 @@ def domain_exception_handler(request: Request, exc: DomainException) -> JSONResp
             content={"detail": {"code": operation_code, "message": str(exc)}},
             headers={"Cache-Control": "no-store"},
         )
-    if isinstance(exc, (ProjectNotFoundError, ProjectSummaryUnavailableError)):
+    if isinstance(exc, EntityNotFoundError):
         status_code = status.HTTP_404_NOT_FOUND
     elif isinstance(exc, AuthorizationDeniedError):
         status_code = status.HTTP_403_FORBIDDEN

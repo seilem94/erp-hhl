@@ -29,11 +29,14 @@ class ProjectRepository(ABC):
         """
 
     @abstractmethod
-    def get_by_id(self, project_id: UUID) -> Project | None:
+    def get_by_id(
+        self, project_id: UUID, *, for_update: bool = False
+    ) -> Project | None:
         """Fetch a single project by its unique identifier.
 
         Args:
             project_id: UUIDv4 of the project.
+            for_update: Lock the row for the caller's write transaction.
 
         Returns:
             The Project entity, or None if not found.

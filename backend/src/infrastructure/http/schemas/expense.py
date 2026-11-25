@@ -5,9 +5,19 @@ from __future__ import annotations
 from datetime import date as dt_date
 from datetime import datetime
 from decimal import Decimal
+from typing import Annotated
 from uuid import UUID
 
-from pydantic import UUID4, BaseModel, ConfigDict, Field
+from pydantic import (
+    UUID4,
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+)
+from pydantic.json_schema import SkipJsonSchema
 
 from src.domain.enums import ExpenseCategory
 
@@ -60,6 +70,41 @@ class RegisterExpenseRequest(BaseModel):
         description="Enlace o ruta del comprobante/boleta escaneada (opcional).",
         examples=["https://almacenamiento.ejemplo.com/boletas/boleta_4021.jpg"],
     )
+
+
+class UpdateExpenseRequest(BaseModel):
+    """Datos editables de un gasto. Los campos omitidos conservan su valor."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    amount: Decimal | SkipJsonSchema[None] = None
+    date: dt_date | SkipJsonSchema[None] = None
+    category: ExpenseCategory | SkipJsonSchema[None] = None
+    description: (
+        Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+        | SkipJsonSchema[None]
+    ) = None
+    project_id: UUID | None = Field(
+        default=None,
+        validation_alias=AliasChoices("project_id", "proyecto_id"),
+        description="Enviar null para mover el gasto a OPEX.",
+    )
+    has_receipt: bool | SkipJsonSchema[None] = None
+    receipt_url: str | None = Field(
+        default=None, description="Enviar null para quitar el enlace del comprobante."
+    )
+
+    @field_validator("amount", "date", "category", "description", "has_receipt")
+    @classmethod
+    def reject_null(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("El campo debe tener un valor si se envía.")
+        return value
+
+    @field_validator("receipt_url")
+    @classmethod
+    def normalize_receipt_url(cls, value: str | None) -> str | None:
+        return (value.strip() or None) if value is not None else None
 
 
 class ExpenseResponse(BaseModel):

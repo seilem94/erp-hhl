@@ -1,8 +1,9 @@
 import { queryOptions, useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import { getAuditLogs } from '@/api/audit'
 import { createProject, getProjects, updateProject } from '@/api/projects'
-import { getExpenses, registerExpense } from '@/api/expenses'
+import { getExpenses, registerExpense, updateExpense } from '@/api/expenses'
 import type { ApiError } from '@/api/client'
-import type { CreateProjectRequest, ExpenseFilters, ExpenseResponse, ProjectResponse, RegisterExpenseRequest, UpdateProjectRequest } from '@/api/types'
+import type { AuditFilters, AuditLogPage, CreateProjectRequest, ExpenseFilters, ExpenseResponse, ProjectResponse, RegisterExpenseRequest, UpdateExpenseRequest, UpdateProjectRequest } from '@/api/types'
 
 export const queryKeys = {
   projects: ['projects'] as const,
@@ -10,6 +11,8 @@ export const queryKeys = {
   expenses: ['expenses'] as const,
   expenseAccount: (projectId: string | null) => ['expenses', projectId] as const,
   expenseList: (projectId: string | null, filters: ExpenseFilters = {}) => ['expenses', projectId, { start_date: filters.start_date || null, end_date: filters.end_date || null }] as const,
+  audit: ['audit'] as const,
+  auditPage: (filters: AuditFilters, limit: number, offset: number) => ['audit', filters, limit, offset] as const,
 }
 
 function projectsQueryOptions() {
@@ -69,17 +72,29 @@ async function refreshExpenseAccount(client: QueryClient, projectId: string | nu
   await client.invalidateQueries({ queryKey })
 }
 
+async function refreshAudit(client: QueryClient) {
+  await client.cancelQueries({ queryKey: queryKeys.audit })
+  await client.invalidateQueries({ queryKey: queryKeys.audit })
+}
+
+async function refreshExpensesAndAudit(client: QueryClient, ...accounts: (string | null)[]) {
+  await Promise.all([
+    refreshAudit(client),
+    ...[...new Set(accounts)].map((account) => refreshExpenseAccount(client, account)),
+  ])
+}
+
 export function useUpdateProject(projectId: string) {
   const client = useQueryClient()
   return useMutation<ProjectResponse, ApiError, UpdateProjectRequest>({
     mutationFn: (body) => updateProject(projectId, body),
     networkMode: 'always',
     retry: false,
-    onSuccess: (project) => cacheProject(client, project),
+    onSuccess: (project) => Promise.all([cacheProject(client, project), refreshAudit(client)]),
     onError: async (error) => {
       if (!error.outcomeUnknown) return
       await cancelProjectReads(client, projectId)
-      await refreshProject(client, projectId)
+      await Promise.all([refreshProject(client, projectId), refreshAudit(client)])
     },
   })
 }
@@ -91,11 +106,11 @@ export function useCreateProject() {
     // Fail offline instead of queuing a write to resume without user confirmation.
     networkMode: 'always',
     retry: false,
-    onSuccess: (project) => cacheProject(client, project),
+    onSuccess: (project) => Promise.all([cacheProject(client, project), refreshAudit(client)]),
     onError: async (error) => {
       if (!error.outcomeUnknown) return
       await cancelProjectReads(client)
-      await refreshProject(client)
+      await Promise.all([refreshProject(client), refreshAudit(client)])
     },
   })
 }
@@ -120,7 +135,31 @@ export function useRegisterExpense() {
     mutationFn: registerExpense,
     networkMode: 'always',
     retry: false,
-    onSuccess: (expense) => refreshExpenseAccount(client, expense.project_id ?? null),
-    onError: (error, body) => error.outcomeUnknown ? refreshExpenseAccount(client, body.project_id ?? null) : undefined,
+    onSuccess: (expense) => refreshExpensesAndAudit(client, expense.project_id ?? null),
+    onError: (error, body) => error.outcomeUnknown ? refreshExpensesAndAudit(client, body.project_id ?? null) : undefined,
+  })
+}
+
+export function useUpdateExpense(expense: ExpenseResponse) {
+  const client = useQueryClient()
+  const source = expense.project_id ?? null
+  return useMutation<ExpenseResponse, ApiError, UpdateExpenseRequest>({
+    mutationFn: (body) => updateExpense(expense.id, body),
+    networkMode: 'always',
+    retry: false,
+    onSuccess: (updated) => refreshExpensesAndAudit(client, source, updated.project_id ?? null),
+    onError: (error, body) => error.outcomeUnknown
+      ? refreshExpensesAndAudit(client, source, body.project_id === undefined ? source : body.project_id)
+      : undefined,
+  })
+}
+
+export function useAuditLogs(filters: AuditFilters, limit: number, offset: number) {
+  return useQuery<AuditLogPage, ApiError>({
+    queryKey: queryKeys.auditPage(filters, limit, offset),
+    queryFn: ({ signal }) => getAuditLogs(filters, limit, offset, signal),
+    staleTime: 30000,
+    networkMode: 'always',
+    retry: false,
   })
 }

@@ -1,4 +1,4 @@
-"""Enrutador HTTP para el registro y consulta de gastos."""
+"""Enrutador HTTP para el registro, la edición y la consulta de gastos."""
 
 from __future__ import annotations
 
@@ -13,11 +13,13 @@ from src.infrastructure.http.dependencies import (
     get_operational_expenses_uc,
     get_project_expenses_uc,
     get_register_expense_uc,
+    get_update_expense_uc,
 )
 from src.infrastructure.http.schemas.error import ErrorResponse
 from src.infrastructure.http.schemas.expense import (
     ExpenseResponse,
     RegisterExpenseRequest,
+    UpdateExpenseRequest,
 )
 from src.infrastructure.http.schemas.operation import (
     IDEMPOTENCY_RESPONSE_HEADERS,
@@ -36,8 +38,10 @@ from src.use_cases.register_daily_expense import (
     RegisterDailyExpenseDTO,
     RegisterDailyExpenseUseCase,
 )
+from src.use_cases.update_expense import UNSET, UpdateExpenseDTO, UpdateExpenseUseCase
 
 router = APIRouter(prefix="/api/v1/expenses", tags=["Gastos"])
+compat_router = APIRouter()
 
 
 @router.post(
@@ -105,6 +109,39 @@ def register_expense(
     )
     response.headers["Idempotency-Replayed"] = "true" if outcome.replayed else "false"
     return ExpenseResponse.model_validate(outcome.result)
+
+
+@compat_router.patch(
+    "/api/gastos/{expense_id}", response_model=ExpenseResponse, include_in_schema=False
+)
+@router.patch(
+    "/{expense_id}",
+    response_model=ExpenseResponse,
+    summary="Actualizar parcialmente un gasto",
+    responses={
+        status.HTTP_404_NOT_FOUND: {
+            "model": ErrorResponse,
+            "description": "El gasto o la obra de destino no existen.",
+        },
+    },
+)
+def update_expense(
+    expense_id: UUID,
+    request: UpdateExpenseRequest,
+    use_case: Annotated[UpdateExpenseUseCase, Depends(get_update_expense_uc)],
+) -> ExpenseResponse:
+    sent = request.model_fields_set
+    dto = UpdateExpenseDTO(
+        expense_id=expense_id,
+        amount=request.amount,
+        date=request.date,
+        category=request.category,
+        description=request.description,
+        project_id=request.project_id if "project_id" in sent else UNSET,
+        has_receipt=request.has_receipt,
+        receipt_url=request.receipt_url if "receipt_url" in sent else UNSET,
+    )
+    return ExpenseResponse.model_validate(use_case.execute(dto))
 
 
 @router.get(

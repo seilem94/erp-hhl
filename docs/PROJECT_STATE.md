@@ -1,10 +1,10 @@
 # Estado del proyecto
 
-Actualizado: 2026-11-24. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
+Actualizado: 2026-11-25. Fuente canónica de entregas, pendientes y evidencia; no contiene recetas de instalación ni reglas de diseño.
 
 ## Situación actual
 
-- Rama de trabajo: `infra/docker-cloudflare`.
+- Rama de trabajo: `feat/proyectos-campos-completos`.
 - Fase activa: Fase 4, en ejecución según la [planificación de evolución y resiliencia](07_fase4_evolucion_y_resiliencia.md).
 - Backend base de las Fases 1 y 2: dominio, persistencia, migraciones y API implementados; autenticación y datos semilla pendientes.
 - Infraestructura Docker, proxy Nginx y orquestación Compose con Cloudflare Tunnel implementados, con arranque y acceso local verificados en Debian 13 según la evidencia de esta entrega. La [guía canónica de despliegue, hardening y backups](08_infraestructura_y_despliegue.md) describe la operación.
@@ -13,8 +13,8 @@ Actualizado: 2026-11-24. Fuente canónica de entregas, pendientes y evidencia; n
 - Fase 4, Módulo 1, Paso 3: registro transaccional, modelo ORM de operaciones, repositorio SQLAlchemy de idempotencia y migración implementados y probados en concurrencia con PostgreSQL real. La clave compuesta por actor y operación arbitra la reserva; los snapshots versionados usan JSONB nullable para futura purga. Reserva y confirmación comparten la transacción de negocio, sin commit ni rollback en el repositorio.
 - Fase 4, Módulo 1, Paso 4: integración de comandos, canonicalización SHA-256 y compatibilidad de rutas de escritura implementadas y probadas. Las altas de obras y gastos y el PATCH de obras reservan, ejecutan negocio, capturan el snapshot y confirman cuando reciben clave e identidad válidas; permiten preasignar el UUID del recurso y recuperan el resultado original al repetir. Sin clave o identidad conservan el flujo antiguo sin deduplicación. El commit de la dependencia termina antes de enviar éxito HTTP, verificado también bajo fallo forzado.
 - Fase 4, Módulo 1, Paso 5: consulta autorizada de recuperación implementada y probada en PostgreSQL real. El caso de uso y el endpoint de operaciones aíslan por actor, revalidan permisos antes de leer el payload y devuelven el snapshot original o los errores de operación desconocida, resolución incierta y reconciliación requerida. **EL CÓDIGO BACKEND DEL MÓDULO 1 ESTÁ COMPLETO** para el alcance aprobado de esta iteración: resúmenes financieros e idempotencia de obras y gastos con recuperación. La integración del frontend, la sesión real y la futura cola offline conservan sus alcances posteriores.
-- Frontend: integración con la API implementada mediante cliente HTTP tipado basado en OpenAPI, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado real, filtro local por estado, creación y edición parcial de nombre, cliente, presupuesto y estado desde el detalle. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha. Los formularios conservan datos ante errores, bloquean envíos simultáneos y confirman las operaciones exitosas.
-- En **Nueva obra**, la descripción, el estado inicial y las fechas de inicio y entrega se pueden ingresar en una sección opcional. El listado muestra la descripción y la fecha de entrega cuando se registran.
+- El frontend integra la API mediante un cliente HTTP tipado, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado y filtro por estado. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha.
+- Cerrados el alta ampliada de obras, la edición de gastos y la bitácora global y por obra en la [entrega de la rama actual](#cierre-funcional-y-preparación-para-producción).
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
 - Configuración permite elegir tema claro u oscuro, persistirlo en el navegador y consultar la versión del ERP. El tema se aplica en todas las vistas. No existe todavía una sesión autenticada ni sincronización de preferencias con una cuenta.
@@ -37,6 +37,12 @@ Actualizado: 2026-11-24. Fuente canónica de entregas, pendientes y evidencia; n
 
 Los resultados anteriores no se vuelven vigentes por editar documentación. El detalle operativo del frontend pertenece a su [README](../frontend/README.md).
 
+## Cierre funcional y preparación para producción
+
+- **Alta ampliada de obras.** El cambio está versionado en `9a74654` y cuenta con la [verificación del alta de obras](#validación-del-alta-de-obras-con-detalles). El [flujo de obras](06_fase3_frontend.md#referencias-de-los-flujos) recoge el alcance de ambos formularios.
+- **Edición de gastos y bitácora.** Ambos hitos están implementados y [verificados en el árbol de trabajo](#validación-de-edición-de-gastos-y-bitácora) de `feat/proyectos-campos-completos`. El código y la [migración de la bitácora](04_fase2_infraestructura.md#persistencia-de-la-bitácora) están listos para integrar en una revisión versionada de despliegue.
+- **Puesta en producción.** Los tres hitos tienen validación técnica en el entorno de pruebas. La publicación de la revisión y la comprobación de la atribución con usuarios reales quedan pendientes según la [guía de despliegue](08_infraestructura_y_despliegue.md#operación-con-docker-compose) y su [configuración de Cloudflare Access](08_infraestructura_y_despliegue.md#cloudflare-tunnel-y-zero-trust).
+
 ## Pendientes de entrega
 
 - Autenticación y preferencias sincronizadas con una cuenta.
@@ -44,6 +50,12 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Hardening de SSH, UFW y fail2ban en el servidor, comprobación del aislamiento desde la LAN, configuración de Cloudflare Access y ensayo de backup/restauración.
 - Datos semilla para el despliegue final.
+
+## Validación de edición de gastos y bitácora
+
+- El 2026-11-25 pasaron 282 pruebas con PostgreSQL 17.12 en UTC. La suite comprobó reasignaciones, totales, diferencias auditadas, conservación de eventos tras borrados y rollback conjunto. Ruff y mypy aprobaron.
+- La revisión `3845a60b9d12` de Alembic se generó desde los modelos. Se verificaron upgrade, downgrade, nueva aplicación y `alembic check` en una base temporal.
+- ESLint, el chequeo de tipos y la compilación de producción aprobaron. Chromium a 320 px con una API simulada verificó la edición en ambos listados, el manejo de errores, la actualización de totales y la navegación, los filtros y la paginación de la bitácora.
 
 ## Validación del alta de obras con detalles
 

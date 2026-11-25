@@ -1,7 +1,7 @@
 """Validate the current NUMERIC(12,2) command contract without rounding.
 
-Only the opt-in command path applies this stricter contract. Aggregated read
-amounts are not subject to the per-row limit. No Decimal context is modified.
+The opt-in command path and expense edits apply this contract. Aggregated
+read amounts are not subject to the per-row limit.
 """
 
 from decimal import Decimal
