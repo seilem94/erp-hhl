@@ -45,6 +45,21 @@ class CreateProjectRequest(BaseModel):
         description="Alcance técnico o descripción detallada de la obra (opcional).",
         examples=["Instalación de tableros TDA y cableado subterráneo."],
     )
+    status: ProjectStatus | None = Field(
+        default=None,
+        description="Estado inicial de la obra. Por defecto, planificación.",
+        examples=[ProjectStatus.IN_PROGRESS],
+    )
+    start_date: date | None = Field(
+        default=None,
+        description="Fecha de inicio de la obra. Por defecto, la fecha actual en UTC.",
+        examples=["2026-11-03"],
+    )
+    end_date: date | None = Field(
+        default=None,
+        description="Fecha estimada o efectiva de entrega de la obra (opcional).",
+        examples=["2026-12-15"],
+    )
 
 
 class UpdateProjectRequest(BaseModel):

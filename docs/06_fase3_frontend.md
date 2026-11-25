@@ -1,6 +1,6 @@
 # Plan de Fase 3 — Integración de la interfaz
 
-Responsabilidad: secuencia de trabajo y criterios de aceptación. Los avances y las validaciones realizadas se registran exclusivamente en [PROJECT_STATE.md](PROJECT_STATE.md).
+Responsabilidad: secuencia de trabajo, criterios de aceptación y referencias a los flujos funcionales. Los avances y las validaciones realizadas se registran exclusivamente en [PROJECT_STATE.md](PROJECT_STATE.md).
 
 Las razones de arquitectura están en el [ADR de migración](adr/0001-migracion-react-vite.md). La estructura, el branding y los comandos pertenecen al [README del frontend](../frontend/README.md).
 
@@ -33,3 +33,11 @@ Acordar formatos, límites, almacenamiento y tratamiento de archivos antes de ha
 Diseñar manifiesto, service worker, caché de recursos y datos, política de actualización y cola de operaciones. Definir identificación de solicitudes, reintentos y resolución de conflictos antes de habilitar escrituras offline.
 
 **Aceptación:** comprobar instalación, recarga sin señal, actualización de recursos y recuperación de operaciones sin duplicación. Auto-alojar fuentes no satisface por sí solo estos criterios.
+
+## Referencias de los flujos
+
+- **Obras.** En **Nueva obra**, nombre y cliente son obligatorios y el presupuesto es opcional. El desplegable **+ Más detalles (opcional)** permite añadir descripción, estado inicial y fechas de inicio y entrega. Al guardar, el formulario se limpia y el desplegable vuelve a cerrarse. El listado muestra la descripción y la entrega cuando existen. El editor del detalle permite cambiar nombre, cliente, presupuesto y estado. [Formulario de alta](../frontend/src/components/projects/project-form.tsx) y [editor de obras](../frontend/src/components/projects/project-edit-form.tsx).
+- **Gastos.** La acción **Editar** en el historial de gastos y en el detalle de obra abre un modal con los datos actuales, incluidos la imputación y el comprobante. **Guardar cambios** actualiza las listas y los totales afectados, mientras que **Cancelar** descarta la edición. Los errores de guardado conservan los valores ingresados. [Editor de gastos](../frontend/src/components/expenses/expense-edit-dialog.tsx) y [actualización de consultas](../frontend/src/hooks/queries.ts).
+- **Bitácora.** La ruta `/auditoria` se abre desde la navegación principal. **Actividad de la obra** usa el mismo componente con el proyecto ya seleccionado. Cada fila muestra autor, fecha y hora locales, acción, resumen y obra asociada cuando corresponde. [Página de Auditoría](../frontend/src/pages/auditoria.tsx), [detalle de obra](../frontend/src/pages/proyecto-detalle.tsx) y [lista de actividad](../frontend/src/components/audit/audit-log-list.tsx).
+
+Los nombres de campos y las rutas HTTP pertenecen a los [contratos de proyectos, gastos y auditoría](04_fase2_infraestructura.md#contratos-de-proyectos-gastos-y-auditoría).

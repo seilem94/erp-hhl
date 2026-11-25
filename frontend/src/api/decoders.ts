@@ -1,5 +1,5 @@
 import { ApiError, isRecord } from '@/api/client'
-import { expenseCategories, projectStatuses, type ExpenseResponse, type ProjectResponse } from '@/api/types'
+import { auditActions, auditEntities, expenseCategories, projectStatuses, type AuditLog, type AuditLogPage, type ExpenseResponse, type ProjectResponse } from '@/api/types'
 
 const optionalString = (value: unknown) => value === undefined || value === null || typeof value === 'string'
 const decimalString = (value: unknown) => typeof value === 'string' && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value) && Number.isFinite(Number(value))
@@ -55,4 +55,29 @@ export function decodeExpense(value: unknown): ExpenseResponse {
 export function decodeExpenses(value: unknown): ExpenseResponse[] {
   if (!Array.isArray(value)) throw new ApiError('El servicio devolvió un listado de gastos con formato inesperado.', 502)
   return value.map(decodeExpense)
+}
+
+function isAuditLog(value: unknown): value is AuditLog {
+  return isRecord(value)
+    && typeof value.id === 'string'
+    && typeof value.created_at === 'string' && Number.isFinite(Date.parse(value.created_at))
+    && typeof value.actor_email === 'string'
+    && auditActions.some((action) => action === value.accion)
+    && auditEntities.some((entity) => entity === value.entidad)
+    && typeof value.entidad_id === 'string'
+    && (value.proyecto_id === null || typeof value.proyecto_id === 'string')
+    && (value.proyecto_nombre === null || typeof value.proyecto_nombre === 'string')
+    && typeof value.resumen === 'string'
+    && (value.detalles === null || (isRecord(value.detalles) && Object.values(value.detalles).every(
+      (snapshot) => snapshot === null || (isRecord(snapshot) && Object.values(snapshot).every(
+        (field) => field === null || typeof field === 'string' || typeof field === 'boolean',
+      )),
+    )))
+}
+
+export function decodeAuditLogPage(value: unknown): AuditLogPage {
+  if (!isRecord(value) || typeof value.has_more !== 'boolean' || !Array.isArray(value.items) || !value.items.every(isAuditLog)) {
+    throw new ApiError('El servicio devolvió una bitácora con formato inesperado.', 502)
+  }
+  return { items: value.items, has_more: value.has_more }
 }

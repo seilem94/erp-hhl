@@ -52,16 +52,33 @@ def test_create_project_success(client: TestClient) -> None:
         "client": "Constructora Alerce",
         "estimated_budget": "5000000.00",
         "description": "Montaje de tableros TDA",
+        "status": ProjectStatus.IN_PROGRESS.value,
+        "start_date": "2026-11-03",
+        "end_date": "2026-12-15",
     }
     response = client.post("/api/v1/projects", json=payload)
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == payload["name"]
     assert data["client"] == payload["client"]
-    assert data["status"] == ProjectStatus.PLANNING.value
+    assert data["status"] == payload["status"]
     assert data["budget"] == payload["estimated_budget"]
     assert data["description"] == payload["description"]
-    assert "id" in data
+    assert data["start_date"] == payload["start_date"]
+    assert data["end_date"] == payload["end_date"]
+    assert client.get("/api/v1/projects").json() == [data]
+
+
+def test_create_project_with_only_required_fields(client: TestClient) -> None:
+    response = client.post(
+        "/api/v1/projects", json={"name": "Obra", "client": "Cliente"}
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["status"] == ProjectStatus.PLANNING.value
+    created_date = datetime.fromisoformat(data["created_at"]).date()
+    assert data["start_date"] == created_date.isoformat()
+    assert data["budget"] is data["description"] is data["end_date"] is None
 
 
 def test_update_project_success(

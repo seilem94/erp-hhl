@@ -1,6 +1,7 @@
 import { Link, useParams } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 import { useExpenses, useProject } from '@/hooks/queries'
+import { AuditLogList } from '@/components/audit/audit-log-list'
 import { ExpenseList } from '@/components/expenses/expense-list'
 import { ProjectEditForm } from '@/components/projects/project-edit-form'
 import { PageHeading } from '@/components/page-heading'
@@ -62,9 +63,13 @@ export function ProjectDetailPage() {
         {!expensesQuery.isPending && expensesQuery.isFetching && !expensesQuery.isError && <div className="mb-4"><LoadingState>Actualizando gastos de la obra…</LoadingState></div>}
         {expensesQuery.isError && <QueryError message={expensesQuery.error.message} onRetry={() => { void expensesQuery.refetch() }} retrying={expensesQuery.isFetching} />}
         {expensesQuery.isSuccess && expenses.length === 0 && <Feedback>Esta obra todavía no tiene gastos registrados.</Feedback>}
-        {expenses.length > 0 && <ExpenseList expenses={expenses} />}
+        <ExpenseList expenses={expenses} />
         {expensesQuery.isSuccess && expenses.length > 0 && <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">{expenses.length} {expenses.length === 1 ? 'gasto registrado' : 'gastos registrados'}.</p>}
         <Link to="/gastos" className="button-primary mt-6">Registrar un gasto</Link>
+      </section>
+      <section aria-labelledby="project-activity-title" className="mt-10">
+        <h2 id="project-activity-title" className="mb-5 text-xl font-semibold tracking-tight">Actividad de la obra</h2>
+        <AuditLogList key={projectId} projectId={projectId} />
       </section>
     </div>
   )

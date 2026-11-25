@@ -24,8 +24,8 @@ El código y sus manifiestos son la autoridad de contratos, versiones, scripts y
 ## Planes de trabajo
 
 - [Fase 1: dominio y casos de uso](03_fase1_mvp.md).
-- [Fase 2: persistencia y API](04_fase2_infraestructura.md).
-- [Fase 3: integración de la interfaz](06_fase3_frontend.md).
+- [Fase 2: persistencia y API](04_fase2_infraestructura.md) con referencias al [esquema de la bitácora](04_fase2_infraestructura.md#persistencia-de-la-bitácora) y los [contratos HTTP](04_fase2_infraestructura.md#contratos-de-proyectos-gastos-y-auditoría).
+- [Fase 3: integración de la interfaz](06_fase3_frontend.md) con [referencias a los flujos de obras, gastos y bitácora](06_fase3_frontend.md#referencias-de-los-flujos).
 - [Fase 4: Evolución del Dominio, Resiliencia y Reglas de Negocio](07_fase4_evolucion_y_resiliencia.md).
 - Guía operativa: [Infraestructura, despliegue y recuperación](08_infraestructura_y_despliegue.md).
 

@@ -1,9 +1,13 @@
 import { request } from '@/api/client'
 import { decodeExpense, decodeExpenses } from '@/api/decoders'
-import type { ExpenseFilters, ExpenseResponse, RegisterExpenseRequest } from '@/api/types'
+import type { ExpenseFilters, ExpenseResponse, RegisterExpenseRequest, UpdateExpenseRequest } from '@/api/types'
 
 export function registerExpense(body: RegisterExpenseRequest): Promise<ExpenseResponse> {
   return request('/api/v1/expenses/', decodeExpense, { method: 'POST', body })
+}
+
+export function updateExpense(expenseId: string, body: UpdateExpenseRequest): Promise<ExpenseResponse> {
+  return request(`/api/v1/expenses/${encodeURIComponent(expenseId)}`, decodeExpense, { method: 'PATCH', body })
 }
 
 export function getExpenses(projectId: string | null = null, filters: ExpenseFilters = {}, signal?: AbortSignal): Promise<ExpenseResponse[]> {

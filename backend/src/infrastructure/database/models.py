@@ -18,13 +18,17 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
     Text,
+    func,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from src.domain.entities.audit_log import ACTOR_EMAIL_MAX_LENGTH, AuditDetails
 
 
 class Base(DeclarativeBase):
@@ -94,6 +98,34 @@ class ExpenseORM(Base):
         nullable=True,
     )
     receipt_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class AuditLogORM(Base):
+    """Append-only record of an application write and its actor."""
+
+    __tablename__ = "audit_logs"
+    __table_args__ = (
+        CheckConstraint(
+            "accion IN ('CREATE', 'UPDATE', 'DELETE')", name="ck_audit_logs_accion"
+        ),
+        Index("ix_audit_logs_created_at_id", "created_at", "id"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    actor_email: Mapped[str] = mapped_column(String(ACTOR_EMAIL_MAX_LENGTH), index=True)
+    accion: Mapped[str] = mapped_column(String(16))
+    entidad: Mapped[str] = mapped_column(String(32))
+    entidad_id: Mapped[str] = mapped_column(String(64), index=True)
+    proyecto_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("projects.id", ondelete="SET NULL"), index=True
+    )
+    resumen: Mapped[str] = mapped_column(Text)
+    detalles: Mapped[AuditDetails | None] = mapped_column(
+        JSONB(none_as_null=True).with_variant(JSON(none_as_null=True), "sqlite"),
+    )
 
 
 class OperationORM(Base):

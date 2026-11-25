@@ -43,6 +43,9 @@ class CreateProjectDTO:
         estimated_budget: Optional agreed or estimated budget in local currency.
         description: Optional scope or technical notes for the obra.
         id: Optional preassigned resource UUID, separate from the operation key.
+        status: Optional initial lifecycle state.
+        start_date: Optional scheduled or actual start date.
+        end_date: Optional estimated or actual delivery date.
     """
 
     name: str
@@ -50,16 +53,18 @@ class CreateProjectDTO:
     estimated_budget: Decimal | None = None
     description: str | None = None
     id: UUID | None = None
+    status: ProjectStatus | None = None
+    start_date: date | None = None
+    end_date: date | None = None
 
 
 class CreateProjectUseCase:
-    """Create and persist a new project with initial PLANNING status.
+    """Create and persist a new project.
 
     The use case is responsible for:
     1. Preserving a supplied resource UUID or generating a UUIDv4.
-    2. Setting the initial status to ``PLANNING``.
-    3. Recording ``start_date`` as today's UTC date and both
-       ``created_at`` / ``updated_at`` as the current UTC datetime.
+    2. Defaulting the status to ``PLANNING`` and the start date to today's UTC date.
+    3. Recording both ``created_at`` and ``updated_at`` as the current UTC datetime.
     4. Persisting the entity via ``project_repo.save()``.
 
     Args:
@@ -93,6 +98,10 @@ class CreateProjectUseCase:
                     "estimated_budget": dto.estimated_budget,
                     "description": dto.description,
                     "currency": Currency.CLP,
+                    # Omit unset fields to preserve previously stored fingerprints.
+                    **({"status": dto.status} if dto.status is not None else {}),
+                    **({"start_date": dto.start_date} if dto.start_date else {}),
+                    **({"end_date": dto.end_date} if dto.end_date else {}),
                 },
             ),
             execute_business=lambda: ProjectSnapshot.from_project(self.execute(dto)),
@@ -107,7 +116,7 @@ class CreateProjectUseCase:
 
         Returns:
             The persisted entity with the supplied or generated resource UUID
-            and server-generated status, start date and UTC timestamps.
+            and server-generated UTC timestamps.
         """
         now: datetime = datetime.now(UTC)
 
@@ -115,12 +124,13 @@ class CreateProjectUseCase:
             id=dto.id if dto.id is not None else uuid4(),
             name=dto.name,
             client=dto.client,
-            status=ProjectStatus.PLANNING,
-            start_date=date(now.year, now.month, now.day),
+            status=dto.status or ProjectStatus.PLANNING,
+            start_date=dto.start_date or now.date(),
             created_at=now,
             updated_at=now,
             budget=dto.estimated_budget,
             description=dto.description,
+            end_date=dto.end_date,
         )
 
         return self._project_repo.save(project)

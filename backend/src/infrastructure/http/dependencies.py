@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import Depends, Header
+from fastapi import Depends, Header, Request
 from pydantic import UUID4
 from sqlalchemy.orm import Session
 
 from src.core.config import settings
+from src.domain.entities.audit_log import ACTOR_EMAIL_MAX_LENGTH
 from src.domain.exceptions import IdentityProviderUnavailableError
 from src.domain.repositories.expense_repository import ExpenseRepository
 from src.domain.repositories.financial_summary_repository import (
@@ -16,6 +17,9 @@ from src.domain.repositories.financial_summary_repository import (
 )
 from src.domain.repositories.operation_repository import OperationRepository
 from src.domain.repositories.project_repository import ProjectRepository
+from src.infrastructure.database.repositories.sqlalchemy_audit_repository import (
+    SQLAlchemyAuditRepository,
+)
 from src.infrastructure.database.repositories.sqlalchemy_expense_repository import (
     SQLAlchemyExpenseRepository,
 )
@@ -46,13 +50,32 @@ from src.use_cases.list_projects import ListProjectsUseCase
 from src.use_cases.ports.authorization import AuthorizationPort
 from src.use_cases.ports.identity import ActorIdentity, IdentityProvider
 from src.use_cases.register_daily_expense import RegisterDailyExpenseUseCase
+from src.use_cases.services.audit_service import LOCAL_AUDIT_ACTOR, AuditService
 from src.use_cases.services.canonicalization import SHA256RequestCanonicalizer
 from src.use_cases.services.idempotency import IdempotencyCoordinator
+from src.use_cases.update_expense import UpdateExpenseUseCase
 from src.use_cases.update_project import UpdateProjectUseCase
 
 # The yield finalizer must commit before http.response.start, including legacy
 # writes. Repositories and the coordinator never own this transaction boundary.
 SessionDep = Annotated[Session, Depends(get_db, scope="function")]
+
+
+def get_audit_actor_email(request: Request) -> str:
+    """Read attribution supplied by the Access-protected ingress."""
+    email = request.headers.get("Cf-Access-Authenticated-User-Email", "").strip()
+    if not email or len(email) > ACTOR_EMAIL_MAX_LENGTH or "\x00" in email:
+        return LOCAL_AUDIT_ACTOR
+    return email
+
+
+def get_audit_service(session: SessionDep, request: Request) -> AuditService:
+    return AuditService(
+        SQLAlchemyAuditRepository(session), actor_email=get_audit_actor_email(request)
+    )
+
+
+AuditServiceDep = Annotated[AuditService, Depends(get_audit_service)]
 
 
 def get_identity_provider() -> IdentityProvider:
@@ -147,17 +170,17 @@ def get_project_financial_summary_uc(
 
 
 def get_project_repo(
-    session: SessionDep,
+    session: SessionDep, audit: AuditServiceDep
 ) -> SQLAlchemyProjectRepository:
     """Provide a SQLAlchemyProjectRepository bound to the current database session."""
-    return SQLAlchemyProjectRepository(session)
+    return SQLAlchemyProjectRepository(session, audit=audit)
 
 
 def get_expense_repo(
-    session: SessionDep,
+    session: SessionDep, audit: AuditServiceDep
 ) -> SQLAlchemyExpenseRepository:
     """Provide a SQLAlchemyExpenseRepository bound to the current database session."""
-    return SQLAlchemyExpenseRepository(session)
+    return SQLAlchemyExpenseRepository(session, audit=audit)
 
 
 ProjectRepoDep = Annotated[ProjectRepository, Depends(get_project_repo)]
@@ -196,6 +219,12 @@ def get_register_expense_uc(
     return RegisterDailyExpenseUseCase(
         expense_repo, project_repo, coordinator=coordinator
     )
+
+
+def get_update_expense_uc(
+    expense_repo: ExpenseRepoDep, project_repo: ProjectRepoDep
+) -> UpdateExpenseUseCase:
+    return UpdateExpenseUseCase(expense_repo, project_repo)
 
 
 def get_project_expenses_uc(

@@ -99,7 +99,7 @@ class UpdateProjectUseCase:
         Raises:
             ProjectNotFoundError: If no project with ``dto.project_id`` exists.
         """
-        project = self._project_repo.get_by_id(dto.project_id)
+        project = self._project_repo.get_by_id(dto.project_id, for_update=True)
         if project is None:
             raise ProjectNotFoundError(dto.project_id)
 

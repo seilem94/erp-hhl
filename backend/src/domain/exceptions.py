@@ -38,6 +38,11 @@ class ProjectNotFoundError(EntityNotFoundError):
         super().__init__(f"Project '{project_id}' not found.")
 
 
+class ExpenseNotFoundError(EntityNotFoundError):
+    def __init__(self, expense_id: UUID) -> None:
+        super().__init__(f"No se encontró el gasto '{expense_id}'.")
+
+
 class BusinessRuleViolationError(DomainException):
     """Base class for business-rule violations (→ HTTP 422)."""
 

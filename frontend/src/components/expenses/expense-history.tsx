@@ -32,7 +32,7 @@ export function ExpenseHistory({ projectId, onProjectChange, projects }: Expense
         {!invalidRange && !query.isPending && query.isFetching && !query.isError && <LoadingState>Actualizando gastos…</LoadingState>}
         {!invalidRange && query.isError && <QueryError message={query.error.message} onRetry={() => { void query.refetch() }} retrying={query.isFetching} />}
         {!invalidRange && query.isSuccess && expenses.length === 0 && <Feedback>No hay gastos registrados para esta cuenta y período.</Feedback>}
-        {!invalidRange && expenses.length > 0 && <ExpenseList expenses={expenses} />}
+        {!invalidRange && <ExpenseList expenses={expenses} />}
       </div>
     </section>
   )

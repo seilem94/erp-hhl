@@ -6,6 +6,7 @@ const navigation = [
   { to: '/', label: 'Inicio' },
   { to: '/proyectos', label: 'Proyectos' },
   { to: '/gastos', label: 'Gastos' },
+  { to: '/auditoria', label: 'Auditoría' },
   { to: '/configuracion', label: 'Configuración' },
 ] as const
 

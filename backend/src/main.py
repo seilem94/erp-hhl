@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.domain.exceptions import DomainException
 from src.infrastructure.http.error_handlers import domain_exception_handler
+from src.infrastructure.http.routers.audit import router as audit_router
+from src.infrastructure.http.routers.expenses import compat_router as gastos_router
 from src.infrastructure.http.routers.expenses import router as expenses_router
 from src.infrastructure.http.routers.financial_summaries import (
     router as summaries_router,
@@ -28,6 +30,10 @@ tags_metadata = [
             "Control de gastos en terreno para obras (CapEx) y "
             "gastos operativos generales (OPEX)."
         ),
+    },
+    {
+        "name": "Auditoría",
+        "description": "Historial de cambios en obras y gastos.",
     },
     {
         "name": "Operaciones",
@@ -65,6 +71,8 @@ app.add_exception_handler(DomainException, domain_exception_handler)  # type: ig
 
 app.include_router(projects_router)
 app.include_router(expenses_router)
+app.include_router(gastos_router)
+app.include_router(audit_router)
 app.include_router(summaries_router)
 app.include_router(operations_router)
 

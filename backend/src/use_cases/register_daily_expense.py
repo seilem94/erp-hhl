@@ -19,19 +19,18 @@ from decimal import Decimal
 from uuid import UUID, uuid4
 
 from src.domain.entities.expense import Expense
-from src.domain.enums import CommandType, Currency, ExpenseCategory, ProjectStatus
-from src.domain.exceptions import (
-    InvalidExpenseAmountError,
-    InvalidExpenseDateError,
-    OperationUnresolvedError,
-    ProjectCancelledError,
-    ProjectNotFoundError,
-)
+from src.domain.enums import CommandType, Currency, ExpenseCategory
+from src.domain.exceptions import OperationUnresolvedError
 from src.domain.repositories.expense_repository import ExpenseRepository
 from src.domain.repositories.project_repository import ProjectRepository
 from src.domain.value_objects.operation_result import ExpenseSnapshot
 from src.use_cases.dto.operation import RegisterExpenseCommandDTO
 from src.use_cases.services.canonicalization import CanonicalRequest
+from src.use_cases.services.expense_rules import (
+    validate_expense_amount,
+    validate_expense_date,
+    validate_expense_project,
+)
 from src.use_cases.services.idempotency import IdempotencyCoordinator, IdempotentResult
 from src.use_cases.services.monetary_precision import validate_command_amount
 
@@ -149,22 +148,9 @@ class RegisterDailyExpenseUseCase:
                 does not exist.
             ProjectCancelledError: If the referenced project is CANCELLED.
         """
-        # ── 1. Amount validation ──────────────────────────────────────────────
-        if dto.amount <= Decimal("0"):
-            raise InvalidExpenseAmountError(dto.amount)
-
-        # ── 2. Date validation ────────────────────────────────────────────────
-        today = self._date_provider()
-        if dto.date > today:
-            raise InvalidExpenseDateError(dto.date, today)
-
-        # ── 3. Project validation (only when this is a project expense) ───────
-        if dto.project_id is not None:
-            project = self._project_repo.get_by_id(dto.project_id)
-            if project is None:
-                raise ProjectNotFoundError(dto.project_id)
-            if project.status == ProjectStatus.CANCELLED:
-                raise ProjectCancelledError(dto.project_id, project.status)
+        validate_expense_amount(dto.amount)
+        validate_expense_date(dto.date, self._date_provider())
+        validate_expense_project(self._project_repo, dto.project_id)
 
         # ── 4. Receipt coherence normalisation ────────────────────────────────
         has_receipt: bool = True if dto.receipt_url is not None else dto.has_receipt
