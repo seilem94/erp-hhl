@@ -4,7 +4,7 @@ Actualizado: 2026-11-25. Fuente canónica de entregas, pendientes y evidencia; n
 
 ## Situación actual
 
-- Rama de trabajo: `feat/proyectos-campos-completos`.
+- Rama de trabajo: `main`.
 - Fase activa: Fase 4, en ejecución según la [planificación de evolución y resiliencia](07_fase4_evolucion_y_resiliencia.md).
 - Backend base de las Fases 1 y 2: dominio, persistencia, migraciones y API implementados; autenticación y datos semilla pendientes.
 - Infraestructura Docker, proxy Nginx y orquestación Compose con Cloudflare Tunnel implementados, con arranque y acceso local verificados en Debian 13 según la evidencia de esta entrega. La [guía canónica de despliegue, hardening y backups](08_infraestructura_y_despliegue.md) describe la operación.
@@ -14,7 +14,7 @@ Actualizado: 2026-11-25. Fuente canónica de entregas, pendientes y evidencia; n
 - Fase 4, Módulo 1, Paso 4: integración de comandos, canonicalización SHA-256 y compatibilidad de rutas de escritura implementadas y probadas. Las altas de obras y gastos y el PATCH de obras reservan, ejecutan negocio, capturan el snapshot y confirman cuando reciben clave e identidad válidas; permiten preasignar el UUID del recurso y recuperan el resultado original al repetir. Sin clave o identidad conservan el flujo antiguo sin deduplicación. El commit de la dependencia termina antes de enviar éxito HTTP, verificado también bajo fallo forzado.
 - Fase 4, Módulo 1, Paso 5: consulta autorizada de recuperación implementada y probada en PostgreSQL real. El caso de uso y el endpoint de operaciones aíslan por actor, revalidan permisos antes de leer el payload y devuelven el snapshot original o los errores de operación desconocida, resolución incierta y reconciliación requerida. **EL CÓDIGO BACKEND DEL MÓDULO 1 ESTÁ COMPLETO** para el alcance aprobado de esta iteración: resúmenes financieros e idempotencia de obras y gastos con recuperación. La integración del frontend, la sesión real y la futura cola offline conservan sus alcances posteriores.
 - El frontend integra la API mediante un cliente HTTP tipado, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado y filtro por estado. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha.
-- Cerrados el alta ampliada de obras, la edición de gastos y la bitácora global y por obra en la [entrega de la rama actual](#cierre-funcional-y-preparación-para-producción).
+- Cerrados el alta ampliada de obras, la edición de gastos y la bitácora global y por obra en la [entrega de `feat/proyectos-campos-completos`](#cierre-funcional-y-preparación-para-producción).
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
 - Configuración permite elegir tema claro u oscuro, persistirlo en el navegador y consultar la versión del ERP. El tema se aplica en todas las vistas. No existe todavía una sesión autenticada ni sincronización de preferencias con una cuenta.
@@ -50,6 +50,11 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Hardening de SSH, UFW y fail2ban en el servidor, comprobación del aislamiento desde la LAN, configuración de Cloudflare Access y ensayo de backup/restauración.
 - Datos semilla para el despliegue final.
+
+## Validación de accesos rápidos a gastos
+
+- ESLint, TypeScript y la compilación de producción aprobaron en `main`.
+- En Chromium a 320 px con una API simulada se comprobaron ambos destinos desde Inicio, el cierre del menú, el foco en Monto y la consulta por defecto desde la navegación. Se verificaron también la preferencia de movimiento reducido, el registro, los filtros por fecha y la edición por PATCH.
 
 ## Validación de edición de gastos y bitácora
 

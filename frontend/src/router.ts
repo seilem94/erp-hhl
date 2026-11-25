@@ -21,7 +21,15 @@ const indexRoute = createRoute({
 
 const projectsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/proyectos', component: ProjectsPage })
 const projectDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: '/proyectos/$projectId', component: ProjectDetailPage })
-const expensesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/gastos', component: ExpensesPage })
+const expensesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/gastos',
+  validateSearch: (search: Record<string, unknown>): { vista?: 'registrar' | 'consultar' } => {
+    const { vista } = search
+    return vista === 'registrar' || vista === 'consultar' ? { vista } : {}
+  },
+  component: ExpensesPage,
+})
 const auditRoute = createRoute({ getParentRoute: () => rootRoute, path: '/auditoria', component: AuditPage })
 const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/configuracion', component: SettingsPage })
 

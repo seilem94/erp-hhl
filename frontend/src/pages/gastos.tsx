@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearch } from '@tanstack/react-router'
 import { useProjects } from '@/hooks/queries'
 import { PageHeading } from '@/components/page-heading'
 import { ExpenseForm } from '@/components/expenses/expense-form'
@@ -8,6 +9,19 @@ import { QueryError } from '@/components/ui/feedback'
 export function ExpensesPage() {
   const projects = useProjects()
   const [historyProjectId, setHistoryProjectId] = useState<string | null>(null)
+  const { vista } = useSearch({ from: '/gastos' })
+
+  useEffect(() => {
+    // Scroll after the router restores the destination's position.
+    const frame = requestAnimationFrame(() => {
+      const registering = vista === 'registrar'
+      const section = document.getElementById(registering ? 'seccion-registrar-gasto' : 'seccion-consultar-gastos')
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      section?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' })
+      if (registering) section?.querySelector<HTMLInputElement>('input[name="amount"]')?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [vista])
 
   return (
     <div className="page-container py-10 sm:py-14">

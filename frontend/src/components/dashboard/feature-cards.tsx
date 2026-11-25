@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import type { MouseEvent } from 'react'
 import { Icon } from '@/components/ui/icon'
 import { QueryError } from '@/components/ui/feedback'
 import { useDashboardMetrics } from '@/hooks/dashboard'
@@ -42,6 +43,11 @@ function ProjectsCard({ metrics }: CardProps) {
 }
 
 function ExpensesCard({ metrics }: CardProps) {
+  function closeQuickActions(event: MouseEvent<HTMLAnchorElement>) {
+    const menu = event.currentTarget.closest('details')
+    if (menu) menu.open = false
+  }
+
   return (
     <article aria-labelledby="expenses-title" className="feature-card expense-card text-white">
       <div className="flex items-center justify-between gap-2">
@@ -56,8 +62,8 @@ function ExpensesCard({ metrics }: CardProps) {
             Accesos rápidos <Icon name="chevron-down" className="size-3 transition-transform group-open:rotate-180" />
           </summary>
           <div className="absolute right-0 top-full z-10 mt-2 w-48 rounded-xl border border-brand-border bg-white dark:bg-slate-900 p-1.5 text-brand-navy dark:text-slate-100 shadow-lg">
-            <Link to="/gastos" className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="plus" className="size-4" /> Registrar gasto</Link>
-            <Link to="/gastos" className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="receipt" className="size-4" /> Consultar gastos</Link>
+            <Link to="/gastos" search={{ vista: 'registrar' }} onClick={closeQuickActions} className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="plus" className="size-4" /> Registrar gasto</Link>
+            <Link to="/gastos" search={{ vista: 'consultar' }} onClick={closeQuickActions} className="flex min-h-11 items-center gap-2 rounded-lg px-3 py-2.5 text-xs hover:bg-brand-tint"><Icon name="receipt" className="size-4" /> Consultar gastos</Link>
           </div>
         </details>
       </div>
@@ -67,7 +73,7 @@ function ExpensesCard({ metrics }: CardProps) {
       <p className="mt-3 text-xs text-white">Gastos acumulados</p>
       <p className="mt-3 text-xs text-white">{metrics.expenseCount === null ? metrics.loadingExpenses ? 'Consultando registros…' : 'Información no disponible' : `${metrics.expenseCount} ${metrics.expenseCount === 1 ? 'gasto registrado' : 'gastos registrados'}`}</p>
       <div className="mt-auto pt-7">
-        <Link to="/gastos" className="card-button justify-center gap-2 bg-white text-brand-deep-blue shadow-sm hover:bg-blue-50">
+        <Link to="/gastos" search={{ vista: 'registrar' }} className="card-button justify-center gap-2 bg-white text-brand-deep-blue shadow-sm hover:bg-blue-50">
           <Icon name="plus" className="size-4" /> Registrar Gasto
         </Link>
       </div>

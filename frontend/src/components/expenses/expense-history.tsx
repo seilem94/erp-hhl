@@ -13,7 +13,7 @@ export function ExpenseHistory({ projectId, onProjectChange, projects }: Expense
   const query = useExpenses(projectId, !invalidRange, { start_date: startDate || undefined, end_date: endDate || undefined })
   const expenses = query.data ? [...query.data].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 10) : []
   return (
-    <section aria-labelledby="expense-history-title" aria-busy={query.isFetching} className="mt-10 min-w-0">
+    <section id="seccion-consultar-gastos" aria-labelledby="expense-history-title" aria-busy={query.isFetching} className="mt-10 min-w-0 scroll-mt-4">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div><h2 id="expense-history-title" className="text-xl font-semibold tracking-tight">Últimos gastos registrados</h2><p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Hasta 10 registros de la cuenta y período seleccionados.</p></div>
         <div className="w-full sm:w-64"><label htmlFor="history-project" className="mb-2 block text-sm text-slate-600 dark:text-slate-300">Consultar gastos de</label><select id="history-project" className="form-input" value={projectId ?? ''} onChange={(event) => onProjectChange(event.target.value || null)}>

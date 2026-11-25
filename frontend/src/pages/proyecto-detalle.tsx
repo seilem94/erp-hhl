@@ -65,7 +65,7 @@ export function ProjectDetailPage() {
         {expensesQuery.isSuccess && expenses.length === 0 && <Feedback>Esta obra todavía no tiene gastos registrados.</Feedback>}
         <ExpenseList expenses={expenses} />
         {expensesQuery.isSuccess && expenses.length > 0 && <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">{expenses.length} {expenses.length === 1 ? 'gasto registrado' : 'gastos registrados'}.</p>}
-        <Link to="/gastos" className="button-primary mt-6">Registrar un gasto</Link>
+        <Link to="/gastos" search={{ vista: 'registrar' }} className="button-primary mt-6">Registrar un gasto</Link>
       </section>
       <section aria-labelledby="project-activity-title" className="mt-10">
         <h2 id="project-activity-title" className="mb-5 text-xl font-semibold tracking-tight">Actividad de la obra</h2>
