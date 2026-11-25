@@ -76,3 +76,7 @@ ehthumbs.db
 *.swp
 *.swo
 *~
+
+#Respaldos
+backups
+backups/*
