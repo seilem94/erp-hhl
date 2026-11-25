@@ -79,10 +79,10 @@ def seed_project(engine: Engine) -> UUID:
 
 def payload(kind: Kind, project_id: UUID) -> dict[str, str | None]:
     if kind == "project":
-        return {"name": "Obra nueva", "client": "Cliente", "estimated_budget": "0.10"}
+        return {"name": "Obra nueva", "client": "Cliente", "estimated_budget": "10"}
     if kind == "expense":
         return {
-            "amount": "0.10",
+            "amount": "10",
             "date": date.today().isoformat(),
             "category": "materials",
             "description": "Cable",
@@ -427,9 +427,9 @@ def test_decimal_scale_and_optional_nulls_keep_the_same_intent(
     project_id, key = seed_project(pg_engine), str(uuid4())
     data = payload(kind, project_id)
     money = "amount" if kind == "expense" else "estimated_budget"
-    data[money] = "1500.50"
+    data[money] = "1500.00"
     original = send_command(client, kind, project_id, data, key)
-    data[money] = "1500.5000"
+    data[money] = "1500.0000"
     data["receipt_url" if kind == "expense" else "description"] = None
     replay = send_command(client, kind, project_id, data, key)
     assert (
@@ -440,7 +440,7 @@ def test_decimal_scale_and_optional_nulls_keep_the_same_intent(
 
 
 @pytest.mark.parametrize("kind", KINDS)
-@pytest.mark.parametrize("amount", ("0.001", "10000000000", "NaN"))
+@pytest.mark.parametrize("amount", ("0.001", "9223372036854775808", "NaN"))
 def test_idempotent_money_is_rejected_instead_of_rounded_or_overflowed(
     client: TestClient, pg_engine: Engine, kind: Kind, amount: str
 ) -> None:

@@ -2,7 +2,6 @@
 
 from dataclasses import FrozenInstanceError, replace
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from uuid import UUID, uuid4
 
 import pytest
@@ -76,19 +75,19 @@ def test_project_snapshot_does_not_follow_later_business_mutation() -> None:
 def test_expense_snapshot_preserves_original_amount_and_receipt() -> None:
     expense = Expense(
         id=uuid4(),
-        amount=Decimal("1234.56"),
+        amount=123456,
         date=date(2026, 11, 9),
         category=ExpenseCategory.MATERIALS,
-        description="Cable",
+        title="Cable",
         has_receipt=True,
         receipt_url="receipt-reference",
         created_at=NOW,
         updated_at=NOW,
     )
     snapshot = ExpenseSnapshot.from_expense(expense)
-    expense.amount = Decimal("9999.99")
+    expense.amount = 999999
     expense.receipt_url = None
-    assert snapshot.amount == Decimal("1234.56")
+    assert snapshot.amount == 123456
     assert snapshot.receipt_url == "receipt-reference"
 
 

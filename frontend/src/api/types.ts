@@ -1,10 +1,10 @@
-// DTOs derived from the running API's /openapi.json. Decimal responses are strings.
+// DTOs derived from OpenAPI. Whole CLP responses are exact digit strings.
 export const projectStatuses = ['planning', 'in_progress', 'paused', 'completed', 'cancelled'] as const
 export type ProjectStatus = typeof projectStatuses[number]
 
 export const expenseCategories = ['materials', 'transport', 'food', 'tools', 'maintenance', 'services', 'other'] as const
 export type ExpenseCategory = typeof expenseCategories[number]
-export type DecimalInput = string | number
+export type ClpInput = string | number
 
 export interface ProjectResponse {
   id: string
@@ -22,7 +22,7 @@ export interface ProjectResponse {
 export interface CreateProjectRequest {
   name: string
   client: string
-  estimated_budget?: DecimalInput | null
+  estimated_budget?: ClpInput | null
   description?: string | null
   status?: ProjectStatus | null
   start_date?: string | null
@@ -32,7 +32,7 @@ export interface CreateProjectRequest {
 export interface UpdateProjectRequest {
   name?: string | null
   client?: string | null
-  estimated_budget?: DecimalInput | null
+  estimated_budget?: ClpInput | null
   status?: ProjectStatus | null
   description?: string | null
 }
@@ -43,24 +43,25 @@ export interface ExpenseFilters {
 }
 
 export interface RegisterExpenseRequest {
-  amount: DecimalInput
+  amount: ClpInput
   date: string
   category: ExpenseCategory
-  description: string
+  title: string
+  detail?: string | null
   project_id?: string | null
   receipt_url?: string | null
-}
-
-export interface UpdateExpenseRequest extends Partial<RegisterExpenseRequest> {
   has_receipt?: boolean
 }
+
+export type UpdateExpenseRequest = Partial<RegisterExpenseRequest>
 
 export interface ExpenseResponse {
   id: string
   amount: string
   date: string
   category: ExpenseCategory
-  description: string
+  title: string
+  detail?: string | null
   has_receipt: boolean
   created_at: string
   updated_at: string

@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Path, Query, Response, status
 
 from src.infrastructure.http.dependencies import (
     OperationContextDep,
+    get_list_expenses_uc,
     get_operational_expenses_uc,
     get_project_expenses_uc,
     get_register_expense_uc,
@@ -18,6 +19,7 @@ from src.infrastructure.http.dependencies import (
 from src.infrastructure.http.schemas.error import ErrorResponse
 from src.infrastructure.http.schemas.expense import (
     ExpenseResponse,
+    GastoResponse,
     RegisterExpenseRequest,
     UpdateExpenseRequest,
 )
@@ -34,6 +36,7 @@ from src.use_cases.get_project_expenses import (
     GetProjectExpensesDTO,
     GetProjectExpensesUseCase,
 )
+from src.use_cases.list_expenses import ListExpensesUseCase
 from src.use_cases.register_daily_expense import (
     RegisterDailyExpenseDTO,
     RegisterDailyExpenseUseCase,
@@ -44,6 +47,12 @@ router = APIRouter(prefix="/api/v1/expenses", tags=["Gastos"])
 compat_router = APIRouter()
 
 
+@compat_router.post(
+    "/api/gastos",
+    response_model=GastoResponse,
+    status_code=status.HTTP_201_CREATED,
+    include_in_schema=False,
+)
 @router.post(
     "",
     response_model=ExpenseResponse,
@@ -97,8 +106,10 @@ def register_expense(
         amount=request.amount,
         date=request.date,
         category=request.category,
-        description=request.description,
+        title=request.title,
+        detail=request.detail,
         project_id=request.project_id,
+        has_receipt=request.has_receipt,
         receipt_url=request.receipt_url,
         id=request.id if context is not None else None,
     )
@@ -112,7 +123,7 @@ def register_expense(
 
 
 @compat_router.patch(
-    "/api/gastos/{expense_id}", response_model=ExpenseResponse, include_in_schema=False
+    "/api/gastos/{expense_id}", response_model=GastoResponse, include_in_schema=False
 )
 @router.patch(
     "/{expense_id}",
@@ -136,12 +147,26 @@ def update_expense(
         amount=request.amount,
         date=request.date,
         category=request.category,
-        description=request.description,
+        title=request.title,
+        detail=request.detail if "detail" in sent else UNSET,
         project_id=request.project_id if "project_id" in sent else UNSET,
         has_receipt=request.has_receipt,
         receipt_url=request.receipt_url if "receipt_url" in sent else UNSET,
     )
     return ExpenseResponse.model_validate(use_case.execute(dto))
+
+
+@compat_router.get(
+    "/api/gastos", response_model=list[GastoResponse], include_in_schema=False
+)
+@router.get("", response_model=list[ExpenseResponse], include_in_schema=False)
+@router.get(
+    "/", response_model=list[ExpenseResponse], summary="Consultar todos los gastos"
+)
+def list_expenses(
+    use_case: Annotated[ListExpensesUseCase, Depends(get_list_expenses_uc)],
+) -> list[ExpenseResponse]:
+    return [ExpenseResponse.model_validate(expense) for expense in use_case.execute()]
 
 
 @router.get(

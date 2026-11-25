@@ -49,7 +49,7 @@ Ejecutar lint y build al modificar código. Los comandos efectivos se definen en
 | `src/api/` | Cliente HTTP, DTO, validación de respuestas y servicios tipados |
 | `src/hooks/queries.ts` | Consultas compartidas, selección de una obra, mutaciones e invalidación de caché |
 | `src/hooks/dashboard.ts` | Composición de consultas y métricas del Dashboard |
-| `src/utils/decimal.ts` | Suma decimal exacta antes del formato visual |
+| `src/utils/clp.ts` | Validación, suma exacta y formato de pesos chilenos |
 | `src/components/projects/` | Formularios de alta y edición parcial de proyectos |
 | `src/components/expenses/` | Registro rápido y consulta de gastos |
 | `src/utils/` | Formato de importes/fechas y utilidades de formularios |
@@ -107,7 +107,7 @@ Publicar `dist/` en un alojamiento estático con redirección de rutas SPA a `in
 
 El resumen obtiene el listado de obras, los gastos operativos y los gastos de cada obra, incluidas las canceladas con gastos históricos. Cuenta las obras registradas y calcula el avance como obras completadas respecto al total. Los importes reflejan todos los registros devueltos, sin limitarse al historial rápido de diez gastos ni aplicar un período de fechas.
 
-Los importes decimales se suman de forma exacta y se formatean en CLP sin pasar por `Number`, conservando precisión incluso por encima del entero seguro de JavaScript. Si una consulta necesaria falla, el total dependiente queda sin valor y se ofrece reintento; no se presenta una suma parcial como total definitivo.
+Los importes se suman con `BigInt` y se formatean en CLP sin decimales. Si una consulta necesaria falla, el total dependiente queda sin valor y se ofrece reintento; no se presenta una suma parcial como total definitivo.
 
 La API actual no proporciona un GET individual de proyecto: la consulta del detalle resuelve la obra mediante el listado compartido en caché y consulta sus gastos por identificador. El detalle muestra todos esos gastos; comparte caché de gastos con el Dashboard y el historial para reflejar las mutaciones existentes. El número de consultas de gastos del resumen crece con el número de obras hasta disponer de un endpoint agregado.
 
@@ -117,7 +117,7 @@ El formulario de edición se abre en el detalle, precarga los datos y envía por
 
 El historial de gastos conserva las fechas en estado local y las envía al servicio como `start_date` y `end_date`, límites inclusivos y opcionales. Un rango invertido bloquea la consulta y muestra el error. Cada combinación de cuenta y fechas tiene su propia clave de caché; el botón de limpieza vuelve a la consulta sin fechas. Un registro invalida todos los rangos de su cuenta, incluida la consulta sin filtros, preservando la caché de otras obras y de OPEX cuando no están afectados. El historial mantiene su límite visual de diez registros, sin afectar los totales completos del Dashboard ni los gastos del detalle.
 
-Los formularios muestran guardado y carga con indicadores visibles, conservan el teclado decimal en los campos numéricos y usan texto de 16 px en móviles. Los controles principales tienen al menos 44 px de alto; los importes y mensajes extensos se ajustan al ancho disponible sin ocultar contenido con `overflow-x: hidden`.
+Los formularios muestran guardado y carga con indicadores visibles y usan texto de 16 px en móviles. Los campos de monto y presupuesto aceptan pesos enteros, usan teclado numérico y muestran una vista previa en CLP. Los controles principales tienen al menos 44 px de alto; los importes y mensajes extensos se ajustan al ancho disponible sin ocultar contenido con `overflow-x: hidden`.
 
 Configuración permite elegir tema claro u oscuro. La selección se guarda en `localStorage` y se aplica antes del montaje de React al recargar. Si el navegador impide guardarla, el tema se aplica a la sesión y se informa de la limitación. Esta preferencia pertenece al navegador, sin sincronización con una cuenta de usuario.
 

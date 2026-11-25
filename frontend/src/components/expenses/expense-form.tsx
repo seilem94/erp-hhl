@@ -1,12 +1,13 @@
 import { useRef, useState, type FormEvent } from 'react'
 import type { ExpenseResponse, ProjectResponse } from '@/api/types'
 import { useRegisterExpense } from '@/hooks/queries'
-import { ExpenseFields } from '@/components/expenses/expense-fields'
+import { ExpenseFields, ExpenseReceiptField } from '@/components/expenses/expense-fields'
 import { readExpenseFields, validateExpenseFields } from '@/components/expenses/expense-form-values'
 import { Feedback } from '@/components/ui/feedback'
 import { Spinner } from '@/components/ui/spinner'
 import { Icon } from '@/components/ui/icon'
-import { formatMoney, localToday } from '@/utils/format'
+import { formatCLP } from '@/utils/clp'
+import { localToday } from '@/utils/format'
 import { focusInvalid } from '@/utils/forms'
 
 type ExpenseFormProps = {
@@ -21,6 +22,8 @@ export function ExpenseForm({ projects, projectsLoading, projectsUnavailable, on
   const formRef = useRef<HTMLFormElement>(null)
   const submitting = useRef(false)
   const [projectId, setProjectId] = useState('')
+  const [amount, setAmount] = useState('')
+  const [hasReceipt, setHasReceipt] = useState(false)
   const [validation, setValidation] = useState<Record<string, string>>({})
   const errors = { ...validation, ...mutation.error?.fieldErrors }
 
@@ -43,12 +46,14 @@ export function ExpenseForm({ projects, projectsLoading, projectsUnavailable, on
       return
     }
     submitting.current = true
-    mutation.mutate({ ...values, category: values.category }, {
+    mutation.mutate({ ...values, category: values.category, has_receipt: hasReceipt }, {
       onSuccess: (expense) => {
         formRef.current?.reset()
         const dateInput = formRef.current?.querySelector<HTMLInputElement>('[name="date"]')
         if (dateInput) dateInput.value = localToday()
         setProjectId('')
+        setAmount('')
+        setHasReceipt(false)
         onRegistered(expense)
       },
       onSettled: () => { submitting.current = false },
@@ -62,12 +67,14 @@ export function ExpenseForm({ projects, projectsLoading, projectsUnavailable, on
         <fieldset disabled={mutation.isPending} className="grid min-w-0 gap-5 sm:grid-cols-2">
           <legend className="sr-only">Datos del gasto</legend>
           <ExpenseFields idPrefix="expense" errors={errors} projects={projects} projectsLoading={projectsLoading}
-            projectsUnavailable={projectsUnavailable} projectId={projectId} onProjectChange={setProjectId} />
+            projectsUnavailable={projectsUnavailable} projectId={projectId} onProjectChange={setProjectId}
+            amount={amount} onAmountChange={setAmount} />
+          <ExpenseReceiptField checked={hasReceipt} onChange={setHasReceipt} />
           <button type="submit" className="button-primary mt-1 sm:col-span-2">{mutation.isPending ? <Spinner /> : <Icon name="plus" className="size-4" />}{mutation.isPending ? 'Registrando gasto…' : 'Registrar Gasto'}</button>
         </fieldset>
         <div className="mt-4 grid gap-3">
           {mutation.error && <Feedback tone="error">{mutation.error.message}</Feedback>}
-          {mutation.isSuccess && <Feedback tone="success">Gasto de {formatMoney(mutation.data.amount)} registrado correctamente.</Feedback>}
+          {mutation.isSuccess && <Feedback tone="success">Gasto de {formatCLP(mutation.data.amount)} registrado correctamente.</Feedback>}
         </div>
       </form>
     </section>

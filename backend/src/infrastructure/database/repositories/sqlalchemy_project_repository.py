@@ -69,7 +69,6 @@ class SQLAlchemyProjectRepository(ProjectRepository):
                     "The requested project identifier is already in use."
                 ) from exc
             raise
-        self._session.refresh(orm, ["budget"])
         saved = project_to_domain(orm)
         self._audit.record_project(None, saved)
         return saved
@@ -92,7 +91,6 @@ class SQLAlchemyProjectRepository(ProjectRepository):
         before = project_to_domain(current)
         merged = self._session.merge(domain_to_project_orm(project))
         self._session.flush()
-        self._session.refresh(merged, ["budget"])
         saved = project_to_domain(merged)
         self._audit.record_project(before, saved)
         return saved

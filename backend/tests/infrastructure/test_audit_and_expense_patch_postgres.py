@@ -36,10 +36,10 @@ def create_expense(client: TestClient, project_id: str | None = None) -> str:
         "/api/v1/expenses/",
         json={
             "project_id": project_id,
-            "amount": "50000.00",
+            "amount": "50000",
             "date": date.today().isoformat(),
             "category": "materials",
-            "description": "Cableado",
+            "title": "Cableado",
         },
     )
     assert response.status_code == 201, response.text
@@ -54,12 +54,13 @@ def test_patch_moves_expense_updates_totals_and_audits_only_changed_fields(
     expense = create_expense(pg_client, origin)
     updated_date = (date.today() - timedelta(days=1)).isoformat()
     response = pg_client.patch(
-        f"/api/gastos/{expense}",
+        f"/api/v1/expenses/{expense}",
         headers={ACTOR_HEADER: "terreno@example.test"},
         json={
-            "amount": "65000.25",
+            "amount": "65000",
             "date": updated_date,
-            "description": "Cableado reforzado",
+            "title": "Cableado reforzado",
+            "detail": "Incluye terminales certificados.",
             "category": "services",
             "proyecto_id": destination,
             "receipt_url": "comprobantes/cableado.pdf",
@@ -68,12 +69,12 @@ def test_patch_moves_expense_updates_totals_and_audits_only_changed_fields(
     assert response.status_code == 200, response.text
     updated = response.json()
     assert updated["project_id"] == destination
-    assert updated["amount"] == "65000.25"
+    assert updated["amount"] == "65000"
     assert updated["date"] == updated_date
     assert updated["has_receipt"] is True
     assert pg_client.get(f"/api/v1/expenses/project/{origin}").json() == []
     assert pg_client.get(f"/api/v1/expenses/project/{destination}").json() == [updated]
-    for project_id, total in [(origin, "0.00"), (destination, "65000.25")]:
+    for project_id, total in [(origin, "0"), (destination, "65000")]:
         summary = pg_client.get(f"/api/v1/projects/{project_id}/summary")
         assert summary.status_code == 200
         assert summary.json()["expenses_total"] == total
@@ -88,21 +89,23 @@ def test_patch_moves_expense_updates_totals_and_audits_only_changed_fields(
         assert log["proyecto_nombre"] == "Obra poniente"
         assert log["entidad_id"] == expense
         assert datetime.fromisoformat(log["created_at"]).utcoffset() == timedelta(0)
-        assert "monto $50.000 → $65.000,25" in log["resumen"]
+        assert "monto $50.000 → $65.000" in log["resumen"]
         assert log["detalles"] == {
             "antes": {
-                "amount": "50000.00",
+                "amount": "50000",
                 "date": date.today().isoformat(),
-                "description": "Cableado",
+                "title": "Cableado",
+                "detail": None,
                 "category": "materials",
                 "project_id": origin,
                 "has_receipt": False,
                 "receipt_url": None,
             },
             "despues": {
-                "amount": "65000.25",
+                "amount": "65000",
                 "date": updated_date,
-                "description": "Cableado reforzado",
+                "title": "Cableado reforzado",
+                "detail": "Incluye terminales certificados.",
                 "category": "services",
                 "project_id": destination,
                 "has_receipt": True,
@@ -127,7 +130,7 @@ def test_invalid_and_noop_patches_do_not_append_activity(pg_client: TestClient) 
     for body, status in (
         ({"amount": None}, 422),
         ({"amount": "25.123"}, 422),
-        ({"description": "  "}, 422),
+        ({"title": "  "}, 422),
         ({"project_id": str(uuid4())}, 404),
     ):
         assert pg_client.patch(path, json=body).status_code == status
@@ -225,7 +228,7 @@ def test_failed_expense_commit_rolls_back_update_and_audit(
         )
     assert response.status_code == 500
     (original,) = pg_client.get("/api/v1/expenses/operational").json()
-    assert original["amount"] == "50000.00"
+    assert original["amount"] == "50000"
     assert pg_client.get(AUDIT_PATH, params={"accion": "UPDATE"}).json()["items"] == []
 
 

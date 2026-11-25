@@ -3,7 +3,7 @@ import type { MouseEvent } from 'react'
 import { Icon } from '@/components/ui/icon'
 import { QueryError } from '@/components/ui/feedback'
 import { useDashboardMetrics } from '@/hooks/dashboard'
-import { formatMoney } from '@/utils/format'
+import { formatCLP } from '@/utils/clp'
 
 type CardProps = { metrics: ReturnType<typeof useDashboardMetrics> }
 
@@ -69,7 +69,7 @@ function ExpensesCard({ metrics }: CardProps) {
       </div>
       <h3 id="expenses-title" className="mt-5 text-xl font-semibold tracking-tight">Registro de Gastos</h3>
       <p className="mt-2 text-sm text-white">Los pequeños gastos también cuentan.</p>
-      <p className="money-value mt-7 text-[2.5rem] leading-none font-semibold tracking-tight"><Metric value={metrics.total === null ? null : formatMoney(metrics.total)} loading={metrics.loadingExpenses} /></p>
+      <p className="money-value mt-7 text-[2.5rem] leading-none font-semibold tracking-tight"><Metric value={metrics.total === null ? null : formatCLP(metrics.total)} loading={metrics.loadingExpenses} /></p>
       <p className="mt-3 text-xs text-white">Gastos acumulados</p>
       <p className="mt-3 text-xs text-white">{metrics.expenseCount === null ? metrics.loadingExpenses ? 'Consultando registros…' : 'Información no disponible' : `${metrics.expenseCount} ${metrics.expenseCount === 1 ? 'gasto registrado' : 'gastos registrados'}`}</p>
       <div className="mt-auto pt-7">
@@ -82,12 +82,12 @@ function ExpensesCard({ metrics }: CardProps) {
 }
 
 function FinancesCard({ metrics }: CardProps) {
-  const total = metrics.total === null ? null : Number(metrics.total)
+  const total = BigInt(metrics.total ?? '0')
   const categories = [
     { label: 'Gastos Operativos (OPEX)', value: metrics.operationalTotal, color: 'bg-brand-navy dark:bg-slate-400' },
     { label: 'Obras (CapEx)', value: metrics.projectTotal, color: 'bg-brand-blue' },
   ]
-  const chartLabel = metrics.total === null ? 'Resumen financiero todavía no disponible.' : `Distribución de gastos: operación ${formatMoney(metrics.operationalTotal ?? '0')}, obras ${formatMoney(metrics.projectTotal ?? '0')}.`
+  const chartLabel = metrics.total === null ? 'Resumen financiero todavía no disponible.' : `Distribución de gastos: operación ${formatCLP(metrics.operationalTotal ?? '0')}, obras ${formatCLP(metrics.projectTotal ?? '0')}.`
 
   return (
     <article aria-labelledby="finances-title" className="feature-card border border-brand-border bg-white dark:bg-slate-900">
@@ -98,19 +98,23 @@ function FinancesCard({ metrics }: CardProps) {
       <h3 id="finances-title" className="mt-5 text-xl font-semibold tracking-tight">Finanzas Rápidas</h3>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Una mirada clara a tus gastos.</p>
       <div className="my-7 grid gap-5" role="img" aria-label={chartLabel}>
-        {categories.map(({ label, value, color }) => (
-          <div key={label}>
-            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs">
-              <span className="text-slate-500 dark:text-slate-400">{label}</span>
-              <span className="money-value font-semibold">{metrics.loadingExpenses ? '…' : value === null ? '—' : formatMoney(value)}</span>
+        {categories.map(({ label, value, color }) => {
+          const share = total > 0n && value !== null ? Number(BigInt(value) * 10000n / total) / 100 : 0
+          const width = Math.max(0, Math.min(100, share))
+          return (
+            <div key={label}>
+              <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs">
+                <span className="text-slate-500 dark:text-slate-400">{label}</span>
+                <span className="money-value font-semibold">{metrics.loadingExpenses ? '…' : value === null ? '—' : formatCLP(value)}</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-brand-canvas"><div className={`h-full rounded-full ${color}`} style={{ width: `${width}%` }} /></div>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-brand-canvas"><div className={`h-full rounded-full ${color}`} style={{ width: `${total !== null && total > 0 && value !== null ? Math.max(0, Math.min(100, Number(value) / total * 100)) : 0}%` }} /></div>
-          </div>
-        ))}
+          )
+        })}
       </div>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-brand-border pt-5 text-sm">
         <span className="text-slate-500 dark:text-slate-400">Total registrado</span>
-        <span className="money-value font-semibold">{metrics.loadingExpenses ? '…' : metrics.total === null ? '—' : formatMoney(metrics.total)}</span>
+        <span className="money-value font-semibold">{metrics.loadingExpenses ? '…' : metrics.total === null ? '—' : formatCLP(metrics.total)}</span>
       </div>
     </article>
   )

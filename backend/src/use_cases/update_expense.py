@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from enum import Enum, auto
 from uuid import UUID
 
@@ -18,8 +17,8 @@ from src.use_cases.services.expense_rules import (
     validate_expense_amount,
     validate_expense_date,
     validate_expense_project,
+    validate_expense_title,
 )
-from src.use_cases.services.monetary_precision import validate_command_amount
 
 
 class _Unset(Enum):
@@ -32,10 +31,11 @@ UNSET = _Unset.VALUE
 @dataclass(frozen=True, kw_only=True)
 class UpdateExpenseDTO:
     expense_id: UUID
-    amount: Decimal | None = None
+    amount: int | None = None
     date: date | None = None
     category: ExpenseCategory | None = None
-    description: str | None = None
+    title: str | None = None
+    detail: str | None | _Unset = UNSET
     project_id: UUID | None | _Unset = UNSET
     has_receipt: bool | None = None
     receipt_url: str | None | _Unset = UNSET
@@ -59,9 +59,10 @@ class UpdateExpenseUseCase:
 
         if dto.amount is not None:
             validate_expense_amount(dto.amount)
-            validate_command_amount(dto.amount)
         if dto.date is not None:
             validate_expense_date(dto.date, self._date_provider())
+        if dto.title is not None:
+            validate_expense_title(dto.title)
         project_id = (
             expense.project_id if isinstance(dto.project_id, _Unset) else dto.project_id
         )
@@ -81,9 +82,8 @@ class UpdateExpenseUseCase:
             amount=expense.amount if dto.amount is None else dto.amount,
             date=expense.date if dto.date is None else dto.date,
             category=expense.category if dto.category is None else dto.category,
-            description=expense.description
-            if dto.description is None
-            else dto.description,
+            title=expense.title if dto.title is None else dto.title,
+            detail=expense.detail if isinstance(dto.detail, _Unset) else dto.detail,
             project_id=project_id,
             receipt_url=receipt_url,
             has_receipt=receipt_url is not None or has_receipt,

@@ -6,7 +6,6 @@ from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from threading import Event
 from uuid import UUID, uuid1, uuid4
 
@@ -65,7 +64,7 @@ def create_operation(client: TestClient, command: CommandType) -> RecordedOperat
     project_data = {
         "name": "Obra original",
         "client": "Cliente",
-        "estimated_budget": "10.50",
+        "estimated_budget": "1050",
     }
     if command is CommandType.CREATE_PROJECT:
         response = client.post("/api/v1/projects", json=project_data, headers=headers)
@@ -84,7 +83,7 @@ def create_operation(client: TestClient, command: CommandType) -> RecordedOperat
                 "/api/v1/expenses",
                 headers=headers,
                 json={
-                    "amount": "0.10",
+                    "amount": "10",
                     "date": date.today().isoformat(),
                     "category": "materials",
                     "description": "Cable original",
@@ -143,7 +142,7 @@ def test_recovery_returns_original_snapshot_with_public_metadata(
         "command_type": command.value,
         "resource_type": command.resource_type.value,
         "result_resource_id": str(operation.resource_id),
-        "result_schema_version": 1,
+        "result_schema_version": 2,
         "created_at": body["created_at"],
         "completed_at": body["completed_at"],
         "result": operation.original_response,
@@ -165,8 +164,8 @@ def test_snapshot_survives_later_resource_edits_or_deletion(
         if command is CommandType.REGISTER_EXPENSE:
             resource = session.get(ExpenseORM, operation.resource_id)
             assert resource is not None
-            resource.amount = Decimal("99.99")
-            resource.description = "Modificación posterior"
+            resource.amount = 9999
+            resource.title = "Modificación posterior"
         else:
             resource = session.get(ProjectORM, operation.resource_id)
             assert resource is not None

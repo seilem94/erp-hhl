@@ -1,28 +1,18 @@
-"""Financial responses preserve exact amounts as decimal strings."""
+"""Financial responses preserve exact whole pesos as digit strings."""
 
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal
-from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, PlainSerializer
+from pydantic import BaseModel, ConfigDict
 
 from src.domain.enums import Currency, ProjectStatus
 from src.domain.read_models.financial_summary import (
     FinancialSummary,
     ProjectFinancialSummary,
 )
-
-
-def _serialize_money(value: Decimal) -> str:
-    return format(value, ".2f")
-
-
-Money = Annotated[
-    Decimal, PlainSerializer(_serialize_money, return_type=str, when_used="json")
-]
+from src.infrastructure.http.schemas.money import ClpResponse
 
 
 class SummaryResponseBase(BaseModel):
@@ -44,9 +34,9 @@ class ProjectStatusCountsResponse(BaseModel):
 
 
 class FinancialSummaryResponse(SummaryResponseBase):
-    operational_expenses_total: Money
-    project_expenses_total: Money
-    expenses_total: Money
+    operational_expenses_total: ClpResponse
+    project_expenses_total: ClpResponse
+    expenses_total: ClpResponse
     expense_count: int
     project_count: int
     projects_by_status: ProjectStatusCountsResponse
@@ -73,7 +63,7 @@ class FinancialSummaryResponse(SummaryResponseBase):
 class ProjectFinancialSummaryResponse(SummaryResponseBase):
     project_id: UUID
     project_status: ProjectStatus
-    expenses_total: Money
+    expenses_total: ClpResponse
     expense_count: int
 
     @classmethod

@@ -22,7 +22,6 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Generator
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from uuid import UUID, uuid4
 
 import pytest
@@ -97,7 +96,7 @@ def _make_project(
     client: str = "Cliente Ejemplo S.A.",
     status: ProjectStatus = ProjectStatus.PLANNING,
     start_date: date = date(2026, 1, 1),
-    budget: Decimal | None = None,
+    budget: int | None = None,
     description: str | None = None,
     end_date: date | None = None,
 ) -> Project:
@@ -119,10 +118,10 @@ def _make_project(
 
 def _make_expense(
     *,
-    amount: Decimal = Decimal("1500.00"),
+    amount: int = 1500,
     expense_date: date = date(2026, 3, 15),
     category: ExpenseCategory = ExpenseCategory.MATERIALS,
-    description: str = "Compra cable 2.5mm²",
+    title: str = "Compra cable 2.5mm²",
     has_receipt: bool = True,
     project_id: UUID | None = None,
     receipt_url: str | None = None,
@@ -134,7 +133,7 @@ def _make_expense(
         amount=amount,
         date=expense_date,
         category=category,
-        description=description,
+        title=title,
         has_receipt=has_receipt,
         created_at=now,
         updated_at=now,
@@ -179,7 +178,7 @@ class TestSQLAlchemyProjectRepositorySave:
             name="Obra Sur",
             client="Empresa XYZ",
             status=ProjectStatus.IN_PROGRESS,
-            budget=Decimal("250000.50"),
+            budget=25000050,
             description="Descripción de prueba",
             end_date=date(2026, 12, 31),
         )
@@ -254,14 +253,14 @@ class TestSQLAlchemyProjectRepositoryUpdate:
         repo.save(project)
 
         updated_project = dataclasses.replace(
-            project, name="Nombre Nuevo", budget=Decimal("99999.99")
+            project, name="Nombre Nuevo", budget=9999999
         )
         repo.update(updated_project)
 
         fetched = repo.get_by_id(project.id)
         assert fetched is not None
         assert fetched.name == "Nombre Nuevo"
-        assert fetched.budget == Decimal("99999.99")
+        assert fetched.budget == 9999999
 
 
 class TestSQLAlchemyProjectRepositoryDelete:
@@ -381,7 +380,7 @@ class TestSQLAlchemyExpenseRepositoryCapEx:
         project = _make_project()
         project_repo.save(project)
 
-        expense = _make_expense(project_id=project.id, amount=Decimal("750.00"))
+        expense = _make_expense(project_id=project.id, amount=750)
         result = expense_repo.save(expense)
 
         assert result.project_id == project.id
@@ -396,10 +395,10 @@ class TestSQLAlchemyExpenseRepositoryCapEx:
         project_repo.save(project)
 
         expense = _make_expense(
-            amount=Decimal("3200.75"),
+            amount=320075,
             expense_date=date(2026, 4, 10),
             category=ExpenseCategory.TRANSPORT,
-            description="Flete materiales a obra",
+            title="Flete materiales a obra",
             has_receipt=True,
             project_id=project.id,
             receipt_url="https://boletas.example.com/001.pdf",
@@ -410,7 +409,7 @@ class TestSQLAlchemyExpenseRepositoryCapEx:
         assert result.amount == expense.amount
         assert result.date == expense.date
         assert result.category == expense.category
-        assert result.description == expense.description
+        assert result.title == expense.title
         assert result.has_receipt == expense.has_receipt
         assert result.receipt_url == expense.receipt_url
 
@@ -426,9 +425,9 @@ class TestSQLAlchemyExpenseRepositoryCapEx:
         project_repo.save(proj_a)
         project_repo.save(proj_b)
 
-        exp_a1 = _make_expense(project_id=proj_a.id, description="Gasto A1")
-        exp_a2 = _make_expense(project_id=proj_a.id, description="Gasto A2")
-        exp_b1 = _make_expense(project_id=proj_b.id, description="Gasto B1")
+        exp_a1 = _make_expense(project_id=proj_a.id, title="Gasto A1")
+        exp_a2 = _make_expense(project_id=proj_a.id, title="Gasto A2")
+        exp_b1 = _make_expense(project_id=proj_b.id, title="Gasto B1")
         expense_repo.save(exp_a1)
         expense_repo.save(exp_a2)
         expense_repo.save(exp_b1)
@@ -465,13 +464,13 @@ class TestSQLAlchemyExpenseRepositoryCapEx:
         project_repo.save(project)
 
         exp1 = _make_expense(
-            project_id=project.id, expense_date=date(2026, 1, 10), description="Enero"
+            project_id=project.id, expense_date=date(2026, 1, 10), title="Enero"
         )
         exp2 = _make_expense(
-            project_id=project.id, expense_date=date(2026, 2, 15), description="Febrero"
+            project_id=project.id, expense_date=date(2026, 2, 15), title="Febrero"
         )
         exp3 = _make_expense(
-            project_id=project.id, expense_date=date(2026, 3, 20), description="Marzo"
+            project_id=project.id, expense_date=date(2026, 3, 20), title="Marzo"
         )
         expense_repo.save(exp1)
         expense_repo.save(exp2)
@@ -494,7 +493,7 @@ class TestSQLAlchemyExpenseRepositoryOpEx:
         """``save`` must return a pure domain dataclass for OPEX expenses."""
         repo = SQLAlchemyExpenseRepository(db_session)
 
-        expense = _make_expense(project_id=None, description="Gasto OPEX")
+        expense = _make_expense(project_id=None, title="Gasto OPEX")
         result = repo.save(expense)
 
         assert dataclasses.is_dataclass(result)
@@ -506,7 +505,7 @@ class TestSQLAlchemyExpenseRepositoryOpEx:
         """``project_id`` must be ``None`` for OPEX expenses after round-trip."""
         repo = SQLAlchemyExpenseRepository(db_session)
 
-        expense = _make_expense(project_id=None, description="Alquiler oficina")
+        expense = _make_expense(project_id=None, title="Alquiler oficina")
         result = repo.save(expense)
 
         assert result.project_id is None
@@ -520,9 +519,9 @@ class TestSQLAlchemyExpenseRepositoryOpEx:
 
         expense = _make_expense(
             project_id=None,
-            amount=Decimal("450.00"),
+            amount=450,
             category=ExpenseCategory.SERVICES,
-            description="Suscripción software contabilidad",
+            title="Suscripción software contabilidad",
         )
         result = repo.save(expense)
 
@@ -539,9 +538,9 @@ class TestSQLAlchemyExpenseRepositoryOpEx:
         project = _make_project()
         project_repo.save(project)
 
-        capex = _make_expense(project_id=project.id, description="CapEx")
-        opex1 = _make_expense(project_id=None, description="OPEX 1")
-        opex2 = _make_expense(project_id=None, description="OPEX 2")
+        capex = _make_expense(project_id=project.id, title="CapEx")
+        opex1 = _make_expense(project_id=None, title="OPEX 1")
+        opex2 = _make_expense(project_id=None, title="OPEX 2")
         expense_repo.save(capex)
         expense_repo.save(opex1)
         expense_repo.save(opex2)
@@ -583,10 +582,10 @@ class TestSQLAlchemyExpenseRepositoryOpEx:
         repo = SQLAlchemyExpenseRepository(db_session)
 
         op1 = _make_expense(
-            project_id=None, expense_date=date(2026, 1, 5), description="Enero"
+            project_id=None, expense_date=date(2026, 1, 5), title="Enero"
         )
         op2 = _make_expense(
-            project_id=None, expense_date=date(2026, 2, 10), description="Febrero"
+            project_id=None, expense_date=date(2026, 2, 10), title="Febrero"
         )
         repo.save(op1)
         repo.save(op2)
@@ -603,14 +602,14 @@ class TestSQLAlchemyExpenseRepositoryQueries:
     def test_get_by_id_retrieves_saved_expense(self, db_session: Session) -> None:
         """``get_by_id`` returns the saved domain dataclass."""
         repo = SQLAlchemyExpenseRepository(db_session)
-        expense = _make_expense(project_id=None, description="Test get_by_id")
+        expense = _make_expense(project_id=None, title="Test get_by_id")
         repo.save(expense)
 
         fetched = repo.get_by_id(expense.id)
 
         assert fetched is not None
         assert fetched.id == expense.id
-        assert fetched.description == "Test get_by_id"
+        assert fetched.title == "Test get_by_id"
         assert dataclasses.is_dataclass(fetched)
         assert not hasattr(fetched, "_sa_instance_state")
 
@@ -623,7 +622,7 @@ class TestSQLAlchemyExpenseRepositoryQueries:
     def test_delete_existing_expense_returns_true(self, db_session: Session) -> None:
         """``delete`` removes an existing expense and returns True."""
         repo = SQLAlchemyExpenseRepository(db_session)
-        expense = _make_expense(project_id=None, description="A eliminar")
+        expense = _make_expense(project_id=None, title="A eliminar")
         repo.save(expense)
 
         deleted = repo.delete(expense.id)
@@ -647,8 +646,8 @@ class TestSQLAlchemyExpenseRepositoryQueries:
         project = _make_project()
         project_repo.save(project)
 
-        capex = _make_expense(project_id=project.id, description="CapEx")
-        opex = _make_expense(project_id=None, description="OPEX")
+        capex = _make_expense(project_id=project.id, title="CapEx")
+        opex = _make_expense(project_id=None, title="OPEX")
         expense_repo.save(capex)
         expense_repo.save(opex)
 

@@ -1,30 +1,36 @@
-"""Command precision checks must never use rounding from the Decimal context."""
+"""Validate whole CLP and preserve the PostgreSQL rule for historical values."""
 
 from decimal import Decimal, localcontext
+from typing import cast
 
 import pytest
 
 from src.domain.exceptions import InvalidMonetaryPrecisionError
-from src.use_cases.services.monetary_precision import validate_command_amount
+from src.use_cases.services.monetary_precision import (
+    MAX_CLP,
+    round_legacy_clp,
+    validate_clp,
+)
+
+
+@pytest.mark.parametrize("amount", (None, 0, 1, 2_500_000_000, MAX_CLP))
+def test_whole_clp_that_fits_bigint_is_valid(amount: int | None) -> None:
+    validate_clp(amount)
+
+
+@pytest.mark.parametrize("amount", (-1, MAX_CLP + 1, True, 125.5, Decimal("1.25")))
+def test_invalid_new_clp_is_rejected_without_rounding(amount: object) -> None:
+    with pytest.raises(InvalidMonetaryPrecisionError):
+        validate_clp(cast(int, amount))
 
 
 @pytest.mark.parametrize(
-    "amount", (None, "0", "0.0100", "1.2300", "9999999999.99", "-9999999999.99")
+    ("amount", "rounded"),
+    (("631809.50", 631810), ("9999999999.49", 9999999999), ("-0.50", -1)),
 )
-def test_exact_representable_values_survive_low_precision_context(
-    amount: str | None,
+def test_legacy_rounding_matches_postgresql_even_with_low_decimal_precision(
+    amount: str, rounded: int
 ) -> None:
-    value = None if amount is None else Decimal(amount)
     with localcontext() as context:
         context.prec = 3
-        validate_command_amount(value)
-
-
-@pytest.mark.parametrize(
-    "amount", ("0.001", "1.2301", "9999999999.991", "10000000000", "NaN", "Infinity")
-)
-def test_nonrepresentable_values_are_rejected_without_rounding(amount: str) -> None:
-    with localcontext() as context:
-        context.prec = 3
-        with pytest.raises(InvalidMonetaryPrecisionError):
-            validate_command_amount(Decimal(amount))
+        assert round_legacy_clp(Decimal(amount)) == rounded

@@ -5,7 +5,8 @@ import { useProjects } from '@/hooks/queries'
 import { PageHeading } from '@/components/page-heading'
 import { ProjectForm } from '@/components/projects/project-form'
 import { LoadingState, QueryError } from '@/components/ui/feedback'
-import { formatDate, formatMoney, statusLabels } from '@/utils/format'
+import { formatCLP } from '@/utils/clp'
+import { formatDate, statusLabels } from '@/utils/format'
 
 export function ProjectsPage() {
   const query = useProjects()
@@ -41,7 +42,7 @@ export function ProjectsPage() {
                 </div>
                 {project.description?.trim() && <p className="mt-3 text-sm leading-6 whitespace-pre-line text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">{project.description}</p>}
                 <dl className="mt-5 grid grid-cols-1 gap-4 border-t border-brand-border pt-4 text-sm sm:grid-cols-2">
-                  <div><dt className="text-slate-500 dark:text-slate-400">Presupuesto</dt><dd className="money-value mt-1 font-semibold">{project.budget == null ? 'Sin presupuesto' : formatMoney(project.budget)}</dd></div>
+                  <div><dt className="text-slate-500 dark:text-slate-400">Presupuesto</dt><dd className="money-value mt-1 font-semibold">{project.budget == null ? 'Sin presupuesto' : formatCLP(project.budget)}</dd></div>
                   <div><dt className="text-slate-500 dark:text-slate-400">Inicio</dt><dd className="mt-1 font-medium">{formatDate(project.start_date)}</dd></div>
                   {project.end_date && <div><dt className="text-slate-500 dark:text-slate-400">Entrega</dt><dd className="mt-1 font-medium">{formatDate(project.end_date)}</dd></div>}
                 </dl>

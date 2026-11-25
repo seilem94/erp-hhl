@@ -7,7 +7,6 @@ logic and must never be imported by the domain or use-case layers.
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal
 from uuid import UUID
 
 from pydantic import JsonValue
@@ -20,7 +19,6 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
-    Numeric,
     String,
     Text,
     func,
@@ -58,9 +56,7 @@ class ProjectORM(Base):
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    # NUMERIC(12, 2) gives 10 integer digits + 2 decimal places, enough for
-    # local-currency budgets up to 9 999 999 999.99.
-    budget: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
+    budget: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     # Transitional storage only: historical classification must not default to False.
     # The final mandatory business classification is introduced with its write flow.
     has_iva: Mapped[bool | None] = mapped_column(nullable=True)
@@ -79,12 +75,12 @@ class ExpenseORM(Base):
     __tablename__ = "expenses"
 
     id: Mapped[UUID] = mapped_column(primary_key=True)
-    # NUMERIC(12, 2): same reasoning as ProjectORM.budget.
-    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    amount: Mapped[int] = mapped_column(BigInteger, nullable=False)
     date: Mapped[date] = mapped_column(Date, nullable=False)
     # ExpenseCategory values stored as plain strings (StrEnum → str).
     category: Mapped[str] = mapped_column(String(50), nullable=False)
-    description: Mapped[str] = mapped_column(Text, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    detail: Mapped[str | None] = mapped_column(Text, nullable=True)
     has_receipt: Mapped[bool] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False

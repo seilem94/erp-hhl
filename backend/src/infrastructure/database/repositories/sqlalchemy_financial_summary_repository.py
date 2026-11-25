@@ -63,9 +63,9 @@ class SQLAlchemyFinancialSummaryRepository(FinancialSummaryRepository):
         return FinancialSummary(
             filters=filters,
             as_of=self._cutoff(row),
-            operational_expenses_total=self._decimal(row, "operational_total"),
-            project_expenses_total=self._decimal(row, "project_total"),
-            expenses_total=self._decimal(row, "expenses_total"),
+            operational_expenses_total=self._total(row, "operational_total"),
+            project_expenses_total=self._total(row, "project_total"),
+            expenses_total=self._total(row, "expenses_total"),
             expense_count=self._integer(row, "expense_count"),
             projects_by_status=ProjectStatusCounts(
                 planning=self._integer(row, ProjectStatus.PLANNING.value),
@@ -107,7 +107,7 @@ class SQLAlchemyFinancialSummaryRepository(FinancialSummaryRepository):
             project_status=ProjectStatus(status),
             filters=filters,
             as_of=self._cutoff(row),
-            expenses_total=self._decimal(row, "expenses_total"),
+            expenses_total=self._total(row, "expenses_total"),
             expense_count=self._integer(row, "expense_count"),
         )
 
@@ -151,8 +151,8 @@ class SQLAlchemyFinancialSummaryRepository(FinancialSummaryRepository):
 
     @staticmethod
     def _expense_totals(expenses: CTE) -> CTE:
-        # SUM(numeric) is unbounded in PostgreSQL: never cast totals to NUMERIC(12,2).
-        zero = literal(Decimal("0.00"), type_=Numeric())
+        # PostgreSQL SUM(bigint) returns numeric, allowing sums beyond bigint.
+        zero = literal(0, type_=Numeric())
         return (
             select(
                 func.coalesce(
@@ -175,11 +175,17 @@ class SQLAlchemyFinancialSummaryRepository(FinancialSummaryRepository):
         )
 
     @staticmethod
-    def _decimal(row: RowMapping, name: str) -> Decimal:
+    def _total(row: RowMapping, name: str) -> int:
         value: object = row[name]
-        if not isinstance(value, Decimal):
-            raise TypeError("Financial aggregates must be exact Decimal values.")
-        return value
+        if isinstance(value, int):
+            return value
+        if (
+            isinstance(value, Decimal)
+            and value.is_finite()
+            and value == value.to_integral_value()
+        ):
+            return int(value)
+        raise TypeError("Financial aggregates must be exact whole CLP values.")
 
     @staticmethod
     def _integer(row: RowMapping, name: str) -> int:

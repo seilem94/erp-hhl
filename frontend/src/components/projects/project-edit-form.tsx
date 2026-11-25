@@ -4,7 +4,8 @@ import { useUpdateProject } from '@/hooks/queries'
 import { Feedback } from '@/components/ui/feedback'
 import { Spinner } from '@/components/ui/spinner'
 import { FormField } from '@/components/ui/form-field'
-import { focusInvalid, formString } from '@/utils/forms'
+import { ClpField } from '@/components/ui/clp-field'
+import { focusInvalid, formString, validClpField } from '@/utils/forms'
 import { statusLabels } from '@/utils/format'
 
 type ProjectEditFormProps = {
@@ -15,6 +16,7 @@ type ProjectEditFormProps = {
 
 export function ProjectEditForm({ project, onClose, onUpdated }: ProjectEditFormProps) {
   const [initial] = useState(project)
+  const [budgetValue, setBudgetValue] = useState(initial.budget ?? '')
   const mutation = useUpdateProject(project.id)
   const submitting = useRef(false)
   const [validation, setValidation] = useState<Record<string, string>>({})
@@ -40,9 +42,8 @@ export function ProjectEditForm({ project, onClose, onUpdated }: ProjectEditForm
     if (!name) issues.name = 'El nombre de la obra no puede quedar vacío.'
     if (!client) issues.client = 'El cliente no puede quedar vacío.'
     if (!status) issues.status = 'Selecciona un estado válido.'
-    const budgetInput = event.currentTarget.elements.namedItem('estimated_budget')
-    if ((budgetInput instanceof HTMLInputElement && !budgetInput.validity.valid) || (budget && (!Number.isFinite(Number(budget)) || Number(budget) < 0))) {
-      issues.estimated_budget = 'Ingresa un presupuesto mayor o igual a cero, con hasta dos decimales.'
+    if (!validClpField(event.currentTarget, 'estimated_budget', budget, 0, initial.budget)) {
+      issues.estimated_budget = 'Ingresa un presupuesto entero mayor o igual a cero en pesos chilenos.'
     }
     setValidation(issues)
     if (Object.keys(issues).length) {
@@ -78,9 +79,9 @@ export function ProjectEditForm({ project, onClose, onUpdated }: ProjectEditForm
           <FormField id="edit-project-client" label="Cliente" error={errors.client}>
             <input id="edit-project-client" name="client" defaultValue={initial.client} className="form-input" aria-invalid={Boolean(errors.client)} aria-describedby={errors.client ? 'edit-project-client-error' : undefined} />
           </FormField>
-          <FormField id="edit-project-budget" label="Presupuesto Estimado" hint="CLP · Deja vacío para conservar el presupuesto actual." error={errors.estimated_budget}>
-            <input id="edit-project-budget" name="estimated_budget" type="number" inputMode="decimal" min="0" step="0.01" defaultValue={initial.budget ?? ''} className="form-input" aria-invalid={Boolean(errors.estimated_budget)} aria-describedby={`edit-project-budget-hint${errors.estimated_budget ? ' edit-project-budget-error' : ''}`} />
-          </FormField>
+          <ClpField id="edit-project-budget" name="estimated_budget" label="Presupuesto Estimado"
+            hint="CLP · Deja vacío para conservar el presupuesto actual." error={errors.estimated_budget}
+            value={budgetValue} onChange={setBudgetValue} />
           <FormField id="edit-project-status" label="Estado" error={errors.status}>
             <select id="edit-project-status" name="status" defaultValue={initial.status} className="form-input" aria-invalid={Boolean(errors.status)} aria-describedby={errors.status ? 'edit-project-status-error' : undefined}>
               {projectStatuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}

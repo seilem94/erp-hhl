@@ -1,4 +1,6 @@
+import { useId } from 'react'
 import { expenseCategories, type ExpenseResponse, type ProjectResponse } from '@/api/types'
+import { ClpField } from '@/components/ui/clp-field'
 import { FormField } from '@/components/ui/form-field'
 import { categoryLabels, localToday } from '@/utils/format'
 
@@ -10,12 +12,14 @@ type ExpenseFieldsProps = {
   projectsUnavailable: boolean
   projectId: string
   onProjectChange: (id: string) => void
+  amount: string
+  onAmountChange: (amount: string) => void
   initial?: ExpenseResponse
 }
 
 export function ExpenseFields({
   idPrefix, errors, projects, projectsLoading, projectsUnavailable,
-  projectId, onProjectChange, initial,
+  projectId, onProjectChange, amount, onAmountChange, initial,
 }: ExpenseFieldsProps) {
   const today = localToday()
   const id = (field: string) => `${idPrefix}-${field}`
@@ -31,11 +35,8 @@ export function ExpenseFields({
 
   return (
     <>
-      <FormField id={id('amount')} label="Monto" required hint="Pesos chilenos (CLP)." error={errors.amount}>
-        <input id={id('amount')} name="amount" type="number" inputMode="decimal" min="0.01" step="0.01"
-          max="9999999999.99" defaultValue={initial?.amount} placeholder="Ej. 15000" className="form-input"
-          required aria-invalid={Boolean(errors.amount)} aria-describedby={describedBy('amount', 'amount', true)} />
-      </FormField>
+      <ClpField id={id('amount')} name="amount" label="Monto" required hint="Pesos chilenos (CLP)." error={errors.amount}
+        value={amount} onChange={onAmountChange} placeholder="Ej. 15000" />
       <FormField id={id('date')} label="Fecha" required error={errors.date}>
         <input id={id('date')} name="date" type="date" defaultValue={initial?.date ?? today} max={today}
           className="form-input" required aria-invalid={Boolean(errors.date)} aria-describedby={describedBy('date')} />
@@ -61,12 +62,42 @@ export function ExpenseFields({
         </select>
       </FormField>
       <div className="sm:col-span-2">
-        <FormField id={id('description')} label="Descripción" required error={errors.description}>
-          <textarea id={id('description')} name="description" rows={3} defaultValue={initial?.description}
-            placeholder="Ej. Compra de materiales para instalación" className="form-input resize-y"
-            required aria-invalid={Boolean(errors.description)} aria-describedby={describedBy('description')} />
+        <FormField id={id('title')} label="Título" required error={errors.title}>
+          <input id={id('title')} name="title" defaultValue={initial?.title}
+            placeholder="Ej. Compra cable EVA 2,5 mm" className="form-input"
+            required aria-invalid={Boolean(errors.title)} aria-describedby={describedBy('title')} />
+        </FormField>
+      </div>
+      <div className="sm:col-span-2">
+        <FormField id={id('detail')} label="Detalle" hint="Opcional." error={errors.detail}>
+          <textarea id={id('detail')} name="detail" rows={2} defaultValue={initial?.detail ?? ''}
+            className="form-input resize-y" aria-invalid={Boolean(errors.detail)} aria-describedby={describedBy('detail', 'detail', true)} />
         </FormField>
       </div>
     </>
+  )
+}
+
+export function ExpenseReceiptField({
+  checked, onChange, hasDigitalReceipt = false,
+}: {
+  checked: boolean
+  onChange: (checked: boolean) => void
+  hasDigitalReceipt?: boolean
+}) {
+  const hintId = useId()
+
+  return (
+    <div className="sm:col-span-2">
+      <label className="flex min-h-11 items-center gap-3 text-sm font-medium">
+        <input name="has_receipt" type="checkbox" checked={checked || hasDigitalReceipt}
+          disabled={hasDigitalReceipt} onChange={(event) => onChange(event.target.checked)}
+          aria-describedby={hintId} className="size-4 accent-brand-blue" />
+        Tiene comprobante
+      </label>
+      <p id={hintId} className="text-xs text-slate-500 dark:text-slate-400">
+        {hasDigitalReceipt ? 'El enlace indica que el gasto tiene un comprobante.' : 'Marca esta casilla si conservas una boleta o factura.'}
+      </p>
+    </div>
   )
 }

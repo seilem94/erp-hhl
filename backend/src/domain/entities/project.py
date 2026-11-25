@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
 from uuid import UUID
 
 from src.domain.enums import Currency, ProjectStatus
@@ -29,7 +28,7 @@ class Project:
         updated_at: UTC timestamp of the last modification.
         description: Optional scope or technical notes for the obra.
         end_date: Estimated or actual delivery date (None if not set yet).
-        budget: Agreed or estimated budget in local currency (None if TBD).
+        budget: Agreed or estimated budget in whole Chilean pesos (None if TBD).
     """
 
     id: UUID
@@ -41,5 +40,5 @@ class Project:
     updated_at: datetime
     description: str | None = None
     end_date: date | None = None
-    budget: Decimal | None = None
+    budget: int | None = None
     currency: Currency = Currency.CLP

@@ -14,7 +14,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from uuid import UUID, uuid4
 
 from src.domain.entities.project import Project
@@ -25,7 +24,7 @@ from src.domain.value_objects.operation_result import ProjectSnapshot
 from src.use_cases.dto.operation import CreateProjectCommandDTO
 from src.use_cases.services.canonicalization import CanonicalRequest
 from src.use_cases.services.idempotency import IdempotencyCoordinator, IdempotentResult
-from src.use_cases.services.monetary_precision import validate_command_amount
+from src.use_cases.services.monetary_precision import validate_clp
 
 
 @dataclass(frozen=True)
@@ -50,7 +49,7 @@ class CreateProjectDTO:
 
     name: str
     client: str
-    estimated_budget: Decimal | None = None
+    estimated_budget: int | None = None
     description: str | None = None
     id: UUID | None = None
     status: ProjectStatus | None = None
@@ -86,7 +85,7 @@ class CreateProjectUseCase:
         if self._coordinator is None:
             raise OperationUnresolvedError("No idempotency coordinator configured.")
         dto = command.data
-        validate_command_amount(dto.estimated_budget)
+        validate_clp(dto.estimated_budget)
         return self._coordinator.execute(
             context=command.context,
             request=CanonicalRequest(
@@ -95,7 +94,12 @@ class CreateProjectUseCase:
                 content={
                     "name": dto.name,
                     "client": dto.client,
-                    "estimated_budget": dto.estimated_budget,
+                    # Match the canonical string used by earlier Decimal commands.
+                    "estimated_budget": (
+                        str(dto.estimated_budget)
+                        if dto.estimated_budget is not None
+                        else None
+                    ),
                     "description": dto.description,
                     "currency": Currency.CLP,
                     # Omit unset fields to preserve previously stored fingerprints.
@@ -118,6 +122,7 @@ class CreateProjectUseCase:
             The persisted entity with the supplied or generated resource UUID
             and server-generated UTC timestamps.
         """
+        validate_clp(dto.estimated_budget)
         now: datetime = datetime.now(UTC)
 
         project = Project(

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal
 from uuid import UUID
 
-from pydantic import UUID4, BaseModel, ConfigDict, Field
+from pydantic import UUID4, AliasChoices, BaseModel, ConfigDict, Field
 
 from src.domain.enums import ProjectStatus
+from src.infrastructure.http.schemas.money import ClpResponse, ProjectBudget
 
 
 class CreateProjectRequest(BaseModel):
@@ -33,12 +33,13 @@ class CreateProjectRequest(BaseModel):
         description="Nombre de la empresa mandante o cliente particular.",
         examples=["Constructora Alerce S.A."],
     )
-    estimated_budget: Decimal | None = Field(
+    estimated_budget: ProjectBudget | None = Field(
         default=None,
+        validation_alias=AliasChoices("estimated_budget", "presupuesto_estimado"),
         description=(
             "Presupuesto acordado o estimado para la obra en moneda local (opcional)."
         ),
-        examples=[Decimal("5000000.00")],
+        examples=[5000000],
     )
     description: str | None = Field(
         default=None,
@@ -75,10 +76,11 @@ class UpdateProjectRequest(BaseModel):
         description="Nuevo nombre de la empresa mandante o cliente (opcional).",
         examples=["Constructora Alerce S.A."],
     )
-    estimated_budget: Decimal | None = Field(
+    estimated_budget: ProjectBudget | None = Field(
         default=None,
+        validation_alias=AliasChoices("estimated_budget", "presupuesto_estimado"),
         description="Nuevo presupuesto acordado o estimado para la obra (opcional).",
-        examples=[Decimal("7500000.00")],
+        examples=[7500000],
     )
     status: ProjectStatus | None = Field(
         default=None,
@@ -140,8 +142,8 @@ class ProjectResponse(BaseModel):
         description="Fecha estimada o efectiva de entrega de la obra.",
         examples=["2026-12-15"],
     )
-    budget: Decimal | None = Field(
+    budget: ClpResponse | None = Field(
         default=None,
         description="Presupuesto final o actual asignado a la obra.",
-        examples=[Decimal("5000000.00")],
+        examples=["5000000"],
     )

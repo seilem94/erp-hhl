@@ -11,7 +11,6 @@ from __future__ import annotations
 from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal
 from uuid import UUID, uuid4
 
 import pytest
@@ -39,6 +38,7 @@ from src.infrastructure.http.dependencies import get_actor_identity, get_authori
 from src.infrastructure.identity.providers import DenyAllAuthorization
 from src.main import app
 from src.use_cases.ports.identity import ActorIdentity
+from src.use_cases.services.monetary_precision import MAX_CLP
 from tests.infrastructure.postgres import migration_config
 
 NOW = datetime(2026, 11, 9, tzinfo=UTC)
@@ -72,13 +72,13 @@ def project_record(
 def dataset(pg_engine: Engine) -> Dataset:
     data = Dataset(uuid4(), uuid4(), uuid4(), uuid4())
     rows = (
-        (data.tax, "0.10", date(2026, 11, 1)),
-        (data.tax, "0.20", date(2026, 11, 2)),
-        (data.partner, "2.30", date(2026, 11, 2)),
-        (data.partner, "4.40", date(2026, 11, 3)),
-        (data.unknown, "8.80", date(2026, 11, 2)),
-        (None, "0.05", date(2026, 11, 2)),
-        (None, "0.15", date(2026, 11, 4)),
+        (data.tax, "10", date(2026, 11, 1)),
+        (data.tax, "20", date(2026, 11, 2)),
+        (data.partner, "230", date(2026, 11, 2)),
+        (data.partner, "440", date(2026, 11, 3)),
+        (data.unknown, "880", date(2026, 11, 2)),
+        (None, "5", date(2026, 11, 2)),
+        (None, "15", date(2026, 11, 4)),
     )
     with Session(pg_engine) as session:
         session.add_all(
@@ -94,10 +94,10 @@ def dataset(pg_engine: Engine) -> Dataset:
             ExpenseORM(
                 id=uuid4(),
                 project_id=project_id,
-                amount=Decimal(amount),
+                amount=int(amount),
                 date=expense_date,
                 category="materials",
-                description="Gasto de prueba",
+                title="Gasto de prueba",
                 has_receipt=False,
                 created_at=NOW,
                 updated_at=NOW,
@@ -200,9 +200,9 @@ def test_http_exact_totals_include_cancelled_and_unclassified_projects(
     response = client.get(GENERAL)
     assert response.status_code == 200
     body = response.json()
-    assert body["operational_expenses_total"] == "0.20"
-    assert body["project_expenses_total"] == "15.80"
-    assert body["expenses_total"] == "16.00"
+    assert body["operational_expenses_total"] == "20"
+    assert body["project_expenses_total"] == "1580"
+    assert body["expenses_total"] == "1600"
     assert body["expense_count"] == 7
     assert body["project_count"] == 4
     assert body["projects_by_status"] == {
@@ -222,7 +222,7 @@ def test_http_exact_totals_include_cancelled_and_unclassified_projects(
 
 @pytest.mark.parametrize(
     ("has_iva", "total", "expense_count", "project_count"),
-    [("true", "0.30", 2, 2), ("false", "6.70", 2, 1)],
+    [("true", "30", 2, 2), ("false", "670", 2, 1)],
 )
 def test_http_tax_filter_excludes_opex_and_unknowns_in_sql(
     client: TestClient,
@@ -236,7 +236,7 @@ def test_http_tax_filter_excludes_opex_and_unknowns_in_sql(
     assert response.status_code == 200
     body = response.json()
     assert body["expenses_total"] == body["project_expenses_total"] == total
-    assert body["operational_expenses_total"] == "0.00"
+    assert body["operational_expenses_total"] == "0"
     assert body["expense_count"] == expense_count
     assert body["project_count"] == project_count
     assert len(queries) == 1
@@ -246,11 +246,11 @@ def test_http_tax_filter_excludes_opex_and_unknowns_in_sql(
 @pytest.mark.parametrize(
     ("params", "total", "count"),
     [
-        ({"start_date": "2026-11-02", "end_date": "2026-11-02"}, "11.35", 4),
-        ({"start_date": "2026-11-02", "end_date": "2026-11-03"}, "15.75", 5),
-        ({"end_date": "2026-11-01"}, "0.10", 1),
-        ({"start_date": "2026-11-03"}, "4.55", 2),
-        ({"start_date": "2027-01-01"}, "0.00", 0),
+        ({"start_date": "2026-11-02", "end_date": "2026-11-02"}, "1135", 4),
+        ({"start_date": "2026-11-02", "end_date": "2026-11-03"}, "1575", 5),
+        ({"end_date": "2026-11-01"}, "10", 1),
+        ({"start_date": "2026-11-03"}, "455", 2),
+        ({"start_date": "2027-01-01"}, "0", 0),
     ],
 )
 def test_http_date_limits_are_inclusive_and_do_not_filter_project_counts(
@@ -292,12 +292,12 @@ def test_project_summary_reconciles_with_real_detail_in_same_period(
     response = client.get(f"/api/v1/projects/{dataset.partner}/summary", params=params)
     assert response.status_code == 200
     assert response.json()["project_status"] == "cancelled"
-    assert response.json()["expenses_total"] == "6.70"
+    assert response.json()["expenses_total"] == "670"
     assert len(queries) == 1
     detail = client.get(f"/api/v1/expenses/project/{dataset.partner}", params=params)
     assert detail.status_code == 200
-    independent = sum((Decimal(item["amount"]) for item in detail.json()), Decimal(0))
-    assert independent == Decimal(response.json()["expenses_total"])
+    independent = sum(int(item["amount"]) for item in detail.json())
+    assert independent == int(response.json()["expenses_total"])
     assert response.json()["expense_count"] == len(detail.json())
 
 
@@ -306,7 +306,7 @@ def test_visible_project_without_expenses_has_zero_summary(
 ) -> None:
     response = client.get(f"/api/v1/projects/{dataset.empty}/summary")
     assert response.status_code == 200
-    assert response.json()["expenses_total"] == "0.00"
+    assert response.json()["expenses_total"] == "0"
     assert response.json()["expense_count"] == 0
 
 
@@ -321,7 +321,7 @@ def test_global_permission_is_required_and_project_access_is_isolated(
     assert not queries
     allowed = client.get(f"/api/v1/projects/{dataset.tax}/summary")
     assert allowed.status_code == 200
-    assert allowed.json()["expenses_total"] == "0.30"
+    assert allowed.json()["expenses_total"] == "30"
     queries.clear()
     hidden = client.get(f"/api/v1/projects/{dataset.partner}/summary")
     assert hidden.status_code == 404
@@ -357,8 +357,8 @@ def test_repository_enforces_server_scope_without_hydrating_entities(
             FinancialSummaryFilters(),
             FinancialReadScope(project_ids=frozenset({dataset.tax})),
         )
-        assert summary.expenses_total == Decimal("0.30")
-        assert isinstance(summary.expenses_total, Decimal)
+        assert summary.expenses_total == 30
+        assert isinstance(summary.expenses_total, int)
         assert summary.project_count == 1
         assert not session.identity_map
 
@@ -369,8 +369,8 @@ def test_empty_database_returns_all_zeros(pg_engine: Engine) -> None:
             FinancialSummaryFilters(),
             FinancialReadScope(all_projects=True, include_operational=True),
         )
-        assert result.expenses_total == result.operational_expenses_total == Decimal(0)
-        assert result.project_expenses_total == Decimal(0)
+        assert result.expenses_total == result.operational_expenses_total == 0
+        assert result.project_expenses_total == 0
         assert result.expense_count == result.project_count == 0
 
 
@@ -381,10 +381,10 @@ def test_aggregate_may_exceed_individual_numeric_precision(
         session.add_all(
             ExpenseORM(
                 id=uuid4(),
-                amount=Decimal("9999999999.99"),
+                amount=MAX_CLP,
                 date=NOW.date(),
                 category="other",
-                description="Importe extremo",
+                title="Importe extremo",
                 has_receipt=False,
                 created_at=NOW,
                 updated_at=NOW,
@@ -394,8 +394,8 @@ def test_aggregate_may_exceed_individual_numeric_precision(
         session.commit()
     result = client.get(GENERAL)
     assert result.status_code == 200
-    assert result.json()["operational_expenses_total"] == "20000000000.18"
-    assert result.json()["expenses_total"] == "20000000015.98"
+    assert result.json()["operational_expenses_total"] == str(2 * MAX_CLP + 20)
+    assert result.json()["expenses_total"] == str(2 * MAX_CLP + 1600)
 
 
 def test_query_count_does_not_grow_per_project(
@@ -422,17 +422,15 @@ def test_committed_expense_appears_in_next_summary(
         "/api/v1/expenses/",
         json={
             "project_id": str(dataset.tax),
-            "amount": "0.07",
+            "amount": "7",
             "date": "2026-11-01",
             "category": "materials",
-            "description": "Nuevo gasto confirmado",
+            "title": "Nuevo gasto confirmado",
         },
     )
     assert write.status_code == 201
     after = client.get(GENERAL).json()
-    assert Decimal(after["expenses_total"]) - Decimal(
-        before["expenses_total"]
-    ) == Decimal("0.07")
+    assert int(after["expenses_total"]) - int(before["expenses_total"]) == 7
     assert after["expense_count"] == before["expense_count"] + 1
 
 

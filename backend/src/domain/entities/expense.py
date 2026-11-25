@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
 from uuid import UUID
 
 from src.domain.enums import Currency, ExpenseCategory
@@ -29,10 +28,11 @@ class Expense:
 
     Attributes:
         id: Unique identifier (UUIDv4).
-        amount: Exact cost in local currency (Decimal avoids float errors).
+        amount: Exact cost in whole Chilean pesos.
         date: Date the expense was incurred.
         category: Business category of the expense.
-        description: Free-text detail or concept (e.g. "Compra cable 2.5mm²").
+        title: Concept of the expense (e.g. "Compra cable 2.5mm²").
+        detail: Optional additional notes about the expense.
         has_receipt: True when a boleta/factura/voucher exists as proof.
         created_at: UTC timestamp when the record was created.
         updated_at: UTC timestamp of the last modification.
@@ -41,15 +41,16 @@ class Expense:
     """
 
     id: UUID
-    amount: Decimal
+    amount: int
     date: date
     category: ExpenseCategory
-    description: str
+    title: str
     has_receipt: bool
     created_at: datetime
     updated_at: datetime
     project_id: UUID | None = None
     receipt_url: str | None = None
+    detail: str | None = None
     currency: Currency = Currency.CLP
 
     @property

@@ -2,7 +2,6 @@
 
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -43,10 +42,10 @@ def setup() -> tuple[UpdateExpenseUseCase, Expense, InMemoryProjectRepository]:
     expense = expenses.save(
         Expense(
             id=uuid4(),
-            amount=Decimal("50.00"),
+            amount=50,
             date=TODAY,
             category=ExpenseCategory.MATERIALS,
-            description="Cable",
+            title="Cable",
             project_id=project.id,
             has_receipt=True,
             receipt_url="boletas/50.pdf",
@@ -61,10 +60,8 @@ def test_patch_preserves_omitted_fields_and_accepts_explicit_clears(
     setup: tuple[UpdateExpenseUseCase, Expense, InMemoryProjectRepository],
 ) -> None:
     use_case, expense, _ = setup
-    updated = use_case.execute(
-        UpdateExpenseDTO(expense_id=expense.id, amount=Decimal("75.25"))
-    )
-    assert updated.amount == Decimal("75.25")
+    updated = use_case.execute(UpdateExpenseDTO(expense_id=expense.id, amount=7525))
+    assert updated.amount == 7525
     assert updated.project_id == expense.project_id
     assert updated.receipt_url == expense.receipt_url
     assert updated.created_at == expense.created_at
@@ -84,9 +81,7 @@ def test_patch_with_same_values_keeps_timestamp_and_receipt_invariant(
 ) -> None:
     use_case, expense, _ = setup
     updated = use_case.execute(
-        UpdateExpenseDTO(
-            expense_id=expense.id, amount=Decimal("50.0000"), has_receipt=False
-        )
+        UpdateExpenseDTO(expense_id=expense.id, amount=50, has_receipt=False)
     )
     assert updated is expense
     assert updated.has_receipt is True
@@ -103,9 +98,8 @@ def test_patch_rejects_missing_expense_and_invalid_fields(
         use_case.execute(UpdateExpenseDTO(expense_id=uuid4()))
     dto = UpdateExpenseDTO(expense_id=expense.id)
     invalid = [
-        (replace(dto, amount=Decimal("0")), InvalidExpenseAmountError),
-        (replace(dto, amount=Decimal("1.234")), InvalidMonetaryPrecisionError),
-        (replace(dto, amount=Decimal("10000000000")), InvalidMonetaryPrecisionError),
+        (replace(dto, amount=0), InvalidExpenseAmountError),
+        (replace(dto, amount=2**63), InvalidMonetaryPrecisionError),
         (replace(dto, date=TODAY + timedelta(days=1)), InvalidExpenseDateError),
         (replace(dto, project_id=uuid4()), ProjectNotFoundError),
         (replace(dto, project_id=cancelled_id), ProjectCancelledError),

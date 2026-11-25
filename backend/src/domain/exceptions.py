@@ -8,7 +8,6 @@ these and mapping them to the appropriate HTTP status codes.
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
 from uuid import UUID
 
 from src.domain.enums import ProjectStatus
@@ -87,9 +86,16 @@ class InvalidExpenseAmountError(BusinessRuleViolationError):
         amount: The invalid amount that was supplied.
     """
 
-    def __init__(self, amount: Decimal) -> None:
+    def __init__(self, amount: int) -> None:
         self.amount = amount
         super().__init__(f"Expense amount must be greater than zero, got '{amount}'.")
+
+
+class InvalidExpenseTitleError(BusinessRuleViolationError):
+    """The expense needs a non-empty title."""
+
+    def __init__(self) -> None:
+        super().__init__("Ingresa el título del gasto.")
 
 
 class InvalidSummaryDateRangeError(BusinessRuleViolationError):
@@ -110,7 +116,7 @@ class InvalidCanonicalContentError(BusinessRuleViolationError):
 
 
 class InvalidMonetaryPrecisionError(BusinessRuleViolationError):
-    """An idempotent command's amount would be rounded or overflow persistence."""
+    """A CLP value is fractional or outside the range for a new write."""
 
 
 class IdempotencyConflictError(DomainException):

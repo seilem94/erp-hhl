@@ -1,26 +1,19 @@
-"""Validate the current NUMERIC(12,2) command contract without rounding.
+"""Whole CLP for writes and conversion of historical decimal values."""
 
-The opt-in command path and expense edits apply this contract. Aggregated
-read amounts are not subject to the per-row limit.
-"""
-
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from src.domain.exceptions import InvalidMonetaryPrecisionError
 
+MAX_CLP = 2**63 - 1
 
-def validate_command_amount(value: Decimal | None) -> None:
-    if value is None:
-        return
-    if not value.is_finite() or value.copy_abs() >= Decimal("10000000000"):
+
+def validate_clp(value: int | None) -> None:
+    if value is not None and (type(value) is not int or not 0 <= value <= MAX_CLP):
         raise InvalidMonetaryPrecisionError(
-            "Amount must be finite and fit NUMERIC(12,2) without rounding."
+            f"El monto debe ser un entero entre 0 y {MAX_CLP} pesos chilenos."
         )
-    # A finite Decimal always has an integer exponent. Trailing zeroes beyond
-    # scale two are harmless; any nonzero digit there would change the intent.
-    _, digits, exponent = value.as_tuple()
-    if isinstance(exponent, int) and exponent < -2:
-        if any(digits[exponent + 2 :]):
-            raise InvalidMonetaryPrecisionError(
-                "Amount must have at most two nonzero fractional decimal places."
-            )
+
+
+def round_legacy_clp(value: Decimal) -> int:
+    """Match PostgreSQL ROUND(numeric) without changing the Decimal context."""
+    return int(value.to_integral_value(rounding=ROUND_HALF_UP))

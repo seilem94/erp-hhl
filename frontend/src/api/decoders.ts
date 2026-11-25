@@ -1,8 +1,8 @@
 import { ApiError, isRecord } from '@/api/client'
 import { auditActions, auditEntities, expenseCategories, projectStatuses, type AuditLog, type AuditLogPage, type ExpenseResponse, type ProjectResponse } from '@/api/types'
+import { isClpAmount } from '@/utils/clp'
 
 const optionalString = (value: unknown) => value === undefined || value === null || typeof value === 'string'
-const decimalString = (value: unknown) => typeof value === 'string' && /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value) && Number.isFinite(Number(value))
 const calendarDate = (value: unknown) => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
   const date = new Date(`${value}T00:00:00Z`)
@@ -20,16 +20,17 @@ function isProject(value: unknown): value is ProjectResponse {
     && typeof value.updated_at === 'string'
     && optionalString(value.description)
     && (value.end_date === undefined || value.end_date === null || calendarDate(value.end_date))
-    && (value.budget === undefined || value.budget === null || decimalString(value.budget))
+    && (value.budget === undefined || value.budget === null || isClpAmount(value.budget))
 }
 
 function isExpense(value: unknown): value is ExpenseResponse {
   return isRecord(value)
     && typeof value.id === 'string'
-    && decimalString(value.amount)
+    && isClpAmount(value.amount)
     && calendarDate(value.date)
     && expenseCategories.some((category) => category === value.category)
-    && typeof value.description === 'string'
+    && typeof value.title === 'string'
+    && optionalString(value.detail)
     && typeof value.has_receipt === 'boolean'
     && typeof value.created_at === 'string'
     && typeof value.updated_at === 'string'

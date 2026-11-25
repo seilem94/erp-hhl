@@ -10,7 +10,6 @@ Test philosophy:
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -78,19 +77,19 @@ def test_registro_exitoso_gasto_proyecto_activo() -> None:
     project = _make_active_project(project_repo)
 
     dto = RegisterDailyExpenseDTO(
-        amount=Decimal("15000"),
+        amount=15000,
         date=TODAY,
         category=ExpenseCategory.MATERIALS,
-        description="Compra cable 2.5 mm²",
+        title="Compra cable 2.5 mm²",
         project_id=project.id,
     )
     use_case = _make_use_case(expense_repo, project_repo)
     result = use_case.execute(dto)
 
     assert result.project_id == project.id
-    assert result.amount == Decimal("15000")
+    assert result.amount == 15000
     assert result.category == ExpenseCategory.MATERIALS
-    assert result.description == "Compra cable 2.5 mm²"
+    assert result.title == "Compra cable 2.5 mm²"
     assert result.has_receipt is False
     assert result.receipt_url is None
     # El gasto debe haber sido persistido en el repositorio
@@ -102,10 +101,10 @@ def test_registro_exitoso_gasto_operacional_sin_proyecto() -> None:
     expense_repo = InMemoryExpenseRepository()
 
     dto = RegisterDailyExpenseDTO(
-        amount=Decimal("8500"),
+        amount=8500,
         date=TODAY,
         category=ExpenseCategory.MAINTENANCE,
-        description="Cambio de aceite camioneta",
+        title="Cambio de aceite camioneta",
         project_id=None,
     )
     use_case = _make_use_case(expense_repo)
@@ -121,10 +120,10 @@ def test_normalizacion_has_receipt_con_receipt_url() -> None:
     expense_repo = InMemoryExpenseRepository()
 
     dto = RegisterDailyExpenseDTO(
-        amount=Decimal("3200"),
+        amount=3200,
         date=TODAY,
         category=ExpenseCategory.FOOD,
-        description="Colación cuadrilla terreno",
+        title="Colación cuadrilla terreno",
         has_receipt=False,  # Explícitamente False
         receipt_url="https://storage.example.com/boletas/factura-001.jpg",
     )
@@ -140,16 +139,16 @@ def test_normalizacion_has_receipt_con_receipt_url() -> None:
 
 @pytest.mark.parametrize(
     "amount",
-    [Decimal("0"), Decimal("-1"), Decimal("-0.01")],
-    ids=["cero", "negativo_entero", "negativo_decimal"],
+    [0, -1, -1],
+    ids=["cero", "negativo_entero", "negativo"],
 )
-def test_error_monto_invalido(amount: Decimal) -> None:
+def test_error_monto_invalido(amount: int) -> None:
     """Se lanza InvalidExpenseAmountError para montos <= 0."""
     dto = RegisterDailyExpenseDTO(
         amount=amount,
         date=TODAY,
         category=ExpenseCategory.TRANSPORT,
-        description="Peaje autopista",
+        title="Peaje autopista",
     )
     use_case = _make_use_case()
 
@@ -163,10 +162,10 @@ def test_error_fecha_futura() -> None:
     """Se lanza InvalidExpenseDateError si la fecha del gasto es posterior a hoy."""
     future_date = date(2026, 11, 2)  # un día después de TODAY
     dto = RegisterDailyExpenseDTO(
-        amount=Decimal("5000"),
+        amount=5000,
         date=future_date,
         category=ExpenseCategory.TOOLS,
-        description="Compra brocas",
+        title="Compra brocas",
     )
     use_case = _make_use_case()
 
@@ -181,10 +180,10 @@ def test_error_proyecto_no_encontrado() -> None:
     """Se lanza ProjectNotFoundError si el project_id no existe en el repositorio."""
     nonexistent_id = uuid4()
     dto = RegisterDailyExpenseDTO(
-        amount=Decimal("12000"),
+        amount=12000,
         date=TODAY,
         category=ExpenseCategory.MATERIALS,
-        description="Automáticos térmicos",
+        title="Automáticos térmicos",
         project_id=nonexistent_id,
     )
     use_case = _make_use_case()  # project_repo vacío
@@ -204,10 +203,10 @@ def test_error_proyecto_cancelado() -> None:
     )
 
     dto = RegisterDailyExpenseDTO(
-        amount=Decimal("7000"),
+        amount=7000,
         date=TODAY,
         category=ExpenseCategory.SERVICES,
-        description="Subcontrato andamios",
+        title="Subcontrato andamios",
         project_id=cancelled_project.id,
     )
     use_case = _make_use_case(expense_repo, project_repo)

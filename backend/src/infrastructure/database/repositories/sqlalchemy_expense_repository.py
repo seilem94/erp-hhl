@@ -73,7 +73,6 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
                     "The requested expense identifier is already in use."
                 ) from exc
             raise
-        self._session.refresh(orm, ["amount"])
         saved = expense_to_domain(orm)
         self._audit.record_expense(None, saved)
         return saved
@@ -95,7 +94,6 @@ class SQLAlchemyExpenseRepository(ExpenseRepository):
             ):
                 raise ProjectNotFoundError(expense.project_id) from exc
             raise
-        self._session.refresh(updated, ["amount"])
         saved = expense_to_domain(updated)
         self._audit.record_expense(before, saved)
         return saved

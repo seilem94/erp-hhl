@@ -14,7 +14,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from decimal import Decimal
 from uuid import UUID
 
 from src.domain.entities.project import Project
@@ -25,7 +24,7 @@ from src.domain.value_objects.operation_result import ProjectSnapshot
 from src.use_cases.dto.operation import UpdateProjectCommandDTO
 from src.use_cases.services.canonicalization import CanonicalRequest
 from src.use_cases.services.idempotency import IdempotencyCoordinator, IdempotentResult
-from src.use_cases.services.monetary_precision import validate_command_amount
+from src.use_cases.services.monetary_precision import validate_clp
 
 
 @dataclass(frozen=True)
@@ -44,7 +43,7 @@ class UpdateProjectDTO:
     project_id: UUID
     name: str | None = None
     client: str | None = None
-    estimated_budget: Decimal | None = None
+    estimated_budget: int | None = None
     status: ProjectStatus | None = None
     description: str | None = None
 
@@ -67,7 +66,7 @@ class UpdateProjectUseCase:
         if self._coordinator is None:
             raise OperationUnresolvedError("No idempotency coordinator configured.")
         dto = command.data
-        validate_command_amount(dto.estimated_budget)
+        validate_clp(dto.estimated_budget)
         return self._coordinator.execute(
             context=command.context,
             request=CanonicalRequest(
@@ -78,7 +77,11 @@ class UpdateProjectUseCase:
                 content={
                     "name": dto.name,
                     "client": dto.client,
-                    "estimated_budget": dto.estimated_budget,
+                    "estimated_budget": (
+                        str(dto.estimated_budget)
+                        if dto.estimated_budget is not None
+                        else None
+                    ),
                     "status": dto.status,
                     "description": dto.description,
                 },
@@ -110,6 +113,7 @@ class UpdateProjectUseCase:
         if dto.status is not None:
             project.status = dto.status
         if dto.estimated_budget is not None:
+            validate_clp(dto.estimated_budget)
             project.budget = dto.estimated_budget
         if dto.description is not None:
             project.description = dto.description

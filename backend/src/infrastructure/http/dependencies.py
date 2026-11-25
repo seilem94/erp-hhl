@@ -46,6 +46,7 @@ from src.use_cases.get_project_expenses import GetProjectExpensesUseCase
 from src.use_cases.get_project_financial_summary import (
     GetProjectFinancialSummaryUseCase,
 )
+from src.use_cases.list_expenses import ListExpensesUseCase
 from src.use_cases.list_projects import ListProjectsUseCase
 from src.use_cases.ports.authorization import AuthorizationPort
 from src.use_cases.ports.identity import ActorIdentity, IdentityProvider
@@ -225,6 +226,10 @@ def get_update_expense_uc(
     expense_repo: ExpenseRepoDep, project_repo: ProjectRepoDep
 ) -> UpdateExpenseUseCase:
     return UpdateExpenseUseCase(expense_repo, project_repo)
+
+
+def get_list_expenses_uc(expense_repo: ExpenseRepoDep) -> ListExpensesUseCase:
+    return ListExpensesUseCase(expense_repo)
 
 
 def get_project_expenses_uc(

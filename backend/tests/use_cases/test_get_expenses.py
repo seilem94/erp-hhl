@@ -9,7 +9,6 @@ Test philosophy:
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -39,7 +38,7 @@ def _make_expense(
     expense_date: date = _TODAY,
     category: ExpenseCategory = ExpenseCategory.MATERIALS,
     project_id: None | type = None,  # sentinel: pass uuid directly when needed
-    amount: Decimal = Decimal("1000"),
+    amount: int = 1000,
 ) -> Expense:
     """Build an Expense instance with sensible defaults for testing."""
     return Expense(
@@ -47,7 +46,7 @@ def _make_expense(
         amount=amount,
         date=expense_date,
         category=category,
-        description="Gasto de prueba",
+        title="Gasto de prueba",
         has_receipt=False,
         created_at=_NOW,
         updated_at=_NOW,
@@ -62,10 +61,10 @@ def _make_expense_for_project(project_id: object, **kwargs: object) -> Expense:
     assert isinstance(project_id, UUID)
     return Expense(
         id=uuid4(),
-        amount=kwargs.get("amount", Decimal("1000")),  # type: ignore[arg-type]
+        amount=kwargs.get("amount", 1000),  # type: ignore[arg-type]
         date=kwargs.get("expense_date", _TODAY),  # type: ignore[arg-type]
         category=kwargs.get("category", ExpenseCategory.MATERIALS),  # type: ignore[arg-type]
-        description="Gasto de prueba en obra",
+        title="Gasto de prueba en obra",
         has_receipt=False,
         created_at=_NOW,
         updated_at=_NOW,
@@ -77,10 +76,10 @@ def _make_opex_expense(**kwargs: object) -> Expense:
     """Build an OPEX Expense (project_id is None)."""
     return Expense(
         id=uuid4(),
-        amount=kwargs.get("amount", Decimal("500")),  # type: ignore[arg-type]
+        amount=kwargs.get("amount", 500),  # type: ignore[arg-type]
         date=kwargs.get("expense_date", _TODAY),  # type: ignore[arg-type]
         category=kwargs.get("category", ExpenseCategory.MAINTENANCE),  # type: ignore[arg-type]
-        description="Gasto operacional de prueba",
+        title="Gasto operacional de prueba",
         has_receipt=False,
         created_at=_NOW,
         updated_at=_NOW,

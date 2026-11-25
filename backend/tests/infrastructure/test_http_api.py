@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -50,7 +49,7 @@ def test_create_project_success(client: TestClient) -> None:
     payload = {
         "name": "Instalación Tablero Central",
         "client": "Constructora Alerce",
-        "estimated_budget": "5000000.00",
+        "estimated_budget": "5000000",
         "description": "Montaje de tableros TDA",
         "status": ProjectStatus.IN_PROGRESS.value,
         "start_date": "2026-11-03",
@@ -92,7 +91,7 @@ def test_update_project_success(
         start_date=date.today(),
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
-        budget=Decimal("500000.00"),
+        budget=500000,
         description="Alcance original",
     )
     project_repo.save(p)
@@ -100,7 +99,7 @@ def test_update_project_success(
     payload = {
         "name": "Obra Nueva",
         "status": ProjectStatus.IN_PROGRESS.value,
-        "estimated_budget": "750000.00",
+        "estimated_budget": "750000",
         "description": "Alcance modificado",
     }
     response = client.patch(f"/api/v1/projects/{p.id}", json=payload)
@@ -110,7 +109,7 @@ def test_update_project_success(
     assert data["name"] == "Obra Nueva"
     assert data["client"] == "Cliente Antiguo"  # Inalterado
     assert data["status"] == ProjectStatus.IN_PROGRESS.value
-    assert data["budget"] == "750000.00"
+    assert data["budget"] == "750000"
     assert data["description"] == "Alcance modificado"
 
 
@@ -176,7 +175,7 @@ def test_register_expense_success(
     project_repo.save(project)
 
     payload = {
-        "amount": "15000.50",
+        "amount": "1250000",
         "date": str(date.today()),
         "category": ExpenseCategory.MATERIALS.value,
         "description": "Cables libres de halógeno 4mm",
@@ -205,7 +204,9 @@ def test_register_expense_invalid_amount_returns_422(
     }
     response = client.post("/api/v1/expenses", json=payload)
     assert response.status_code == 422
-    assert "Expense amount must be greater than zero" in response.json()["detail"]
+    (error,) = response.json()["detail"]
+    assert error["loc"] == ["body", "amount"]
+    assert error["type"] == "greater_than"
 
 
 def test_register_expense_future_date_returns_422(
@@ -277,10 +278,10 @@ def test_list_operational_expenses(
 ) -> None:
     exp = Expense(
         id=uuid4(),
-        amount=Decimal("30000"),
+        amount=30000,
         date=date.today(),
         category=ExpenseCategory.TRANSPORT,
-        description="Combustible camioneta",
+        title="Combustible camioneta",
         has_receipt=True,
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),

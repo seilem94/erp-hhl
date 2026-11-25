@@ -4,8 +4,9 @@ import { useCreateProject } from '@/hooks/queries'
 import { Feedback } from '@/components/ui/feedback'
 import { Spinner } from '@/components/ui/spinner'
 import { FormField } from '@/components/ui/form-field'
+import { ClpField } from '@/components/ui/clp-field'
 import { Icon } from '@/components/ui/icon'
-import { focusInvalid, formString } from '@/utils/forms'
+import { focusInvalid, formString, validClpField } from '@/utils/forms'
 import { statusLabels } from '@/utils/format'
 
 const dateFields = [
@@ -18,6 +19,7 @@ export function ProjectForm() {
   const formRef = useRef<HTMLFormElement>(null)
   const detailsRef = useRef<HTMLDetailsElement>(null)
   const submitting = useRef(false)
+  const [budgetValue, setBudgetValue] = useState('')
   const [validation, setValidation] = useState<Record<string, string>>({})
   const errors = { ...validation, ...mutation.error?.fieldErrors }
 
@@ -40,9 +42,8 @@ export function ProjectForm() {
     const issues: Record<string, string> = {}
     if (!name) issues.name = 'Ingresa el nombre de la obra.'
     if (!client) issues.client = 'Ingresa el nombre del cliente.'
-    const budgetInput = event.currentTarget.elements.namedItem('estimated_budget')
-    if ((budgetInput instanceof HTMLInputElement && !budgetInput.validity.valid) || (budget && (!Number.isFinite(Number(budget)) || Number(budget) < 0))) {
-      issues.estimated_budget = 'Ingresa un presupuesto mayor o igual a cero, con hasta dos decimales.'
+    if (!validClpField(event.currentTarget, 'estimated_budget', budget, 0)) {
+      issues.estimated_budget = 'Ingresa un presupuesto entero mayor o igual a cero en pesos chilenos.'
     }
     for (const { name } of dateFields) {
       const input = event.currentTarget.elements.namedItem(name)
@@ -68,6 +69,7 @@ export function ProjectForm() {
     }, {
       onSuccess: () => {
         formRef.current?.reset()
+        setBudgetValue('')
         if (detailsRef.current) detailsRef.current.open = false
       },
       onError: ({ fieldErrors }) => {
@@ -93,9 +95,8 @@ export function ProjectForm() {
           <FormField id="project-client" label="Cliente" required error={errors.client}>
             <input id="project-client" name="client" className="form-input" placeholder="Nombre o razón social" required aria-invalid={Boolean(errors.client)} aria-describedby={errors.client ? 'project-client-error' : undefined} />
           </FormField>
-          <FormField id="project-budget" label="Presupuesto Estimado" hint="Opcional · Pesos chilenos (CLP)." error={errors.estimated_budget}>
-            <input id="project-budget" name="estimated_budget" type="number" inputMode="decimal" min="0" step="0.01" className="form-input" placeholder="Ej. 2500000" aria-invalid={Boolean(errors.estimated_budget)} aria-describedby={`project-budget-hint${errors.estimated_budget ? ' project-budget-error' : ''}`} />
-          </FormField>
+          <ClpField id="project-budget" name="estimated_budget" label="Presupuesto Estimado" hint="Opcional · Pesos chilenos (CLP)."
+            error={errors.estimated_budget} value={budgetValue} onChange={setBudgetValue} placeholder="Ej. 2500000" />
           <details ref={detailsRef} className="group min-w-0 rounded-xl border border-brand-border">
             <summary className="flex min-h-11 cursor-pointer items-center rounded-xl px-3.5 py-2 text-sm font-semibold text-brand-blue hover:underline dark:text-blue-400">
               <span className="group-open:hidden">+ Más detalles (opcional)</span>

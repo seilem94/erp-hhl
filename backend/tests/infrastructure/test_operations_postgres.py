@@ -5,7 +5,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
-from decimal import Decimal, localcontext
+from decimal import localcontext
 from threading import Barrier, Event
 from uuid import uuid4
 
@@ -61,10 +61,11 @@ def confirmation(operation: OperationRecord) -> OperationRecord:
     if operation.command_type is CommandType.REGISTER_EXPENSE:
         payload = ExpenseSnapshot(
             id=resource_id,
-            amount=Decimal("1234567890.12"),
+            amount=1_234_567_890_012,
             date=date(2026, 11, 9),
             category=ExpenseCategory.MATERIALS,
-            description="Cable y conectores",
+            title="Cable y conectores",
+            detail="Material de montaje",
             has_receipt=True,
             receipt_url="verified-file-reference",
             created_at=NOW,
@@ -82,7 +83,7 @@ def confirmation(operation: OperationRecord) -> OperationRecord:
             created_at=NOW,
             updated_at=NOW,
             currency=Currency.CLP,
-            budget=Decimal("12.30"),
+            budget=1230,
             description="Primera línea\nSegunda línea",
             end_date=date(2026, 12, 31),
         )
@@ -90,7 +91,7 @@ def confirmation(operation: OperationRecord) -> OperationRecord:
         operation,
         state=OperationState.CONFIRMED,
         result_resource_id=resource_id,
-        result_schema_version=1,
+        result_schema_version=2,
         result_payload=payload,
         completed_at=NOW + timedelta(seconds=1),
     )
@@ -173,7 +174,7 @@ def test_jsonb_roundtrip_preserves_typed_immutable_result(
         assert raw is not None
         amount_field = "amount" if kind is CommandType.REGISTER_EXPENSE else "budget"
         assert raw[amount_field] == (
-            "1234567890.12" if amount_field == "amount" else "12.30"
+            1_234_567_890_012 if amount_field == "amount" else 1230
         )
         assert isinstance(
             repo.reserve(replace(operation, created_at=NOW + timedelta(days=1))),
@@ -188,7 +189,7 @@ def test_snapshot_precision_is_independent_of_decimal_context(
     result = confirmation(operation)
     payload = result.recover_result()
     assert isinstance(payload, ProjectSnapshot)
-    exact = Decimal("123456789012345678901234567890.12")
+    exact = 9_223_372_036_854_775_807
     result = replace(result, result_payload=replace(payload, budget=exact))
     with Session(pg_engine) as session, localcontext() as context:
         context.prec = 3

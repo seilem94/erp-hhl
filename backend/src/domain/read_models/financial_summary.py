@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
 from uuid import UUID
 
 from src.domain.enums import Currency, ProjectStatus
@@ -69,9 +68,9 @@ class FinancialSummary:
 
     filters: FinancialSummaryFilters
     as_of: datetime
-    operational_expenses_total: Decimal
-    project_expenses_total: Decimal
-    expenses_total: Decimal
+    operational_expenses_total: int
+    project_expenses_total: int
+    expenses_total: int
     expense_count: int
     projects_by_status: ProjectStatusCounts
 
@@ -90,7 +89,7 @@ class ProjectFinancialSummary:
     project_status: ProjectStatus
     filters: FinancialSummaryFilters
     as_of: datetime
-    expenses_total: Decimal
+    expenses_total: int
     expense_count: int
 
     @property

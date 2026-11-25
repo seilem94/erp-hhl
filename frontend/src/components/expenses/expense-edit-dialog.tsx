@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import type { ExpenseResponse, UpdateExpenseRequest } from '@/api/types'
-import { ExpenseFields } from '@/components/expenses/expense-fields'
+import { ExpenseFields, ExpenseReceiptField } from '@/components/expenses/expense-fields'
 import { readExpenseFields, validateExpenseFields } from '@/components/expenses/expense-form-values'
 import { Feedback } from '@/components/ui/feedback'
 import { FormField } from '@/components/ui/form-field'
@@ -18,6 +18,7 @@ export function ExpenseEditDialog({ expense, onCancel, onSaved }: ExpenseEditDia
   const dialogRef = useRef<HTMLDialogElement>(null)
   const submitting = useRef(false)
   const [projectId, setProjectId] = useState(expense.project_id ?? '')
+  const [amount, setAmount] = useState(expense.amount)
   const [hasReceipt, setHasReceipt] = useState(expense.has_receipt)
   const [receiptUrl, setReceiptUrl] = useState(expense.receipt_url ?? '')
   const [validation, setValidation] = useState<Record<string, string>>({})
@@ -56,7 +57,8 @@ export function ExpenseEditDialog({ expense, onCancel, onSaved }: ExpenseEditDia
     if (values.amount !== expense.amount) body.amount = values.amount
     if (values.date !== expense.date) body.date = values.date
     if (values.category !== expense.category) body.category = values.category
-    if (values.description !== expense.description.trim()) body.description = values.description
+    if (values.title !== expense.title.trim()) body.title = values.title
+    if (values.detail !== (expense.detail?.trim() || null)) body.detail = values.detail
     if (values.project_id !== (expense.project_id ?? null)) body.project_id = values.project_id
     const url = formString(data, 'receipt_url') || null
     if (url !== (expense.receipt_url?.trim() || null)) body.receipt_url = url
@@ -75,19 +77,19 @@ export function ExpenseEditDialog({ expense, onCancel, onSaved }: ExpenseEditDia
   }
 
   return (
-    <dialog ref={dialogRef} aria-labelledby="edit-expense-title"
+    <dialog ref={dialogRef} aria-labelledby="edit-expense-dialog-title"
       onCancel={(event) => {
         event.preventDefault()
         if (!submitting.current) onCancel()
       }}
       className="form-panel m-auto max-h-[90dvh] w-full max-w-[calc(100%_-_2rem)] overflow-y-auto overscroll-contain backdrop:bg-slate-950/50 sm:max-w-xl">
-      <h2 id="edit-expense-title" className="text-xl font-semibold tracking-tight">Editar gasto</h2>
+      <h2 id="edit-expense-dialog-title" className="text-xl font-semibold tracking-tight">Editar gasto</h2>
       <form onSubmit={submit} onChange={clearFeedback} noValidate aria-busy={mutation.isPending} className="mt-5">
         <fieldset disabled={mutation.isPending} className="grid min-w-0 gap-4 sm:grid-cols-2">
           <legend className="sr-only">Datos del gasto</legend>
           <ExpenseFields idPrefix="edit-expense" initial={expense} errors={errors} projects={projects.data ?? []}
             projectsLoading={projects.isPending} projectsUnavailable={projects.isError && !projects.data}
-            projectId={projectId} onProjectChange={setProjectId} />
+            projectId={projectId} onProjectChange={setProjectId} amount={amount} onAmountChange={setAmount} />
           <div className="sm:col-span-2">
             <FormField id="edit-expense-receipt" label="Enlace o ruta del comprobante" hint="Opcional." error={errors.receipt_url}>
               <input id="edit-expense-receipt" name="receipt_url" type="text" inputMode="url" value={receiptUrl}
@@ -95,17 +97,7 @@ export function ExpenseEditDialog({ expense, onCancel, onSaved }: ExpenseEditDia
                 aria-invalid={Boolean(errors.receipt_url)} aria-describedby={`edit-expense-receipt-hint${errors.receipt_url ? ' edit-expense-receipt-error' : ''}`} />
             </FormField>
           </div>
-          <div className="sm:col-span-2">
-            <label className="flex min-h-11 items-center gap-3 text-sm font-medium">
-              <input name="has_receipt" type="checkbox" checked={hasReceipt || hasDigitalReceipt}
-                disabled={hasDigitalReceipt} onChange={(event) => setHasReceipt(event.target.checked)}
-                aria-describedby="edit-expense-receipt-status" className="size-4 accent-brand-blue" />
-              Tiene comprobante
-            </label>
-            <p id="edit-expense-receipt-status" className="text-xs text-slate-500 dark:text-slate-400">
-              {hasDigitalReceipt ? 'El enlace indica que el gasto tiene un comprobante.' : 'Marca esta casilla si conservas un comprobante físico.'}
-            </p>
-          </div>
+          <ExpenseReceiptField checked={hasReceipt} onChange={setHasReceipt} hasDigitalReceipt={hasDigitalReceipt} />
           <div className="flex flex-wrap gap-3 sm:col-span-2">
             <button type="submit" className="button-primary">
               {mutation.isPending && <Spinner />}{mutation.isPending ? 'Guardando…' : 'Guardar cambios'}

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
-from decimal import Decimal
 from typing import TypeAlias
 from uuid import UUID
 
@@ -12,7 +11,7 @@ from src.domain.entities.expense import Expense
 from src.domain.entities.project import Project
 from src.domain.enums import Currency, ExpenseCategory, ProjectStatus
 
-OPERATION_RESULT_SCHEMA_VERSION = 1
+OPERATION_RESULT_SCHEMA_VERSION = 2
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -27,7 +26,7 @@ class ProjectSnapshot:
     currency: Currency
     description: str | None = None
     end_date: date | None = None
-    budget: Decimal | None = None
+    budget: int | None = None
 
     @classmethod
     def from_project(cls, project: Project) -> ProjectSnapshot:
@@ -49,16 +48,17 @@ class ProjectSnapshot:
 @dataclass(frozen=True, kw_only=True)
 class ExpenseSnapshot:
     id: UUID
-    amount: Decimal
+    amount: int
     date: date
     category: ExpenseCategory
-    description: str
+    title: str
     has_receipt: bool
     created_at: datetime
     updated_at: datetime
     currency: Currency
     project_id: UUID | None = None
     receipt_url: str | None = None
+    detail: str | None = None
 
     @classmethod
     def from_expense(cls, expense: Expense) -> ExpenseSnapshot:
@@ -67,7 +67,8 @@ class ExpenseSnapshot:
             amount=expense.amount,
             date=expense.date,
             category=expense.category,
-            description=expense.description,
+            title=expense.title,
+            detail=expense.detail,
             has_receipt=expense.has_receipt,
             created_at=expense.created_at,
             updated_at=expense.updated_at,

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from uuid import uuid4
 
 import pytest
@@ -28,7 +27,7 @@ def test_actualizar_proyecto_exitoso() -> None:
         start_date=date(2026, 1, 1),
         created_at=initial_time,
         updated_at=initial_time,
-        budget=Decimal("100000.00"),
+        budget=100000,
         description="Alcance inicial",
     )
     repo.save(project)
@@ -37,7 +36,7 @@ def test_actualizar_proyecto_exitoso() -> None:
         project_id=project.id,
         name="Obra Modificada",
         status=ProjectStatus.IN_PROGRESS,
-        estimated_budget=Decimal("150000.00"),
+        estimated_budget=150000,
         description="Nuevo alcance ampliado",
     )
     updated = use_case.execute(dto)
@@ -45,7 +44,7 @@ def test_actualizar_proyecto_exitoso() -> None:
     assert updated.name == "Obra Modificada"
     assert updated.client == "Cliente Original"  # Sin cambios
     assert updated.status == ProjectStatus.IN_PROGRESS
-    assert updated.budget == Decimal("150000.00")
+    assert updated.budget == 150000
     assert updated.description == "Nuevo alcance ampliado"
     assert updated.updated_at > initial_time
 
@@ -75,7 +74,7 @@ def test_actualizar_proyecto_campos_none_no_sobreescriben() -> None:
         start_date=date(2026, 1, 1),
         created_at=datetime.now(UTC),
         updated_at=datetime.now(UTC),
-        budget=Decimal("500000.00"),
+        budget=500000,
         description="Descripción fija",
     )
     repo.save(project)
@@ -89,5 +88,5 @@ def test_actualizar_proyecto_campos_none_no_sobreescriben() -> None:
     assert updated.status == ProjectStatus.PAUSED
     assert updated.name == "Obra Fija"
     assert updated.client == "Cliente Fijo"
-    assert updated.budget == Decimal("500000.00")
+    assert updated.budget == 500000
     assert updated.description == "Descripción fija"

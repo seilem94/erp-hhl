@@ -15,6 +15,7 @@ from src.domain.exceptions import (
     InvalidCanonicalContentError,
     InvalidExpenseAmountError,
     InvalidExpenseDateError,
+    InvalidExpenseTitleError,
     InvalidMonetaryPrecisionError,
     InvalidOperationIdError,
     InvalidSummaryDateRangeError,
@@ -64,6 +65,7 @@ def domain_exception_handler(request: Request, exc: DomainException) -> JSONResp
         (
             InvalidExpenseAmountError,
             InvalidExpenseDateError,
+            InvalidExpenseTitleError,
             InvalidCanonicalContentError,
             InvalidMonetaryPrecisionError,
             InvalidOperationIdError,

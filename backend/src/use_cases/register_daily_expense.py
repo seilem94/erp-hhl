@@ -15,7 +15,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from uuid import UUID, uuid4
 
 from src.domain.entities.expense import Expense
@@ -30,9 +29,9 @@ from src.use_cases.services.expense_rules import (
     validate_expense_amount,
     validate_expense_date,
     validate_expense_project,
+    validate_expense_title,
 )
 from src.use_cases.services.idempotency import IdempotencyCoordinator, IdempotentResult
-from src.use_cases.services.monetary_precision import validate_command_amount
 
 
 @dataclass(frozen=True)
@@ -47,7 +46,8 @@ class RegisterDailyExpenseDTO:
         amount: Cost amount in local currency.  Must be > 0.
         date: Date on which the expense was incurred.  Must be <= today.
         category: Business category of the expense.
-        description: Free-text concept (e.g. "Compra cable 2.5 mm²").
+        title: Free-text concept (e.g. "Compra cable 2.5 mm²").
+        detail: Optional notes about the expense.
         project_id: UUID of the target project.  None → OPEX expense.
         has_receipt: True when a physical receipt exists but is not yet
             uploaded.  Automatically forced to True when ``receipt_url``
@@ -58,14 +58,15 @@ class RegisterDailyExpenseDTO:
         id: Optional preassigned resource UUID, separate from the operation key.
     """
 
-    amount: Decimal
+    amount: int
     date: date
     category: ExpenseCategory
-    description: str
+    title: str
     project_id: UUID | None = None
     has_receipt: bool = False
     receipt_url: str | None = None
     id: UUID | None = None
+    detail: str | None = None
 
 
 class RegisterDailyExpenseUseCase:
@@ -109,17 +110,19 @@ class RegisterDailyExpenseUseCase:
         if self._coordinator is None:
             raise OperationUnresolvedError("No idempotency coordinator configured.")
         dto = command.data
-        validate_command_amount(dto.amount)
+        validate_expense_amount(dto.amount)
         return self._coordinator.execute(
             context=command.context,
             request=CanonicalRequest(
                 command_type=CommandType.REGISTER_EXPENSE,
                 target_resource_id=dto.id,
                 content={
-                    "amount": dto.amount,
+                    # Keep fingerprints for historical whole-CLP requests.
+                    "amount": str(dto.amount),
                     "date": dto.date,
                     "category": dto.category,
-                    "description": dto.description,
+                    "description": dto.title,
+                    **({"detail": dto.detail} if dto.detail is not None else {}),
                     "project_id": dto.project_id,
                     "has_receipt": dto.has_receipt or dto.receipt_url is not None,
                     "receipt_url": dto.receipt_url,
@@ -149,6 +152,7 @@ class RegisterDailyExpenseUseCase:
             ProjectCancelledError: If the referenced project is CANCELLED.
         """
         validate_expense_amount(dto.amount)
+        validate_expense_title(dto.title)
         validate_expense_date(dto.date, self._date_provider())
         validate_expense_project(self._project_repo, dto.project_id)
 
@@ -162,7 +166,8 @@ class RegisterDailyExpenseUseCase:
             amount=dto.amount,
             date=dto.date,
             category=dto.category,
-            description=dto.description,
+            title=dto.title,
+            detail=dto.detail,
             has_receipt=has_receipt,
             receipt_url=dto.receipt_url,
             project_id=dto.project_id,

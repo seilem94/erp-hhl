@@ -8,8 +8,6 @@ Test philosophy:
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 import pytest
 
 from src.domain.enums import ProjectStatus
@@ -77,12 +75,12 @@ def test_crear_proyecto_con_presupuesto_estimado() -> None:
     dto = CreateProjectDTO(
         name="Instalación Paneles Solares",
         client="Cliente Solar Ltda",
-        estimated_budget=Decimal("5000000"),
+        estimated_budget=5000000,
     )
 
     result = use_case.execute(dto)
 
-    assert result.budget == Decimal("5000000")
+    assert result.budget == 5000000
 
 
 def test_crear_proyecto_sin_presupuesto_budget_es_none() -> None:

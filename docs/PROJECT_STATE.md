@@ -14,6 +14,7 @@ Actualizado: 2026-11-25. Fuente canónica de entregas, pendientes y evidencia; n
 - Fase 4, Módulo 1, Paso 4: integración de comandos, canonicalización SHA-256 y compatibilidad de rutas de escritura implementadas y probadas. Las altas de obras y gastos y el PATCH de obras reservan, ejecutan negocio, capturan el snapshot y confirman cuando reciben clave e identidad válidas; permiten preasignar el UUID del recurso y recuperan el resultado original al repetir. Sin clave o identidad conservan el flujo antiguo sin deduplicación. El commit de la dependencia termina antes de enviar éxito HTTP, verificado también bajo fallo forzado.
 - Fase 4, Módulo 1, Paso 5: consulta autorizada de recuperación implementada y probada en PostgreSQL real. El caso de uso y el endpoint de operaciones aíslan por actor, revalidan permisos antes de leer el payload y devuelven el snapshot original o los errores de operación desconocida, resolución incierta y reconciliación requerida. **EL CÓDIGO BACKEND DEL MÓDULO 1 ESTÁ COMPLETO** para el alcance aprobado de esta iteración: resúmenes financieros e idempotencia de obras y gastos con recuperación. La integración del frontend, la sesión real y la futura cola offline conservan sus alcances posteriores.
 - El frontend integra la API mediante un cliente HTTP tipado, consultas y mutaciones TanStack Query e invalidación de caché. Proyectos dispone de listado y filtro por estado. Gastos dispone de registro rápido con proyecto opcional y consulta de gastos operativos o por obra con filtros de fecha.
+- Gastos y presupuestos operan en pesos chilenos enteros. El alta de gastos incorpora título, detalle opcional y comprobante. [Validación de la entrega CLP](#validación-de-clp-enteros-y-comprobantes).
 - Cerrados el alta ampliada de obras, la edición de gastos y la bitácora global y por obra en la [entrega de `feat/proyectos-campos-completos`](#cierre-funcional-y-preparación-para-producción).
 - Inicio muestra métricas consultadas: obras registradas y completadas, gastos operativos, gastos de obras y total acumulado. Incluye carga, errores recuperables y protección frente a totales incompletos. El detalle de obra muestra sus datos y todos los gastos asociados.
 - Arranque local en Windows disponible mediante `start_dev.ps1`; uso y requisitos en el [README raíz](../README.md#arranque-rápido).
@@ -50,6 +51,12 @@ Los resultados anteriores no se vuelven vigentes por editar documentación. El d
 - Capacidades PWA y resolución de operaciones sin conexión.
 - Hardening de SSH, UFW y fail2ban en el servidor, comprobación del aislamiento desde la LAN, configuración de Cloudflare Access y ensayo de backup/restauración.
 - Datos semilla para el despliegue final.
+
+## Validación de CLP enteros y comprobantes
+
+- Pasaron 295 pruebas en PostgreSQL 17.12 en UTC, incluidas la conversión de datos históricos, la conservación del título y las confirmaciones anteriores, la validación de montos, la edición de detalle y los eventos de auditoría. Ruff y mypy aprobaron.
+- `alembic check` confirmó el modelo después de aplicar la [revisión CLP](04_fase2_infraestructura.md#importes-en-pesos-chilenos). Las pruebas migraron y revirtieron esquemas temporales con gastos y presupuestos preexistentes.
+- ESLint, TypeScript y el build aprobaron. Chromium a 320 px con una API simulada comprobó el formato y la vista previa de montos y presupuestos, los valores superiores al entero seguro de JavaScript y el flujo de alta y edición de gastos.
 
 ## Validación de accesos rápidos a gastos
 
